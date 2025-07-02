@@ -575,27 +575,65 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
   }
 }
 
-class WordSearchScreen extends StatelessWidget {
+class WordSearchScreen extends StatefulWidget {
   final List<Word> words;
   const WordSearchScreen({super.key, required this.words});
 
-  List<List<String>> _generateGrid(int gridSize, List<String> wordList, {List<String>? actuallyPlaced}) {
-    // Initialize empty grid
+  @override
+  State<WordSearchScreen> createState() => _WordSearchScreenState();
+}
+
+class _WordSearchScreenState extends State<WordSearchScreen> {
+  static const int _numPairs = 3;
+  late List<Word> _selectedWords;
+  late List<List<String>> _grid;
+  late int _gridSize;
+  late List<_PlacedWord> _placedWords;
+  Set<int> _foundWordIndexes = {};
+  List<_FoundWord> _foundWords = [];
+  int? _selectStartRow;
+  int? _selectStartCol;
+  int? _selectEndRow;
+  int? _selectEndCol;
+
+  @override
+  void initState() {
+    super.initState();
+    _initGame();
+  }
+
+  void _initGame() {
+    // Select 3 random pairs from the vocabulary
+    final rand = Random();
+    final allWords = List<Word>.from(widget.words);
+    allWords.shuffle(rand);
+    _selectedWords = allWords.take(_numPairs).toList();
+    final wordList = _selectedWords.map((w) => w.target.toUpperCase()).toList();
+    _gridSize = (wordList.fold<int>(0, (p, w) => w.length > p ? w.length : p)).clamp(6, 12);
+    _placedWords = [];
+    _grid = _generateGrid(_gridSize, wordList, actuallyPlaced: _placedWords);
+    _foundWordIndexes.clear();
+    _foundWords.clear();
+    _selectStartRow = null;
+    _selectStartCol = null;
+    _selectEndRow = null;
+    _selectEndCol = null;
+  }
+
+  List<List<String>> _generateGrid(int gridSize, List<String> wordList, {List<_PlacedWord>? actuallyPlaced}) {
     final grid = List.generate(gridSize, (_) => List.generate(gridSize, (_) => ''));
     final rand = Random();
-    final placed = <String>[];
-
+    final placed = <_PlacedWord>[];
     for (final word in wordList) {
       final isHorizontal = rand.nextBool();
       final maxStart = gridSize - word.length;
-      if (maxStart < 0) continue; // skip if word too long
-      int row, col;
+      if (maxStart < 0) continue;
+      int row = 0, col = 0;
       bool placedWord = false;
       for (int attempt = 0; attempt < 100 && !placedWord; attempt++) {
         if (isHorizontal) {
           row = rand.nextInt(gridSize);
           col = rand.nextInt(maxStart + 1);
-          // Check if fits
           bool canPlace = true;
           for (int i = 0; i < word.length; i++) {
             if (grid[row][col + i] != '' && grid[row][col + i] != word[i]) {
@@ -608,6 +646,12 @@ class WordSearchScreen extends StatelessWidget {
               grid[row][col + i] = word[i];
             }
             placedWord = true;
+            placed.add(_PlacedWord(
+              word: word,
+              start: [row, col],
+              end: [row, col + word.length - 1],
+              isHorizontal: true,
+            ));
           }
         } else {
           row = rand.nextInt(maxStart + 1);
@@ -624,16 +668,20 @@ class WordSearchScreen extends StatelessWidget {
               grid[row + i][col] = word[i];
             }
             placedWord = true;
+            placed.add(_PlacedWord(
+              word: word,
+              start: [row, col],
+              end: [row + word.length - 1, col],
+              isHorizontal: false,
+            ));
           }
         }
       }
-      if (placedWord) placed.add(word);
     }
-    // Fill empty cells with random letters
     for (int r = 0; r < gridSize; r++) {
       for (int c = 0; c < gridSize; c++) {
         if (grid[r][c] == '') {
-          grid[r][c] = String.fromCharCode(rand.nextInt(26) + 65); // A-Z
+          grid[r][c] = String.fromCharCode(rand.nextInt(26) + 65);
         }
       }
     }
@@ -644,17 +692,146 @@ class WordSearchScreen extends StatelessWidget {
     return grid;
   }
 
+  void _onCellTap(int row, int col) {
+    setState(() {
+      if (_selectStartRow == null || _selectStartCol == null) {
+        _selectStartRow = row;
+        _selectStartCol = col;
+        _selectEndRow = null;
+        _selectEndCol = null;
+      } else if (_selectEndRow == null || _selectEndCol == null) {
+        // Only allow straight lines
+        if (row == _selectStartRow || col == _selectStartCol) {
+          _selectEndRow = row;
+          _selectEndCol = col;
+          _checkSelection();
+        } else {
+          // Reset if not straight
+          _selectStartRow = row;
+          _selectStartCol = col;
+          _selectEndRow = null;
+          _selectEndCol = null;
+        }
+      } else {
+        _selectStartRow = row;
+        _selectStartCol = col;
+        _selectEndRow = null;
+        _selectEndCol = null;
+      }
+    });
+  }
+
+  void _checkSelection() {
+    if (_selectStartRow == null || _selectStartCol == null || _selectEndRow == null || _selectEndCol == null) return;
+    final start = [_selectStartRow!, _selectStartCol!];
+    final end = [_selectEndRow!, _selectEndCol!];
+    // Only allow horizontal or vertical
+    if (start[0] != end[0] && start[1] != end[1]) return;
+    // Get the word
+    List<String> selected = [];
+    if (start[0] == end[0]) {
+      // Horizontal
+      int row = start[0];
+      int minCol = start[1] < end[1] ? start[1] : end[1];
+      int maxCol = start[1] > end[1] ? start[1] : end[1];
+      for (int c = minCol; c <= maxCol; c++) {
+        selected.add(_grid[row][c]);
+      }
+    } else {
+      // Vertical
+      int col = start[1];
+      int minRow = start[0] < end[0] ? start[0] : end[0];
+      int maxRow = start[0] > end[0] ? start[0] : end[0];
+      for (int r = minRow; r <= maxRow; r++) {
+        selected.add(_grid[r][col]);
+      }
+    }
+    final selectedWord = selected.join();
+    // Check if matches any placed word and not already found
+    bool found = false;
+    for (int i = 0; i < _placedWords.length; i++) {
+      if (_foundWordIndexes.contains(i)) continue;
+      if (_placedWords[i].word == selectedWord) {
+        setState(() {
+          _foundWordIndexes.add(i);
+          _foundWords.add(_FoundWord(
+            index: i,
+            word: selectedWord,
+            start: _placedWords[i].start,
+            end: _placedWords[i].end,
+            isHorizontal: _placedWords[i].isHorizontal,
+          ));
+        });
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      // Keep highlight for a short delay before resetting
+      Future.delayed(const Duration(milliseconds: 600), () {
+        if (mounted) {
+          setState(() {
+            _selectStartRow = null;
+            _selectStartCol = null;
+            _selectEndRow = null;
+            _selectEndCol = null;
+          });
+        }
+      });
+    } else {
+      // Reset selection immediately if not found
+      setState(() {
+        _selectStartRow = null;
+        _selectStartCol = null;
+        _selectEndRow = null;
+        _selectEndCol = null;
+      });
+    }
+  }
+
+  List<int> _getSelectedCells() {
+    // If only start cell is set, highlight it
+    if (_selectStartRow != null && _selectStartCol != null && (_selectEndRow == null || _selectEndCol == null)) {
+      return [_selectStartRow! * _gridSize + _selectStartCol!];
+    }
+    if (_selectStartRow == null || _selectStartCol == null || _selectEndRow == null || _selectEndCol == null) return [];
+    final start = [_selectStartRow!, _selectStartCol!];
+    final end = [_selectEndRow!, _selectEndCol!];
+    List<int> cells = [];
+    if (start[0] == end[0]) {
+      int row = start[0];
+      int minCol = start[1] < end[1] ? start[1] : end[1];
+      int maxCol = start[1] > end[1] ? start[1] : end[1];
+      for (int c = minCol; c <= maxCol; c++) {
+        cells.add(row * _gridSize + c);
+      }
+    } else if (start[1] == end[1]) {
+      int col = start[1];
+      int minRow = start[0] < end[0] ? start[0] : end[0];
+      int maxRow = start[0] > end[0] ? start[0] : end[0];
+      for (int r = minRow; r <= maxRow; r++) {
+        cells.add(r * _gridSize + col);
+      }
+    }
+    return cells;
+  }
+
+  bool _isCellInFoundWord(int row, int col) {
+    for (final fw in _foundWords) {
+      if (fw.isHorizontal) {
+        if (row == fw.start[0] && col >= fw.start[1] && col <= fw.end[1]) return true;
+      } else {
+        if (col == fw.start[1] && row >= fw.start[0] && row <= fw.end[0]) return true;
+      }
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Use target language words in the grid, source language as hints
-    final wordList = words.map((w) => w.target.toUpperCase()).toList();
-    final gridSize = (wordList.fold<int>(0, (p, w) => w.length > p ? w.length : p)).clamp(6, 12);
-    final List<String> placedWords = [];
-    final grid = _generateGrid(gridSize, wordList, actuallyPlaced: placedWords);
-    const double cellSize = 36.0; // Fixed size for each cell
-    final double gridPixelSize = gridSize * cellSize;
-    // Only show hints for placed words
-    final placedSourceWords = words.where((w) => placedWords.contains(w.target.toUpperCase())).map((w) => w.source).toList();
+    const double cellSize = 36.0;
+    final double gridPixelSize = _gridSize * cellSize;
+    final selectedCells = _getSelectedCells();
     return Scaffold(
       appBar: AppBar(title: const Text('Word Search')),
       body: SafeArea(
@@ -663,32 +840,40 @@ class WordSearchScreen extends StatelessWidget {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Word search grid
                 SizedBox(
                   width: gridPixelSize,
                   height: gridPixelSize,
                   child: GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: gridSize * gridSize,
+                    itemCount: _gridSize * _gridSize,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: gridSize,
+                      crossAxisCount: _gridSize,
                       childAspectRatio: 1.0,
                     ),
                     itemBuilder: (context, index) {
-                      final row = index ~/ gridSize;
-                      final col = index % gridSize;
-                      return Container(
-                        width: cellSize,
-                        height: cellSize,
-                        margin: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.blueGrey),
-                          color: Colors.white,
-                        ),
-                        child: Center(
-                          child: Text(
-                            grid[row][col],
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      final row = index ~/ _gridSize;
+                      final col = index % _gridSize;
+                      final isSelected = selectedCells.contains(index);
+                      final isFound = _isCellInFoundWord(row, col);
+                      return GestureDetector(
+                        onTap: () => _onCellTap(row, col),
+                        child: Container(
+                          width: cellSize,
+                          height: cellSize,
+                          margin: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.blueGrey),
+                            color: isFound
+                                ? Colors.greenAccent
+                                : isSelected
+                                    ? Colors.yellowAccent
+                                    : Colors.white,
+                          ),
+                          child: Center(
+                            child: Text(
+                              _grid[row][col],
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
                       );
@@ -706,7 +891,16 @@ class WordSearchScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 12,
-                  children: placedSourceWords.map((src) => Chip(label: Text(src))).toList(),
+                  children: _selectedWords
+                      .map((w) => Chip(label: Text(w.source)))
+                      .toList(),
+                ),
+                const SizedBox(height: 24),
+                Text('Found: ${_foundWords.length} / $_numPairs', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () => setState(_initGame),
+                  child: const Text('Restart'),
                 ),
               ],
             ),
@@ -715,4 +909,21 @@ class WordSearchScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PlacedWord {
+  final String word;
+  final List<int> start;
+  final List<int> end;
+  final bool isHorizontal;
+  _PlacedWord({required this.word, required this.start, required this.end, required this.isHorizontal});
+}
+
+class _FoundWord {
+  final int index;
+  final String word;
+  final List<int> start;
+  final List<int> end;
+  final bool isHorizontal;
+  _FoundWord({required this.index, required this.word, required this.start, required this.end, required this.isHorizontal});
 } 
