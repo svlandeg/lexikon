@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
+import 'dart:math';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -68,8 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (context, index) {
           final word = _words[index];
           return ListTile(
-            title: Text(word.text),
-            subtitle: Text(word.translation),
+            title: Text(word.source),
+            subtitle: Text(word.target),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -150,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 List<Word> importedWords = [];
                 for (var row in rows) {
                   if (row.length >= 2 && row[0] is String && row[1] is String) {
-                    importedWords.add(Word(text: row[0], translation: row[1]));
+                    importedWords.add(Word(source: row[0], target: row[1]));
                   }
                 }
                 if (importedWords.isNotEmpty) {
@@ -213,20 +214,20 @@ class AddWordScreen extends StatefulWidget {
 
 class _AddWordScreenState extends State<AddWordScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _wordController;
-  late final TextEditingController _translationController;
+  late final TextEditingController _sourceController;
+  late final TextEditingController _targetController;
 
   @override
   void initState() {
     super.initState();
-    _wordController = TextEditingController(text: widget.initialWord?.text ?? '');
-    _translationController = TextEditingController(text: widget.initialWord?.translation ?? '');
+    _sourceController = TextEditingController(text: widget.initialWord?.source ?? '');
+    _targetController = TextEditingController(text: widget.initialWord?.target ?? '');
   }
 
   @override
   void dispose() {
-    _wordController.dispose();
-    _translationController.dispose();
+    _sourceController.dispose();
+    _targetController.dispose();
     super.dispose();
   }
 
@@ -242,12 +243,12 @@ class _AddWordScreenState extends State<AddWordScreen> {
           child: Column(
             children: [
               TextFormField(
-                controller: _wordController,
+                controller: _sourceController,
                 decoration: const InputDecoration(labelText: 'Source Language'),
                 validator: (value) => value == null || value.isEmpty ? 'Enter a source language word' : null,
               ),
               TextFormField(
-                controller: _translationController,
+                controller: _targetController,
                 decoration: const InputDecoration(labelText: 'Target Language'),
                 validator: (value) => value == null || value.isEmpty ? 'Enter a target language word' : null,
               ),
@@ -258,8 +259,8 @@ class _AddWordScreenState extends State<AddWordScreen> {
                     Navigator.pop(
                       context,
                       Word(
-                        text: _wordController.text,
-                        translation: _translationController.text,
+                        source: _sourceController.text,
+                        target: _targetController.text,
                       ),
                     );
                   }
@@ -355,18 +356,18 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       return;
     }
     final userInput = _controller.text.trim().toLowerCase();
-    final correctAnswer = _quizWords[_current].translation.trim().toLowerCase();
+    final correctAnswer = _quizWords[_current].target.trim().toLowerCase();
     if (userInput == correctAnswer) {
       setState(() {
         _correct++;
-        _feedback = 'Correct! The translation is: ${_quizWords[_current].translation}';
+        _feedback = 'Correct! The translation is: ${_quizWords[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
     } else {
       setState(() {
         _incorrect++;
-        _feedback = 'Incorrect. The correct answer is: ${_quizWords[_current].translation}';
+        _feedback = 'Incorrect. The correct answer is: ${_quizWords[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
@@ -411,7 +412,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
           children: [
             Text('Source Language:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            Text(word.text, style: Theme.of(context).textTheme.headlineMedium),
+            Text(word.source, style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 32),
             RawKeyboardListener(
               focusNode: _keyboardFocusNode,
@@ -554,7 +555,156 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
               }
             },
           ),
+          // Word Search Practice
+          ListTile(
+            leading: const Icon(Icons.grid_on),
+            title: const Text('Word Search'),
+            onTap: () {
+              if (_words.isEmpty) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WordSearchScreen(words: _words),
+                ),
+              );
+            },
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class WordSearchScreen extends StatelessWidget {
+  final List<Word> words;
+  const WordSearchScreen({super.key, required this.words});
+
+  List<List<String>> _generateGrid(int gridSize, List<String> wordList) {
+    // Initialize empty grid
+    final grid = List.generate(gridSize, (_) => List.generate(gridSize, (_) => ''));
+    final rand = Random();
+    final placed = <String>[];
+
+    for (final word in wordList) {
+      final isHorizontal = rand.nextBool();
+      final maxStart = gridSize - word.length;
+      if (maxStart < 0) continue; // skip if word too long
+      int row, col;
+      bool placedWord = false;
+      for (int attempt = 0; attempt < 100 && !placedWord; attempt++) {
+        if (isHorizontal) {
+          row = rand.nextInt(gridSize);
+          col = rand.nextInt(maxStart + 1);
+          // Check if fits
+          bool canPlace = true;
+          for (int i = 0; i < word.length; i++) {
+            if (grid[row][col + i] != '' && grid[row][col + i] != word[i]) {
+              canPlace = false;
+              break;
+            }
+          }
+          if (canPlace) {
+            for (int i = 0; i < word.length; i++) {
+              grid[row][col + i] = word[i];
+            }
+            placedWord = true;
+          }
+        } else {
+          row = rand.nextInt(maxStart + 1);
+          col = rand.nextInt(gridSize);
+          bool canPlace = true;
+          for (int i = 0; i < word.length; i++) {
+            if (grid[row + i][col] != '' && grid[row + i][col] != word[i]) {
+              canPlace = false;
+              break;
+            }
+          }
+          if (canPlace) {
+            for (int i = 0; i < word.length; i++) {
+              grid[row + i][col] = word[i];
+            }
+            placedWord = true;
+          }
+        }
+      }
+      if (placedWord) placed.add(word);
+    }
+    // Fill empty cells with random letters
+    for (int r = 0; r < gridSize; r++) {
+      for (int c = 0; c < gridSize; c++) {
+        if (grid[r][c] == '') {
+          grid[r][c] = String.fromCharCode(rand.nextInt(26) + 65); // A-Z
+        }
+      }
+    }
+    return grid;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Use target language words in the grid, source language as hints
+    final wordList = words.map((w) => w.target.toUpperCase()).toList();
+    final gridSize = (wordList.fold<int>(0, (p, w) => w.length > p ? w.length : p)).clamp(6, 12);
+    final grid = _generateGrid(gridSize, wordList);
+    const double cellSize = 36.0; // Fixed size for each cell
+    final double gridPixelSize = gridSize * cellSize;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Word Search')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Word search grid
+                SizedBox(
+                  width: gridPixelSize,
+                  height: gridPixelSize,
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: gridSize * gridSize,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: gridSize,
+                      childAspectRatio: 1.0,
+                    ),
+                    itemBuilder: (context, index) {
+                      final row = index ~/ gridSize;
+                      final col = index % gridSize;
+                      return Container(
+                        width: cellSize,
+                        height: cellSize,
+                        margin: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.blueGrey),
+                          color: Colors.white,
+                        ),
+                        child: Center(
+                          child: Text(
+                            grid[row][col],
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Hints (Source Language):',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 12,
+                  children: words.map((w) => Chip(label: Text(w.source))).toList(),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

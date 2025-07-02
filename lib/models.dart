@@ -1,16 +1,16 @@
 class Word {
-  final String text;
-  final String translation;
+  final String source;
+  final String target;
 
-  Word({required this.text, required this.translation});
+  Word({required this.source, required this.target});
 
   Map<String, dynamic> toJson() => {
-    'text': text,
-    'translation': translation,
+    'source': source,
+    'target': target,
   };
 
   factory Word.fromJson(Map<String, dynamic> json) => Word(
-    text: json['text'] as String,
-    translation: json['translation'] as String,
+    source: json['source'] as String,
+    target: json['target'] as String,
   );
 } 
