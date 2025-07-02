@@ -32,6 +32,7 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
+    WelcomeScreen(),
     HomeScreen(),
     ExercisesHomeScreen(),
   ];
@@ -49,6 +50,10 @@ class _MainScreenState extends State<MainScreen> {
         },
         items: const [
           BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Welcome',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.list),
             label: 'Vocabulary',
           ),
@@ -57,6 +62,20 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Exercises',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class WelcomeScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: Text(
+          'Welcome to Lexikon!',
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
