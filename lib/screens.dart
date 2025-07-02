@@ -3,6 +3,9 @@ import 'models.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:csv/csv.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -198,6 +201,65 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             child: const Icon(Icons.quiz),
             tooltip: 'Flashcards',
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: 'importCSV',
+            onPressed: () async {
+              FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
+              if (result != null && result.files.single.path != null) {
+                final file = File(result.files.single.path!);
+                final content = await file.readAsString();
+                final rows = const CsvToListConverter().convert(content, eol: '\n');
+                List<Word> importedWords = [];
+                for (var row in rows) {
+                  if (row.length >= 2 && row[0] is String && row[1] is String) {
+                    importedWords.add(Word(text: row[0], translation: row[1]));
+                  }
+                }
+                if (importedWords.isNotEmpty) {
+                  final action = await showDialog<String>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Import Words'),
+                      content: const Text('Do you want to add the imported words to the existing list, or overwrite the list completely?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, 'add'),
+                          child: const Text('Add'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, 'overwrite'),
+                          child: const Text('Overwrite'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, null),
+                          child: const Text('Cancel'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (action == 'add') {
+                    setState(() {
+                      _words.addAll(importedWords);
+                    });
+                    await _saveWords();
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Words added successfully.')));
+                  } else if (action == 'overwrite') {
+                    setState(() {
+                      _words.clear();
+                      _words.addAll(importedWords);
+                    });
+                    await _saveWords();
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Word list overwritten successfully.')));
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No valid words found in CSV.')));
+                }
+              }
+            },
+            child: const Icon(Icons.upload_file),
+            tooltip: 'Import CSV',
           ),
         ],
       ),
