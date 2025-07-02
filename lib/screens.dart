@@ -473,14 +473,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   }
 }
 
-class ExercisesHomeScreen extends StatefulWidget {
-  const ExercisesHomeScreen({super.key});
+class PracticeHomeScreen extends StatefulWidget {
+  const PracticeHomeScreen({super.key});
 
   @override
-  State<ExercisesHomeScreen> createState() => _ExercisesHomeScreenState();
+  State<PracticeHomeScreen> createState() => _PracticeHomeScreenState();
 }
 
-class _ExercisesHomeScreenState extends State<ExercisesHomeScreen> {
+class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
   List<Word> _words = [];
 
   @override
@@ -500,7 +500,7 @@ class _ExercisesHomeScreenState extends State<ExercisesHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Exercises')),
+      appBar: AppBar(title: const Text('Practice')),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
