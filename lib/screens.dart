@@ -140,70 +140,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
           FloatingActionButton(
-            heroTag: 'exercise',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ExerciseScreen(words: _words)),
-              );
-            },
-            child: const Icon(Icons.school),
-            tooltip: 'Practice',
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: 'flashcards',
-            onPressed: () async {
-              if (_words.isEmpty) return;
-              final count = await showDialog<int>(
-                context: context,
-                builder: (context) {
-                  int selected = _words.length;
-                  return AlertDialog(
-                    title: const Text('How many words to practice?'),
-                    content: StatefulBuilder(
-                      builder: (context, setState) => Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Slider(
-                            value: selected.toDouble(),
-                            min: 1,
-                            max: _words.length.toDouble(),
-                            divisions: _words.length - 1,
-                            label: selected.toString(),
-                            onChanged: (v) => setState(() => selected = v.round()),
-                          ),
-                          Text('Words: $selected'),
-                        ],
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, selected),
-                        child: const Text('Start'),
-                      ),
-                    ],
-                  );
-                },
-              );
-              if (count != null && count > 0) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FlashcardScreen(words: _words, count: count),
-                  ),
-                );
-              }
-            },
-            child: const Icon(Icons.quiz),
-            tooltip: 'Flashcards',
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
             heroTag: 'importCSV',
             onPressed: () async {
               FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
@@ -532,6 +468,103 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             Text('Progress: ${_current + 1} / ${_quizWords.length}'),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class ExercisesHomeScreen extends StatefulWidget {
+  const ExercisesHomeScreen({super.key});
+
+  @override
+  State<ExercisesHomeScreen> createState() => _ExercisesHomeScreenState();
+}
+
+class _ExercisesHomeScreenState extends State<ExercisesHomeScreen> {
+  List<Word> _words = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWords();
+  }
+
+  Future<void> _loadWords() async {
+    final prefs = await SharedPreferences.getInstance();
+    final wordsJson = prefs.getStringList('words') ?? [];
+    setState(() {
+      _words = wordsJson.map((w) => Word.fromJson(jsonDecode(w))).toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Exercises')),
+      body: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          ListTile(
+            leading: const Icon(Icons.school),
+            title: const Text('Practice'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ExerciseScreen(words: _words)),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.quiz),
+            title: const Text('Flashcards'),
+            onTap: () async {
+              if (_words.isEmpty) return;
+              final count = await showDialog<int>(
+                context: context,
+                builder: (context) {
+                  int selected = _words.length;
+                  return AlertDialog(
+                    title: const Text('How many words to practice?'),
+                    content: StatefulBuilder(
+                      builder: (context, setState) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Slider(
+                            value: selected.toDouble(),
+                            min: 1,
+                            max: _words.length.toDouble(),
+                            divisions: _words.length - 1,
+                            label: selected.toString(),
+                            onChanged: (v) => setState(() => selected = v.round()),
+                          ),
+                          Text('Words: $selected'),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, selected),
+                        child: const Text('Start'),
+                      ),
+                    ],
+                  );
+                },
+              );
+              if (count != null && count > 0) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FlashcardScreen(words: _words, count: count),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
       ),
     );
   }
