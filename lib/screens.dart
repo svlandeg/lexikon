@@ -579,7 +579,7 @@ class WordSearchScreen extends StatelessWidget {
   final List<Word> words;
   const WordSearchScreen({super.key, required this.words});
 
-  List<List<String>> _generateGrid(int gridSize, List<String> wordList) {
+  List<List<String>> _generateGrid(int gridSize, List<String> wordList, {List<String>? actuallyPlaced}) {
     // Initialize empty grid
     final grid = List.generate(gridSize, (_) => List.generate(gridSize, (_) => ''));
     final rand = Random();
@@ -637,6 +637,10 @@ class WordSearchScreen extends StatelessWidget {
         }
       }
     }
+    if (actuallyPlaced != null) {
+      actuallyPlaced.clear();
+      actuallyPlaced.addAll(placed);
+    }
     return grid;
   }
 
@@ -645,9 +649,12 @@ class WordSearchScreen extends StatelessWidget {
     // Use target language words in the grid, source language as hints
     final wordList = words.map((w) => w.target.toUpperCase()).toList();
     final gridSize = (wordList.fold<int>(0, (p, w) => w.length > p ? w.length : p)).clamp(6, 12);
-    final grid = _generateGrid(gridSize, wordList);
+    final List<String> placedWords = [];
+    final grid = _generateGrid(gridSize, wordList, actuallyPlaced: placedWords);
     const double cellSize = 36.0; // Fixed size for each cell
     final double gridPixelSize = gridSize * cellSize;
+    // Only show hints for placed words
+    final placedSourceWords = words.where((w) => placedWords.contains(w.target.toUpperCase())).map((w) => w.source).toList();
     return Scaffold(
       appBar: AppBar(title: const Text('Word Search')),
       body: SafeArea(
@@ -699,7 +706,7 @@ class WordSearchScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 12,
-                  children: words.map((w) => Chip(label: Text(w.source))).toList(),
+                  children: placedSourceWords.map((src) => Chip(label: Text(src))).toList(),
                 ),
               ],
             ),
