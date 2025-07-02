@@ -97,8 +97,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text('Delete Word'),
-                        content: const Text('Are you sure you want to delete this word?'),
+                        title: const Text('Delete Entry'),
+                        content: const Text('Are you sure you want to delete this entry?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
@@ -157,8 +157,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   final action = await showDialog<String>(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('Import Words'),
-                      content: const Text('Do you want to add the imported words to the existing list, or overwrite the list completely?'),
+                      title: const Text('Import Entries'),
+                      content: const Text('Do you want to add the imported entries to the existing list, or overwrite the list completely?'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, 'add'),
@@ -180,17 +180,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       _words.addAll(importedWords);
                     });
                     await _saveWords();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Words added successfully.')));
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entries added successfully.')));
                   } else if (action == 'overwrite') {
                     setState(() {
                       _words.clear();
                       _words.addAll(importedWords);
                     });
                     await _saveWords();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Word list overwritten successfully.')));
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vocabulary list overwritten successfully.')));
                   }
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No valid words found in CSV.')));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No valid entries found in CSV.')));
                 }
               }
             },
@@ -234,7 +234,7 @@ class _AddWordScreenState extends State<AddWordScreen> {
   Widget build(BuildContext context) {
     final isEditing = widget.initialWord != null;
     return Scaffold(
-      appBar: AppBar(title: Text(isEditing ? 'Edit Word' : 'Add Word')),
+      appBar: AppBar(title: Text(isEditing ? 'Edit Entry' : 'Add Entry')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -243,13 +243,13 @@ class _AddWordScreenState extends State<AddWordScreen> {
             children: [
               TextFormField(
                 controller: _wordController,
-                decoration: const InputDecoration(labelText: 'Word'),
-                validator: (value) => value == null || value.isEmpty ? 'Enter a word' : null,
+                decoration: const InputDecoration(labelText: 'Source Language'),
+                validator: (value) => value == null || value.isEmpty ? 'Enter a source language word' : null,
               ),
               TextFormField(
                 controller: _translationController,
-                decoration: const InputDecoration(labelText: 'Translation'),
-                validator: (value) => value == null || value.isEmpty ? 'Enter a translation' : null,
+                decoration: const InputDecoration(labelText: 'Target Language'),
+                validator: (value) => value == null || value.isEmpty ? 'Enter a target language word' : null,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -283,7 +283,7 @@ class ExerciseScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Practice')),
       body: Center(
-        child: Text('Exercise screen coming soon! (${words.length} words)'),
+        child: Text('Exercise screen coming soon! (${words.length} entries)'),
       ),
     );
   }
@@ -409,7 +409,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Word:', style: Theme.of(context).textTheme.titleLarge),
+            Text('Source Language:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(word.text, style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 32),
@@ -434,7 +434,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       controller: _controller,
                       focusNode: _inputFocusNode,
                       decoration: const InputDecoration(
-                        labelText: 'Type the translation',
+                        labelText: 'Type the target language equivalent',
                         border: OutlineInputBorder(),
                       ),
                       onSubmitted: (_) => _submit(),
