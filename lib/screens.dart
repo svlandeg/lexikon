@@ -505,16 +505,6 @@ class _ExercisesHomeScreenState extends State<ExercisesHomeScreen> {
         padding: const EdgeInsets.all(24),
         children: [
           ListTile(
-            leading: const Icon(Icons.school),
-            title: const Text('Practice'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ExerciseScreen(words: _words)),
-              );
-            },
-          ),
-          ListTile(
             leading: const Icon(Icons.quiz),
             title: const Text('Flashcards'),
             onTap: () async {
