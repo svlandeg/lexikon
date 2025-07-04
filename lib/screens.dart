@@ -730,19 +730,35 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     // Get the word
     List<String> selected = [];
     if (start[0] == end[0]) {
-      // Horizontal
+      // Horizontal - only allow left to right selection
       int row = start[0];
-      int minCol = start[1] < end[1] ? start[1] : end[1];
-      int maxCol = start[1] > end[1] ? start[1] : end[1];
-      for (int c = minCol; c <= maxCol; c++) {
+      if (start[1] > end[1]) {
+        // User selected right to left, which is not allowed
+        setState(() {
+          _selectStartRow = null;
+          _selectStartCol = null;
+          _selectEndRow = null;
+          _selectEndCol = null;
+        });
+        return;
+      }
+      for (int c = start[1]; c <= end[1]; c++) {
         selected.add(_grid[row][c]);
       }
     } else {
-      // Vertical
+      // Vertical - only allow top to bottom selection
       int col = start[1];
-      int minRow = start[0] < end[0] ? start[0] : end[0];
-      int maxRow = start[0] > end[0] ? start[0] : end[0];
-      for (int r = minRow; r <= maxRow; r++) {
+      if (start[0] > end[0]) {
+        // User selected bottom to top, which is not allowed
+        setState(() {
+          _selectStartRow = null;
+          _selectStartCol = null;
+          _selectEndRow = null;
+          _selectEndCol = null;
+        });
+        return;
+      }
+      for (int r = start[0]; r <= end[0]; r++) {
         selected.add(_grid[r][col]);
       }
     }
@@ -799,18 +815,20 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     final end = [_selectEndRow!, _selectEndCol!];
     List<int> cells = [];
     if (start[0] == end[0]) {
-      int row = start[0];
-      int minCol = start[1] < end[1] ? start[1] : end[1];
-      int maxCol = start[1] > end[1] ? start[1] : end[1];
-      for (int c = minCol; c <= maxCol; c++) {
-        cells.add(row * _gridSize + c);
+      // Horizontal - only highlight if left to right
+      if (start[1] <= end[1]) {
+        int row = start[0];
+        for (int c = start[1]; c <= end[1]; c++) {
+          cells.add(row * _gridSize + c);
+        }
       }
     } else if (start[1] == end[1]) {
-      int col = start[1];
-      int minRow = start[0] < end[0] ? start[0] : end[0];
-      int maxRow = start[0] > end[0] ? start[0] : end[0];
-      for (int r = minRow; r <= maxRow; r++) {
-        cells.add(r * _gridSize + col);
+      // Vertical - only highlight if top to bottom
+      if (start[0] <= end[0]) {
+        int col = start[1];
+        for (int r = start[0]; r <= end[0]; r++) {
+          cells.add(r * _gridSize + col);
+        }
       }
     }
     return cells;
@@ -926,4 +944,5 @@ class _FoundWord {
   final List<int> end;
   final bool isHorizontal;
   _FoundWord({required this.index, required this.word, required this.start, required this.end, required this.isHorizontal});
+} 
 } 
