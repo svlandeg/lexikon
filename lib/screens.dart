@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
+import 'dart:math';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -68,8 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (context, index) {
           final word = _words[index];
           return ListTile(
-            title: Text(word.text),
-            subtitle: Text(word.translation),
+            title: Text(word.source),
+            subtitle: Text(word.target),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -150,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 List<Word> importedWords = [];
                 for (var row in rows) {
                   if (row.length >= 2 && row[0] is String && row[1] is String) {
-                    importedWords.add(Word(text: row[0], translation: row[1]));
+                    importedWords.add(Word(source: row[0], target: row[1]));
                   }
                 }
                 if (importedWords.isNotEmpty) {
@@ -213,20 +214,20 @@ class AddWordScreen extends StatefulWidget {
 
 class _AddWordScreenState extends State<AddWordScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _wordController;
-  late final TextEditingController _translationController;
+  late final TextEditingController _sourceController;
+  late final TextEditingController _targetController;
 
   @override
   void initState() {
     super.initState();
-    _wordController = TextEditingController(text: widget.initialWord?.text ?? '');
-    _translationController = TextEditingController(text: widget.initialWord?.translation ?? '');
+    _sourceController = TextEditingController(text: widget.initialWord?.source ?? '');
+    _targetController = TextEditingController(text: widget.initialWord?.target ?? '');
   }
 
   @override
   void dispose() {
-    _wordController.dispose();
-    _translationController.dispose();
+    _sourceController.dispose();
+    _targetController.dispose();
     super.dispose();
   }
 
@@ -242,12 +243,12 @@ class _AddWordScreenState extends State<AddWordScreen> {
           child: Column(
             children: [
               TextFormField(
-                controller: _wordController,
+                controller: _sourceController,
                 decoration: const InputDecoration(labelText: 'Source Language'),
                 validator: (value) => value == null || value.isEmpty ? 'Enter a source language word' : null,
               ),
               TextFormField(
-                controller: _translationController,
+                controller: _targetController,
                 decoration: const InputDecoration(labelText: 'Target Language'),
                 validator: (value) => value == null || value.isEmpty ? 'Enter a target language word' : null,
               ),
@@ -258,8 +259,8 @@ class _AddWordScreenState extends State<AddWordScreen> {
                     Navigator.pop(
                       context,
                       Word(
-                        text: _wordController.text,
-                        translation: _translationController.text,
+                        source: _sourceController.text,
+                        target: _targetController.text,
                       ),
                     );
                   }
@@ -355,18 +356,18 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       return;
     }
     final userInput = _controller.text.trim().toLowerCase();
-    final correctAnswer = _quizWords[_current].translation.trim().toLowerCase();
+    final correctAnswer = _quizWords[_current].target.trim().toLowerCase();
     if (userInput == correctAnswer) {
       setState(() {
         _correct++;
-        _feedback = 'Correct! The translation is: ${_quizWords[_current].translation}';
+        _feedback = 'Correct! The translation is: ${_quizWords[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
     } else {
       setState(() {
         _incorrect++;
-        _feedback = 'Incorrect. The correct answer is: ${_quizWords[_current].translation}';
+        _feedback = 'Incorrect. The correct answer is: ${_quizWords[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
@@ -411,7 +412,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
           children: [
             Text('Source Language:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            Text(word.text, style: Theme.of(context).textTheme.headlineMedium),
+            Text(word.source, style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 32),
             RawKeyboardListener(
               focusNode: _keyboardFocusNode,
@@ -473,14 +474,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   }
 }
 
-class ExercisesHomeScreen extends StatefulWidget {
-  const ExercisesHomeScreen({super.key});
+class PracticeHomeScreen extends StatefulWidget {
+  const PracticeHomeScreen({super.key});
 
   @override
-  State<ExercisesHomeScreen> createState() => _ExercisesHomeScreenState();
+  State<PracticeHomeScreen> createState() => _PracticeHomeScreenState();
 }
 
-class _ExercisesHomeScreenState extends State<ExercisesHomeScreen> {
+class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
   List<Word> _words = [];
 
   @override
@@ -500,7 +501,7 @@ class _ExercisesHomeScreenState extends State<ExercisesHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Exercises')),
+      appBar: AppBar(title: const Text('Practice')),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -554,8 +555,394 @@ class _ExercisesHomeScreenState extends State<ExercisesHomeScreen> {
               }
             },
           ),
+          // Word Search Practice
+          ListTile(
+            leading: const Icon(Icons.grid_on),
+            title: const Text('Word Search'),
+            onTap: () {
+              if (_words.isEmpty) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WordSearchScreen(words: _words),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
   }
+}
+
+class WordSearchScreen extends StatefulWidget {
+  final List<Word> words;
+  const WordSearchScreen({super.key, required this.words});
+
+  @override
+  State<WordSearchScreen> createState() => _WordSearchScreenState();
+}
+
+class _WordSearchScreenState extends State<WordSearchScreen> {
+  static const int _numPairs = 3;
+  late List<Word> _selectedWords;
+  late List<List<String>> _grid;
+  late int _gridSize;
+  late List<_PlacedWord> _placedWords;
+  Set<int> _foundWordIndexes = {};
+  List<_FoundWord> _foundWords = [];
+  int? _selectStartRow;
+  int? _selectStartCol;
+  int? _selectEndRow;
+  int? _selectEndCol;
+
+  @override
+  void initState() {
+    super.initState();
+    _initGame();
+  }
+
+  void _initGame() {
+    // Select 3 random pairs from the vocabulary
+    final rand = Random();
+    final allWords = List<Word>.from(widget.words);
+    allWords.shuffle(rand);
+    _selectedWords = allWords.take(_numPairs).toList();
+    final wordList = _selectedWords.map((w) => w.target.trim().toUpperCase()).toList();
+    _gridSize = (wordList.fold<int>(0, (p, w) => w.length > p ? w.length : p)).clamp(6, 12);
+    _placedWords = [];
+    _grid = _generateGrid(_gridSize, wordList, actuallyPlaced: _placedWords);
+    _foundWordIndexes.clear();
+    _foundWords.clear();
+    _selectStartRow = null;
+    _selectStartCol = null;
+    _selectEndRow = null;
+    _selectEndCol = null;
+  }
+
+  List<List<String>> _generateGrid(int gridSize, List<String> wordList, {List<_PlacedWord>? actuallyPlaced}) {
+    final grid = List.generate(gridSize, (_) => List.generate(gridSize, (_) => ''));
+    final rand = Random();
+    final placed = <_PlacedWord>[];
+    for (final word in wordList) {
+      final isHorizontal = rand.nextBool();
+      final maxStart = gridSize - word.length;
+      if (maxStart < 0) continue;
+      int row = 0, col = 0;
+      bool placedWord = false;
+      for (int attempt = 0; attempt < 100 && !placedWord; attempt++) {
+        if (isHorizontal) {
+          row = rand.nextInt(gridSize);
+          col = rand.nextInt(maxStart + 1);
+          bool canPlace = true;
+          for (int i = 0; i < word.length; i++) {
+            if (grid[row][col + i] != '' && grid[row][col + i] != word[i]) {
+              canPlace = false;
+              break;
+            }
+          }
+          if (canPlace) {
+            for (int i = 0; i < word.length; i++) {
+              grid[row][col + i] = word[i];
+            }
+            placedWord = true;
+            placed.add(_PlacedWord(
+              word: word,
+              start: [row, col],
+              end: [row, col + word.length - 1],
+              isHorizontal: true,
+            ));
+          }
+        } else {
+          row = rand.nextInt(maxStart + 1);
+          col = rand.nextInt(gridSize);
+          bool canPlace = true;
+          for (int i = 0; i < word.length; i++) {
+            if (grid[row + i][col] != '' && grid[row + i][col] != word[i]) {
+              canPlace = false;
+              break;
+            }
+          }
+          if (canPlace) {
+            for (int i = 0; i < word.length; i++) {
+              grid[row + i][col] = word[i];
+            }
+            placedWord = true;
+            placed.add(_PlacedWord(
+              word: word,
+              start: [row, col],
+              end: [row + word.length - 1, col],
+              isHorizontal: false,
+            ));
+          }
+        }
+      }
+    }
+    for (int r = 0; r < gridSize; r++) {
+      for (int c = 0; c < gridSize; c++) {
+        if (grid[r][c] == '') {
+          grid[r][c] = String.fromCharCode(rand.nextInt(26) + 65);
+        }
+      }
+    }
+    if (actuallyPlaced != null) {
+      actuallyPlaced.clear();
+      actuallyPlaced.addAll(placed);
+    }
+    return grid;
+  }
+
+  void _onCellTap(int row, int col) {
+    setState(() {
+      if (_selectStartRow == null || _selectStartCol == null) {
+        _selectStartRow = row;
+        _selectStartCol = col;
+        _selectEndRow = null;
+        _selectEndCol = null;
+      } else if (_selectEndRow == null || _selectEndCol == null) {
+        // Only allow straight lines
+        if (row == _selectStartRow || col == _selectStartCol) {
+          _selectEndRow = row;
+          _selectEndCol = col;
+          _checkSelection();
+        } else {
+          // Reset if not straight
+          _selectStartRow = row;
+          _selectStartCol = col;
+          _selectEndRow = null;
+          _selectEndCol = null;
+        }
+      } else {
+        _selectStartRow = row;
+        _selectStartCol = col;
+        _selectEndRow = null;
+        _selectEndCol = null;
+      }
+    });
+  }
+
+  void _checkSelection() {
+    if (_selectStartRow == null || _selectStartCol == null || _selectEndRow == null || _selectEndCol == null) return;
+    final start = [_selectStartRow!, _selectStartCol!];
+    final end = [_selectEndRow!, _selectEndCol!];
+    // Only allow horizontal or vertical
+    if (start[0] != end[0] && start[1] != end[1]) return;
+    // Get the word
+    List<String> selected = [];
+    if (start[0] == end[0]) {
+      // Horizontal - only allow left to right selection
+      int row = start[0];
+      if (start[1] > end[1]) {
+        // User selected right to left, which is not allowed
+        setState(() {
+          _selectStartRow = null;
+          _selectStartCol = null;
+          _selectEndRow = null;
+          _selectEndCol = null;
+        });
+        return;
+      }
+      for (int c = start[1]; c <= end[1]; c++) {
+        selected.add(_grid[row][c]);
+      }
+    } else {
+      // Vertical - only allow top to bottom selection
+      int col = start[1];
+      if (start[0] > end[0]) {
+        // User selected bottom to top, which is not allowed
+        setState(() {
+          _selectStartRow = null;
+          _selectStartCol = null;
+          _selectEndRow = null;
+          _selectEndCol = null;
+        });
+        return;
+      }
+      for (int r = start[0]; r <= end[0]; r++) {
+        selected.add(_grid[r][col]);
+      }
+    }
+    final selectedWord = selected.join();
+    // Check if matches any placed word and not already found
+    bool found = false;
+    for (int i = 0; i < _placedWords.length; i++) {
+      if (_foundWordIndexes.contains(i)) continue;
+      if (_placedWords[i].word == selectedWord) {
+        setState(() {
+          _foundWordIndexes.add(i);
+          _foundWords.add(_FoundWord(
+            index: i,
+            word: selectedWord,
+            start: _placedWords[i].start,
+            end: _placedWords[i].end,
+            isHorizontal: _placedWords[i].isHorizontal,
+          ));
+        });
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      // Keep highlight for a short delay before resetting
+      Future.delayed(const Duration(milliseconds: 600), () {
+        if (mounted) {
+          setState(() {
+            _selectStartRow = null;
+            _selectStartCol = null;
+            _selectEndRow = null;
+            _selectEndCol = null;
+          });
+        }
+      });
+    } else {
+      // Reset selection immediately if not found
+      setState(() {
+        _selectStartRow = null;
+        _selectStartCol = null;
+        _selectEndRow = null;
+        _selectEndCol = null;
+      });
+    }
+  }
+
+  List<int> _getSelectedCells() {
+    // If only start cell is set, highlight it
+    if (_selectStartRow != null && _selectStartCol != null && (_selectEndRow == null || _selectEndCol == null)) {
+      return [_selectStartRow! * _gridSize + _selectStartCol!];
+    }
+    if (_selectStartRow == null || _selectStartCol == null || _selectEndRow == null || _selectEndCol == null) return [];
+    final start = [_selectStartRow!, _selectStartCol!];
+    final end = [_selectEndRow!, _selectEndCol!];
+    List<int> cells = [];
+    if (start[0] == end[0]) {
+      // Horizontal - only highlight if left to right
+      if (start[1] <= end[1]) {
+        int row = start[0];
+        for (int c = start[1]; c <= end[1]; c++) {
+          cells.add(row * _gridSize + c);
+        }
+      }
+    } else if (start[1] == end[1]) {
+      // Vertical - only highlight if top to bottom
+      if (start[0] <= end[0]) {
+        int col = start[1];
+        for (int r = start[0]; r <= end[0]; r++) {
+          cells.add(r * _gridSize + col);
+        }
+      }
+    }
+    return cells;
+  }
+
+  bool _isCellInFoundWord(int row, int col) {
+    for (final fw in _foundWords) {
+      if (fw.isHorizontal) {
+        if (row == fw.start[0] && col >= fw.start[1] && col <= fw.end[1]) return true;
+      } else {
+        if (col == fw.start[1] && row >= fw.start[0] && row <= fw.end[0]) return true;
+      }
+    }
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const double cellSize = 36.0;
+    final double gridPixelSize = _gridSize * cellSize;
+    final selectedCells = _getSelectedCells();
+    return Scaffold(
+      appBar: AppBar(title: const Text('Word Search')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(
+                  width: gridPixelSize,
+                  height: gridPixelSize,
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _gridSize * _gridSize,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: _gridSize,
+                      childAspectRatio: 1.0,
+                    ),
+                    itemBuilder: (context, index) {
+                      final row = index ~/ _gridSize;
+                      final col = index % _gridSize;
+                      final isSelected = selectedCells.contains(index);
+                      final isFound = _isCellInFoundWord(row, col);
+                      return GestureDetector(
+                        onTap: () => _onCellTap(row, col),
+                        child: Container(
+                          width: cellSize,
+                          height: cellSize,
+                          margin: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.blueGrey),
+                            color: isFound
+                                ? Colors.greenAccent
+                                : isSelected
+                                    ? Colors.yellowAccent
+                                    : Colors.white,
+                          ),
+                          child: Center(
+                            child: Text(
+                              _grid[row][col],
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Hints (Source Language):',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 12,
+                  children: _selectedWords
+                      .map((w) => Chip(label: Text(w.source)))
+                      .toList(),
+                ),
+                const SizedBox(height: 24),
+                Text('Found: ${_foundWords.length} / $_numPairs', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () => setState(_initGame),
+                  child: const Text('Restart'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PlacedWord {
+  final String word;
+  final List<int> start;
+  final List<int> end;
+  final bool isHorizontal;
+  _PlacedWord({required this.word, required this.start, required this.end, required this.isHorizontal});
+}
+
+class _FoundWord {
+  final int index;
+  final String word;
+  final List<int> start;
+  final List<int> end;
+  final bool isHorizontal;
+  _FoundWord({required this.index, required this.word, required this.start, required this.end, required this.isHorizontal});
+} 
 } 

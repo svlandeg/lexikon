@@ -34,7 +34,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     WelcomeScreen(),
     HomeScreen(),
-    ExercisesHomeScreen(),
+    PracticeHomeScreen(),
   ];
 
   @override
@@ -59,7 +59,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.school),
-            label: 'Exercises',
+            label: 'Practice',
           ),
         ],
       ),
