@@ -122,82 +122,82 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: 'addWord',
-            onPressed: () async {
-              final result = await Navigator.push<Word>(
-                context,
-                MaterialPageRoute(builder: (context) => const AddWordScreen()),
-              );
-              if (result != null) {
-                _addWord(result);
-              }
-            },
-            child: const Icon(Icons.add),
-            tooltip: 'Add Word',
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: 'importCSV',
-            onPressed: () async {
-              FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
-              if (result != null && result.files.single.path != null) {
-                final file = File(result.files.single.path!);
-                final content = await file.readAsString();
-                final rows = const CsvToListConverter().convert(content, eol: '\n');
-                List<Word> importedWords = [];
-                for (var row in rows) {
-                  if (row.length >= 2 && row[0] is String && row[1] is String) {
-                    importedWords.add(Word(source: row[0], target: row[1]));
+              floatingActionButton: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              heroTag: 'addWord',
+              onPressed: () async {
+                final result = await Navigator.push<Word>(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddWordScreen()),
+                );
+                if (result != null) {
+                  _addWord(result);
+                }
+              },
+              child: const Icon(Icons.add),
+              tooltip: 'Add Word',
+            ),
+            const SizedBox(height: 16),
+            FloatingActionButton(
+              heroTag: 'importCSV',
+              onPressed: () async {
+                FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
+                if (result != null && result.files.single.path != null) {
+                  final file = File(result.files.single.path!);
+                  final content = await file.readAsString();
+                  final rows = const CsvToListConverter().convert(content, eol: '\n');
+                  List<Word> importedWords = [];
+                  for (var row in rows) {
+                    if (row.length >= 2 && row[0] is String && row[1] is String) {
+                      importedWords.add(Word(source: row[0], target: row[1]));
+                    }
+                  }
+                  if (importedWords.isNotEmpty) {
+                    final action = await showDialog<String>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Import Entries'),
+                        content: const Text('Do you want to add the imported entries to the existing list, or overwrite the list completely?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, 'add'),
+                            child: const Text('Add'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, 'overwrite'),
+                            child: const Text('Overwrite'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, null),
+                            child: const Text('Cancel'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (action == 'add') {
+                      setState(() {
+                        _words.addAll(importedWords);
+                      });
+                      await _saveWords();
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entries added successfully.')));
+                    } else if (action == 'overwrite') {
+                      setState(() {
+                        _words.clear();
+                        _words.addAll(importedWords);
+                      });
+                      await _saveWords();
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vocabulary list overwritten successfully.')));
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No valid entries found in CSV.')));
                   }
                 }
-                if (importedWords.isNotEmpty) {
-                  final action = await showDialog<String>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Import Entries'),
-                      content: const Text('Do you want to add the imported entries to the existing list, or overwrite the list completely?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, 'add'),
-                          child: const Text('Add'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, 'overwrite'),
-                          child: const Text('Overwrite'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, null),
-                          child: const Text('Cancel'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (action == 'add') {
-                    setState(() {
-                      _words.addAll(importedWords);
-                    });
-                    await _saveWords();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entries added successfully.')));
-                  } else if (action == 'overwrite') {
-                    setState(() {
-                      _words.clear();
-                      _words.addAll(importedWords);
-                    });
-                    await _saveWords();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vocabulary list overwritten successfully.')));
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No valid entries found in CSV.')));
-                }
-              }
-            },
-            child: const Icon(Icons.upload_file),
-            tooltip: 'Import CSV',
-          ),
+              },
+              child: const Icon(Icons.upload_file),
+              tooltip: 'Import CSV',
+            ),
         ],
       ),
     );
@@ -385,8 +385,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             children: [
               Text('Quiz complete!', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 16),
-              Text('Correct: [32m$_correct[0m'),
-              Text('Incorrect: [31m$_incorrect[0m'),
+              Text('Correct:  [32m$_correct [0m'),
+              Text('Incorrect:  [31m$_incorrect [0m'),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
@@ -944,5 +944,4 @@ class _FoundWord {
   final List<int> end;
   final bool isHorizontal;
   _FoundWord({required this.index, required this.word, required this.start, required this.end, required this.isHorizontal});
-} 
 } 
