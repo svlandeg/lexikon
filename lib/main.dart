@@ -34,6 +34,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const WelcomeScreen(),
     const VocabularyListScreen(),
+    const PracticeScreen(),
   ];
 
   @override
@@ -55,6 +56,10 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.book),
             label: 'Vocabularies',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school),
+            label: 'Practice',
           ),
         ],
       ),
