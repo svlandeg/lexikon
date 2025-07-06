@@ -188,6 +188,8 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _sourceLanguageController;
   late final TextEditingController _targetLanguageController;
+  late ReadingDirection _sourceReadingDirection;
+  late ReadingDirection _targetReadingDirection;
 
   @override
   void initState() {
@@ -195,6 +197,8 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
     _nameController = TextEditingController(text: widget.initialVocabulary?.name ?? '');
     _sourceLanguageController = TextEditingController(text: widget.initialVocabulary?.sourceLanguage ?? '');
     _targetLanguageController = TextEditingController(text: widget.initialVocabulary?.targetLanguage ?? '');
+    _sourceReadingDirection = widget.initialVocabulary?.sourceReadingDirection ?? ReadingDirection.leftToRight;
+    _targetReadingDirection = widget.initialVocabulary?.targetReadingDirection ?? ReadingDirection.leftToRight;
   }
 
   @override
@@ -242,6 +246,46 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
               ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<ReadingDirection>(
+                value: _sourceReadingDirection,
+                decoration: const InputDecoration(
+                  labelText: 'Source Language Reading Direction',
+                ),
+                items: ReadingDirection.values.map((direction) {
+                  return DropdownMenuItem<ReadingDirection>(
+                    value: direction,
+                    child: Text(direction.displayName),
+                  );
+                }).toList(),
+                onChanged: (ReadingDirection? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _sourceReadingDirection = newValue;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<ReadingDirection>(
+                value: _targetReadingDirection,
+                decoration: const InputDecoration(
+                  labelText: 'Target Language Reading Direction',
+                ),
+                items: ReadingDirection.values.map((direction) {
+                  return DropdownMenuItem<ReadingDirection>(
+                    value: direction,
+                    child: Text(direction.displayName),
+                  );
+                }).toList(),
+                onChanged: (ReadingDirection? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _targetReadingDirection = newValue;
+                    });
+                  }
+                },
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
@@ -252,6 +296,8 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                       name: _nameController.text,
                       sourceLanguage: _sourceLanguageController.text,
                       targetLanguage: _targetLanguageController.text,
+                      sourceReadingDirection: _sourceReadingDirection,
+                      targetReadingDirection: _targetReadingDirection,
                       words: widget.initialVocabulary?.words ?? [],
                       createdAt: widget.initialVocabulary?.createdAt ?? now,
                       updatedAt: now,
@@ -345,7 +391,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${_vocabulary.sourceLanguage} → ${_vocabulary.targetLanguage}',
+                        '${_vocabulary.sourceLanguage} (${_vocabulary.sourceReadingDirection.displayName}) → ${_vocabulary.targetLanguage} (${_vocabulary.targetReadingDirection.displayName})',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(
@@ -400,6 +446,8 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                                       initialWord: word,
                                       sourceLanguage: _vocabulary.sourceLanguage,
                                       targetLanguage: _vocabulary.targetLanguage,
+                                      sourceReadingDirection: _vocabulary.sourceReadingDirection,
+                                      targetReadingDirection: _vocabulary.targetReadingDirection,
                                     ),
                                   ),
                                 );
@@ -454,6 +502,8 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     builder: (context) => AddWordScreen(
                       sourceLanguage: _vocabulary.sourceLanguage,
                       targetLanguage: _vocabulary.targetLanguage,
+                      sourceReadingDirection: _vocabulary.sourceReadingDirection,
+                      targetReadingDirection: _vocabulary.targetReadingDirection,
                     ),
                   ),
                 );
@@ -540,7 +590,16 @@ class AddWordScreen extends StatefulWidget {
   final Word? initialWord;
   final String sourceLanguage;
   final String targetLanguage;
-  const AddWordScreen({super.key, this.initialWord, required this.sourceLanguage, required this.targetLanguage});
+  final ReadingDirection sourceReadingDirection;
+  final ReadingDirection targetReadingDirection;
+  const AddWordScreen({
+    super.key, 
+    this.initialWord, 
+    required this.sourceLanguage, 
+    required this.targetLanguage,
+    required this.sourceReadingDirection,
+    required this.targetReadingDirection,
+  });
 
   @override
   State<AddWordScreen> createState() => _AddWordScreenState();
@@ -621,7 +680,15 @@ class _AddWordScreenState extends State<AddWordScreen> {
 class FlashcardScreen extends StatefulWidget {
   final List<Word> words;
   final int count;
-  const FlashcardScreen({super.key, required this.words, required this.count});
+  final ReadingDirection sourceReadingDirection;
+  final ReadingDirection targetReadingDirection;
+  const FlashcardScreen({
+    super.key, 
+    required this.words, 
+    required this.count,
+    required this.sourceReadingDirection,
+    required this.targetReadingDirection,
+  });
 
   @override
   State<FlashcardScreen> createState() => _FlashcardScreenState();
@@ -670,6 +737,16 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         _keyboardFocusNode.requestFocus();
       }
     });
+  }
+
+  TextDirection _getTextDirection(ReadingDirection direction) {
+    switch (direction) {
+      case ReadingDirection.rightToLeft:
+        return TextDirection.rtl;
+      case ReadingDirection.leftToRight:
+      default:
+        return TextDirection.ltr;
+    }
   }
 
   void _submit() {
@@ -740,7 +817,11 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
           children: [
             Text('Source Language:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            Text(word.source, style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              word.source, 
+              style: Theme.of(context).textTheme.headlineMedium,
+              textDirection: _getTextDirection(widget.sourceReadingDirection),
+            ),
             const SizedBox(height: 32),
             RawKeyboardListener(
               focusNode: _keyboardFocusNode,
@@ -960,10 +1041,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => FlashcardScreen(
-                            words: _selectedVocabulary!.words,
-                            count: count,
-                          ),
+                                                  builder: (context) => FlashcardScreen(
+                          words: _selectedVocabulary!.words,
+                          count: count,
+                          sourceReadingDirection: _selectedVocabulary!.sourceReadingDirection,
+                          targetReadingDirection: _selectedVocabulary!.targetReadingDirection,
+                        ),
                         ),
                       );
                     }
@@ -1082,7 +1165,12 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => FlashcardScreen(words: _words, count: count),
+                    builder: (context) => FlashcardScreen(
+                      words: _words, 
+                      count: count,
+                      sourceReadingDirection: widget.vocabulary.sourceReadingDirection,
+                      targetReadingDirection: widget.vocabulary.targetReadingDirection,
+                    ),
                   ),
                 );
               }
