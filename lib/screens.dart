@@ -8,139 +8,490 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'dart:math';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class VocabularyListScreen extends StatefulWidget {
+  const VocabularyListScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<VocabularyListScreen> createState() => _VocabularyListScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final List<Word> _words = [];
+class _VocabularyListScreenState extends State<VocabularyListScreen> {
+  final List<Vocabulary> _vocabularies = [];
 
   @override
   void initState() {
     super.initState();
-    _loadWords();
+    _loadVocabularies();
   }
 
-  Future<void> _loadWords() async {
+  Future<void> _loadVocabularies() async {
     final prefs = await SharedPreferences.getInstance();
-    final wordsJson = prefs.getStringList('words') ?? [];
+    final vocabulariesJson = prefs.getStringList('vocabularies') ?? [];
     setState(() {
-      _words.clear();
-      _words.addAll(wordsJson.map((w) => Word.fromJson(jsonDecode(w))));
+      _vocabularies.clear();
+      _vocabularies.addAll(vocabulariesJson.map((v) => Vocabulary.fromJson(jsonDecode(v))));
     });
   }
 
-  Future<void> _saveWords() async {
+  Future<void> _saveVocabularies() async {
     final prefs = await SharedPreferences.getInstance();
-    final wordsJson = _words.map((w) => jsonEncode(w.toJson())).toList();
-    await prefs.setStringList('words', wordsJson);
+    final vocabulariesJson = _vocabularies.map((v) => jsonEncode(v.toJson())).toList();
+    await prefs.setStringList('vocabularies', vocabulariesJson);
   }
 
-  void _addWord(Word word) {
+  void _addVocabulary(Vocabulary vocabulary) {
     setState(() {
-      _words.add(word);
+      _vocabularies.add(vocabulary);
     });
-    _saveWords();
+    _saveVocabularies();
   }
 
-  void _removeWord(int index) {
+  void _removeVocabulary(int index) {
     setState(() {
-      _words.removeAt(index);
+      _vocabularies.removeAt(index);
     });
-    _saveWords();
+    _saveVocabularies();
   }
 
-  void _editWord(int index, Word newWord) {
+  void _updateVocabulary(int index, Vocabulary vocabulary) {
     setState(() {
-      _words[index] = newWord;
+      _vocabularies[index] = vocabulary;
     });
-    _saveWords();
+    _saveVocabularies();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lexikon - Words')),
-      body: ListView.builder(
-        itemCount: _words.length,
-        itemBuilder: (context, index) {
-          final word = _words[index];
-          return ListTile(
-            title: Text(word.source),
-            subtitle: Text(word.target),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  tooltip: 'Edit',
-                  onPressed: () async {
-                    final result = await Navigator.push<Word>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddWordScreen(
-                          initialWord: word,
+      appBar: AppBar(title: const Text('Lexikon - Vocabularies')),
+      body: _vocabularies.isEmpty
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.book_outlined, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No vocabularies yet',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Create your first vocabulary to get started',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              itemCount: _vocabularies.length,
+              itemBuilder: (context, index) {
+                final vocabulary = _vocabularies[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: ListTile(
+                    title: Text(vocabulary.name),
+                    subtitle: Text('${vocabulary.sourceLanguage} → ${vocabulary.targetLanguage} (${vocabulary.words.length} words)'),
+                    leading: const Icon(Icons.book),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          tooltip: 'Edit Vocabulary',
+                          onPressed: () async {
+                            final result = await Navigator.push<Vocabulary>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AddVocabularyScreen(
+                                  initialVocabulary: vocabulary,
+                                ),
+                              ),
+                            );
+                            if (result != null) {
+                              _updateVocabulary(index, result);
+                            }
+                          },
                         ),
-                      ),
-                    );
-                    if (result != null) {
-                      _editWord(index, result);
-                    }
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  tooltip: 'Delete',
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Delete Entry'),
-                        content: const Text('Are you sure you want to delete this entry?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              _removeWord(index);
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          tooltip: 'Delete Vocabulary',
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Delete Vocabulary'),
+                                content: Text('Are you sure you want to delete "${vocabulary.name}" and all its ${vocabulary.words.length} words?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      _removeVocabulary(index);
+                                    },
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => VocabularyDetailScreen(
+                            vocabulary: vocabulary,
+                            onVocabularyUpdated: (updatedVocabulary) {
+                              _updateVocabulary(index, updatedVocabulary);
                             },
-                            child: const Text('Delete'),
                           ),
-                        ],
-                      ),
-                    );
-                  },
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push<Vocabulary>(
+            context,
+            MaterialPageRoute(builder: (context) => const AddVocabularyScreen()),
+          );
+          if (result != null) {
+            _addVocabulary(result);
+          }
+        },
+        tooltip: 'Add Vocabulary',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class AddVocabularyScreen extends StatefulWidget {
+  final Vocabulary? initialVocabulary;
+  const AddVocabularyScreen({super.key, this.initialVocabulary});
+
+  @override
+  State<AddVocabularyScreen> createState() => _AddVocabularyScreenState();
+}
+
+class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _sourceLanguageController;
+  late final TextEditingController _targetLanguageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initialVocabulary?.name ?? '');
+    _sourceLanguageController = TextEditingController(text: widget.initialVocabulary?.sourceLanguage ?? '');
+    _targetLanguageController = TextEditingController(text: widget.initialVocabulary?.targetLanguage ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _sourceLanguageController.dispose();
+    _targetLanguageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEditing = widget.initialVocabulary != null;
+    return Scaffold(
+      appBar: AppBar(title: Text(isEditing ? 'Edit Vocabulary' : 'Add Vocabulary')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Vocabulary Name',
+                  hintText: 'e.g., Spanish Basics, French Travel',
                 ),
+                validator: (value) => value == null || value.isEmpty ? 'Enter a vocabulary name' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _sourceLanguageController,
+                decoration: const InputDecoration(
+                  labelText: 'Source Language',
+                  hintText: 'e.g., English, Spanish',
+                ),
+                validator: (value) => value == null || value.isEmpty ? 'Enter source language' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _targetLanguageController,
+                decoration: const InputDecoration(
+                  labelText: 'Target Language',
+                  hintText: 'e.g., Spanish, French',
+                ),
+                validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    final now = DateTime.now();
+                    final vocabulary = Vocabulary(
+                      id: widget.initialVocabulary?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                      name: _nameController.text,
+                      sourceLanguage: _sourceLanguageController.text,
+                      targetLanguage: _targetLanguageController.text,
+                      words: widget.initialVocabulary?.words ?? [],
+                      createdAt: widget.initialVocabulary?.createdAt ?? now,
+                      updatedAt: now,
+                    );
+                    Navigator.pop(context, vocabulary);
+                  }
+                },
+                child: Text(isEditing ? 'Save' : 'Create'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class VocabularyDetailScreen extends StatefulWidget {
+  final Vocabulary vocabulary;
+  final Function(Vocabulary) onVocabularyUpdated;
+  
+  const VocabularyDetailScreen({
+    super.key,
+    required this.vocabulary,
+    required this.onVocabularyUpdated,
+  });
+
+  @override
+  State<VocabularyDetailScreen> createState() => _VocabularyDetailScreenState();
+}
+
+class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
+  late Vocabulary _vocabulary;
+
+  @override
+  void initState() {
+    super.initState();
+    _vocabulary = widget.vocabulary;
+  }
+
+  Future<void> _saveVocabulary() async {
+    final updatedVocabulary = _vocabulary.copyWith(updatedAt: DateTime.now());
+    widget.onVocabularyUpdated(updatedVocabulary);
+    setState(() {
+      _vocabulary = updatedVocabulary;
+    });
+  }
+
+  void _addWord(Word word) {
+    setState(() {
+      _vocabulary = _vocabulary.copyWith(
+        words: [..._vocabulary.words, word],
+      );
+    });
+    _saveVocabulary();
+  }
+
+  void _removeWord(int index) {
+    setState(() {
+      final newWords = List<Word>.from(_vocabulary.words);
+      newWords.removeAt(index);
+      _vocabulary = _vocabulary.copyWith(words: newWords);
+    });
+    _saveVocabulary();
+  }
+
+  void _editWord(int index, Word newWord) {
+    setState(() {
+      final newWords = List<Word>.from(_vocabulary.words);
+      newWords[index] = newWord;
+      _vocabulary = _vocabulary.copyWith(words: newWords);
+    });
+    _saveVocabulary();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_vocabulary.name),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.play_arrow),
+            tooltip: 'Practice',
+            onPressed: _vocabulary.words.isEmpty ? null : () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PracticeHomeScreen(vocabulary: _vocabulary),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: Colors.grey[100],
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${_vocabulary.sourceLanguage} → ${_vocabulary.targetLanguage}',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(
+                        '${_vocabulary.words.length} words',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_vocabulary.words.isNotEmpty)
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PracticeHomeScreen(vocabulary: _vocabulary),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('Practice'),
+                  ),
               ],
             ),
-          );
-        },
+          ),
+          Expanded(
+            child: _vocabulary.words.isEmpty
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.translate_outlined, size: 64, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          'No words yet',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Add your first word to get started',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _vocabulary.words.length,
+                    itemBuilder: (context, index) {
+                      final word = _vocabulary.words[index];
+                      return ListTile(
+                        title: Text(word.source),
+                        subtitle: Text(word.target),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              tooltip: 'Edit',
+                              onPressed: () async {
+                                final result = await Navigator.push<Word>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddWordScreen(
+                                      initialWord: word,
+                                      sourceLanguage: _vocabulary.sourceLanguage,
+                                      targetLanguage: _vocabulary.targetLanguage,
+                                    ),
+                                  ),
+                                );
+                                if (result != null) {
+                                  _editWord(index, result);
+                                }
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              tooltip: 'Delete',
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Delete Entry'),
+                                    content: const Text('Are you sure you want to delete this entry?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                          _removeWord(index);
+                                        },
+                                        child: const Text('Delete'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
-              floatingActionButton: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            FloatingActionButton(
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+                      FloatingActionButton(
               heroTag: 'addWord',
               onPressed: () async {
                 final result = await Navigator.push<Word>(
                   context,
-                  MaterialPageRoute(builder: (context) => const AddWordScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => AddWordScreen(
+                      sourceLanguage: _vocabulary.sourceLanguage,
+                      targetLanguage: _vocabulary.targetLanguage,
+                    ),
+                  ),
                 );
                 if (result != null) {
                   _addWord(result);
                 }
               },
-              child: const Icon(Icons.add),
               tooltip: 'Add Word',
+              child: const Icon(Icons.add),
             ),
-            const SizedBox(height: 16),
-            FloatingActionButton(
+          const SizedBox(height: 16),
+                      FloatingActionButton(
               heroTag: 'importCSV',
               onPressed: () async {
                 FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
@@ -178,25 +529,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                     if (action == 'add') {
                       setState(() {
-                        _words.addAll(importedWords);
+                        _vocabulary = _vocabulary.copyWith(
+                          words: [..._vocabulary.words, ...importedWords],
+                        );
                       });
-                      await _saveWords();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entries added successfully.')));
+                      await _saveVocabulary();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entries added successfully.')));
+                      }
                     } else if (action == 'overwrite') {
                       setState(() {
-                        _words.clear();
-                        _words.addAll(importedWords);
+                        _vocabulary = _vocabulary.copyWith(words: importedWords);
                       });
-                      await _saveWords();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vocabulary list overwritten successfully.')));
+                      await _saveVocabulary();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vocabulary overwritten successfully.')));
+                      }
                     }
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No valid entries found in CSV.')));
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No valid entries found in CSV.')));
+                    }
                   }
                 }
               },
-              child: const Icon(Icons.upload_file),
               tooltip: 'Import CSV',
+              child: const Icon(Icons.upload_file),
             ),
         ],
       ),
@@ -206,7 +564,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class AddWordScreen extends StatefulWidget {
   final Word? initialWord;
-  const AddWordScreen({super.key, this.initialWord});
+  final String sourceLanguage;
+  final String targetLanguage;
+  const AddWordScreen({super.key, this.initialWord, required this.sourceLanguage, required this.targetLanguage});
 
   @override
   State<AddWordScreen> createState() => _AddWordScreenState();
@@ -244,12 +604,19 @@ class _AddWordScreenState extends State<AddWordScreen> {
             children: [
               TextFormField(
                 controller: _sourceController,
-                decoration: const InputDecoration(labelText: 'Source Language'),
+                decoration: InputDecoration(
+                  labelText: 'Source Language (${widget.sourceLanguage})',
+                  hintText: 'Enter a source language word',
+                ),
                 validator: (value) => value == null || value.isEmpty ? 'Enter a source language word' : null,
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _targetController,
-                decoration: const InputDecoration(labelText: 'Target Language'),
+                decoration: InputDecoration(
+                  labelText: 'Target Language (${widget.targetLanguage})',
+                  hintText: 'Enter a target language word',
+                ),
                 validator: (value) => value == null || value.isEmpty ? 'Enter a target language word' : null,
               ),
               const SizedBox(height: 20),
@@ -275,20 +642,7 @@ class _AddWordScreenState extends State<AddWordScreen> {
   }
 }
 
-class ExerciseScreen extends StatelessWidget {
-  final List<Word> words;
-  const ExerciseScreen({super.key, required this.words});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Practice')),
-      body: Center(
-        child: Text('Exercise screen coming soon! (${words.length} entries)'),
-      ),
-    );
-  }
-}
 
 class FlashcardScreen extends StatefulWidget {
   final List<Word> words;
@@ -475,7 +829,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 }
 
 class PracticeHomeScreen extends StatefulWidget {
-  const PracticeHomeScreen({super.key});
+  final Vocabulary vocabulary;
+  const PracticeHomeScreen({super.key, required this.vocabulary});
 
   @override
   State<PracticeHomeScreen> createState() => _PracticeHomeScreenState();
@@ -487,21 +842,37 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadWords();
-  }
-
-  Future<void> _loadWords() async {
-    final prefs = await SharedPreferences.getInstance();
-    final wordsJson = prefs.getStringList('words') ?? [];
-    setState(() {
-      _words = wordsJson.map((w) => Word.fromJson(jsonDecode(w))).toList();
-    });
+    _words = List<Word>.from(widget.vocabulary.words);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_words.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Practice: ${widget.vocabulary.name}')),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.school_outlined, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'No words to practice',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Add some words to this vocabulary first',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Practice')),
+      appBar: AppBar(title: Text('Practice: ${widget.vocabulary.name}')),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -509,7 +880,6 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
             leading: const Icon(Icons.quiz),
             title: const Text('Flashcards'),
             onTap: () async {
-              if (_words.isEmpty) return;
               final count = await showDialog<int>(
                 context: context,
                 builder: (context) {
@@ -560,7 +930,6 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
             leading: const Icon(Icons.grid_on),
             title: const Text('Word Search'),
             onTap: () {
-              if (_words.isEmpty) return;
               Navigator.push(
                 context,
                 MaterialPageRoute(
