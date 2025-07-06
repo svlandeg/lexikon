@@ -32,9 +32,9 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    WelcomeScreen(),
-    HomeScreen(),
-    PracticeHomeScreen(),
+    const WelcomeScreen(),
+    const VocabularyListScreen(),
+    const PracticeScreen(),
   ];
 
   @override
@@ -54,8 +54,8 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Welcome',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Vocabulary',
+            icon: Icon(Icons.book),
+            label: 'Vocabularies',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.school),
@@ -68,6 +68,8 @@ class _MainScreenState extends State<MainScreen> {
 }
 
 class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
+  
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
