@@ -1229,7 +1229,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     allWords.shuffle(rand);
     _selectedWords = allWords.take(_numPairs).toList();
     final wordList = _selectedWords.map((w) => w.target.trim().toUpperCase()).toList();
-    _gridSize = (wordList.fold<int>(0, (p, w) => w.length > p ? w.length : p)).clamp(6, 12);
+    // Set grid size to always be 12x12
+    _gridSize = 12;
     _placedWords = [];
     _grid = _generateGrid(_gridSize, wordList, actuallyPlaced: _placedWords);
     _foundWordIndexes.clear();
