@@ -1590,6 +1590,20 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                 const SizedBox(height: 24),
                 Text('Found: ${_foundWords.length} / $_numPairs', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
+                // Show found words in full at the bottom
+                if (_foundWords.isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Found Words:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Wrap(
+                        spacing: 8,
+                        children: _foundWords
+                            .map((fw) => Chip(label: Text(fw.word)))
+                            .toList(),
+                      ),
+                    ],
+                  ),
                 ElevatedButton(
                   onPressed: () => setState(_initGame),
                   child: const Text('Restart'),
