@@ -1223,7 +1223,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   }
 
   void _initGame() {
-    // Select 3 random pairs from the vocabulary
+    // Set grid size to always be 12x12
+    _gridSize = 12;
     final rand = Random();
     final allWords = List<Word>.from(widget.words)
         .where((w) {
@@ -1234,8 +1235,6 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     allWords.shuffle(rand);
     _selectedWords = allWords.take(_numPairs).toList();
     final wordList = _selectedWords.map((w) => w.target.trim().toUpperCase()).toList();
-    // Set grid size to always be 12x12
-    _gridSize = 12;
     _placedWords = [];
     _grid = _generateGrid(_gridSize, wordList, actuallyPlaced: _placedWords);
     _foundWordIndexes.clear();
