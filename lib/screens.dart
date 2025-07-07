@@ -1270,6 +1270,29 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
             if (!isHorizontal && row > maxStart) continue;
             bool canPlace = true;
             int overlap = 0;
+            // Prevent two vertical words next to each other or two horizontal words right below each other
+            if (isHorizontal) {
+              // Check for horizontal word directly above or below
+              for (final pw in placed) {
+                if (pw.isHorizontal &&
+                    ((row == pw.start[0] + 1 || row == pw.start[0] - 1) &&
+                     ((col <= pw.end[1] && col + word.length - 1 >= pw.start[1])))) {
+                  canPlace = false;
+                  break;
+                }
+              }
+            } else {
+              // Check for vertical word directly left or right
+              for (final pw in placed) {
+                if (!pw.isHorizontal &&
+                    ((col == pw.start[1] + 1 || col == pw.start[1] - 1) &&
+                     ((row <= pw.end[0] && row + word.length - 1 >= pw.start[0])))) {
+                  canPlace = false;
+                  break;
+                }
+              }
+            }
+            if (!canPlace) continue;
             for (int i = 0; i < word.length; i++) {
               int r = isHorizontal ? row : row + i;
               int c = isHorizontal ? col + i : col;
