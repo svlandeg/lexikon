@@ -1238,7 +1238,9 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     final allWords = List<Word>.from(widget.words)
         .where((w) {
           final trimmed = w.target.trim();
-          return !trimmed.contains(' ') && trimmed.length <= _gridSize;
+          // Exclude words with spaces or punctuation
+          final hasPunctuation = RegExp(r'[\p{P}]', unicode: true).hasMatch(trimmed);
+          return !trimmed.contains(' ') && !hasPunctuation && trimmed.length <= _gridSize;
         })
         .toList();
     allWords.shuffle(rand);
