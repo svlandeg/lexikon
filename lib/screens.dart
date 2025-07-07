@@ -1204,7 +1204,7 @@ class WordSearchScreen extends StatefulWidget {
 }
 
 class _WordSearchScreenState extends State<WordSearchScreen> {
-  static const int _numPairs = 3;
+  static const int _numPairs = 10;
   late List<Word> _selectedWords;
   late List<List<String>> _grid;
   late int _gridSize;
@@ -1225,7 +1225,12 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   void _initGame() {
     // Select 3 random pairs from the vocabulary
     final rand = Random();
-    final allWords = List<Word>.from(widget.words);
+    final allWords = List<Word>.from(widget.words)
+        .where((w) {
+          final trimmed = w.target.trim();
+          return !trimmed.contains(' ') && trimmed.length <= _gridSize;
+        })
+        .toList();
     allWords.shuffle(rand);
     _selectedWords = allWords.take(_numPairs).toList();
     final wordList = _selectedWords.map((w) => w.target.trim().toUpperCase()).toList();
