@@ -8,6 +8,15 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'dart:math';
 
+// Helper class for placement options
+class _PlacementOption {
+  final int row;
+  final int col;
+  final bool isHorizontal;
+  final int overlap;
+  _PlacementOption(this.row, this.col, this.isHorizontal, this.overlap);
+}
+
 class VocabularyListScreen extends StatefulWidget {
   const VocabularyListScreen({super.key});
 
@@ -1204,7 +1213,7 @@ class WordSearchScreen extends StatefulWidget {
 }
 
 class _WordSearchScreenState extends State<WordSearchScreen> {
-  static const int _numPairs = 10;
+  static const int _numPairs = 12;
   late List<Word> _selectedWords;
   late List<List<String>> _grid;
   late int _gridSize;
@@ -1223,8 +1232,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   }
 
   void _initGame() {
-    // Set grid size to always be 12x12
-    _gridSize = 12;
+    // Set grid size to always be 10x10
+    _gridSize = 10;
     final rand = Random();
     final allWords = List<Word>.from(widget.words)
         .where((w) {
@@ -1250,57 +1259,74 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     final rand = Random();
     final placed = <_PlacedWord>[];
     for (final word in wordList) {
-      final isHorizontal = rand.nextBool();
-      final maxStart = gridSize - word.length;
-      if (maxStart < 0) continue;
-      int row = 0, col = 0;
-      bool placedWord = false;
-      for (int attempt = 0; attempt < 100 && !placedWord; attempt++) {
-        if (isHorizontal) {
-          row = rand.nextInt(gridSize);
-          col = rand.nextInt(maxStart + 1);
-          bool canPlace = true;
-          for (int i = 0; i < word.length; i++) {
-            if (grid[row][col + i] != '' && grid[row][col + i] != word[i]) {
-              canPlace = false;
-              break;
-            }
-          }
-          if (canPlace) {
+      List<_PlacementOption> bestOptions = [];
+      int maxOverlap = -1;
+      for (final isHorizontal in [true, false]) {
+        final maxStart = gridSize - word.length;
+        if (maxStart < 0) continue;
+        for (int row = 0; row < gridSize; row++) {
+          for (int col = 0; col < gridSize; col++) {
+            if (isHorizontal && col > maxStart) continue;
+            if (!isHorizontal && row > maxStart) continue;
+            bool canPlace = true;
+            int overlap = 0;
             for (int i = 0; i < word.length; i++) {
-              grid[row][col + i] = word[i];
+              int r = isHorizontal ? row : row + i;
+              int c = isHorizontal ? col + i : col;
+              if (grid[r][c] != '' && grid[r][c] != word[i]) {
+                canPlace = false;
+                break;
+              }
+              if (grid[r][c] == word[i]) {
+                // Only count overlap if the existing letter is from a word placed in the opposite direction
+                bool overlapAllowed = false;
+                for (final pw in placed) {
+                  if (pw.isHorizontal != isHorizontal) {
+                    // Check if this cell is part of pw
+                    if (pw.isHorizontal) {
+                      if (r == pw.start[0] && c >= pw.start[1] && c <= pw.end[1]) {
+                        overlapAllowed = true;
+                        break;
+                      }
+                    } else {
+                      if (c == pw.start[1] && r >= pw.start[0] && r <= pw.end[0]) {
+                        overlapAllowed = true;
+                        break;
+                      }
+                    }
+                  }
+                }
+                if (overlapAllowed) overlap++;
+              }
             }
-            placedWord = true;
-            placed.add(_PlacedWord(
-              word: word,
-              start: [row, col],
-              end: [row, col + word.length - 1],
-              isHorizontal: true,
-            ));
-          }
-        } else {
-          row = rand.nextInt(maxStart + 1);
-          col = rand.nextInt(gridSize);
-          bool canPlace = true;
-          for (int i = 0; i < word.length; i++) {
-            if (grid[row + i][col] != '' && grid[row + i][col] != word[i]) {
-              canPlace = false;
-              break;
+            if (canPlace) {
+              if (overlap > maxOverlap) {
+                maxOverlap = overlap;
+                bestOptions = [
+                  _PlacementOption(row, col, isHorizontal, overlap)
+                ];
+              } else if (overlap == maxOverlap) {
+                bestOptions.add(_PlacementOption(row, col, isHorizontal, overlap));
+              }
             }
-          }
-          if (canPlace) {
-            for (int i = 0; i < word.length; i++) {
-              grid[row + i][col] = word[i];
-            }
-            placedWord = true;
-            placed.add(_PlacedWord(
-              word: word,
-              start: [row, col],
-              end: [row + word.length - 1, col],
-              isHorizontal: false,
-            ));
           }
         }
+      }
+      if (bestOptions.isNotEmpty) {
+        final chosen = bestOptions[rand.nextInt(bestOptions.length)];
+        for (int i = 0; i < word.length; i++) {
+          int r = chosen.isHorizontal ? chosen.row : chosen.row + i;
+          int c = chosen.isHorizontal ? chosen.col + i : chosen.col;
+          grid[r][c] = word[i];
+        }
+        placed.add(_PlacedWord(
+          word: word,
+          start: [chosen.row, chosen.col],
+          end: chosen.isHorizontal
+              ? [chosen.row, chosen.col + word.length - 1]
+              : [chosen.row + word.length - 1, chosen.col],
+          isHorizontal: chosen.isHorizontal,
+        ));
       }
     }
     for (int r = 0; r < gridSize; r++) {
