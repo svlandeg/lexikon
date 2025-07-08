@@ -1244,6 +1244,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   int? _selectEndRow;
   int? _selectEndCol;
   bool _showSourceHints = true;
+  late List<List<bool>> _foundMatrix;
 
   @override
   void initState() {
@@ -1274,6 +1275,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     _selectStartCol = null;
     _selectEndRow = null;
     _selectEndCol = null;
+    _foundMatrix = List.generate(_gridSize, (_) => List.filled(_gridSize, false));
   }
 
   List<List<String>> _generateGrid(int gridSize, List<String> wordList, ReadingDirection direction, {List<_PlacedWord>? actuallyPlaced}) {
@@ -1502,6 +1504,20 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     });
   }
 
+  void _markWordFound(_PlacedWord word) {
+    final start = word.start;
+    final end = word.end;
+    if (word.isHorizontal) {
+      for (int c = start[1]; c <= end[1]; c++) {
+        _foundMatrix[start[0]][c] = true;
+      }
+    } else {
+      for (int r = start[0]; r <= end[0]; r++) {
+        _foundMatrix[r][start[1]] = true;
+      }
+    }
+  }
+
   void _checkSelection() {
     if (_selectStartRow == null || _selectStartCol == null || _selectEndRow == null || _selectEndCol == null) return;
     final start = [_selectStartRow!, _selectStartCol!];
@@ -1577,7 +1593,6 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     }
     final selectedWord = selected.join();
     // Check if matches any placed word and not already found
-    bool found = false;
     for (int i = 0; i < _placedWords.length; i++) {
       if (_foundWordIndexes.contains(i)) continue;
       if (_placedWords[i].word == selectedWord) {
@@ -1590,32 +1605,22 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
             end: _placedWords[i].end,
             isHorizontal: _placedWords[i].isHorizontal,
           ));
+          _markWordFound(_placedWords[i]);
+          _selectStartRow = null;
+          _selectStartCol = null;
+          _selectEndRow = null;
+          _selectEndCol = null;
         });
-        found = true;
-        break;
+        return;
       }
     }
-    if (found) {
-      // Keep highlight for a short delay before resetting
-      Future.delayed(const Duration(milliseconds: 600), () {
-        if (mounted) {
-          setState(() {
-            _selectStartRow = null;
-            _selectStartCol = null;
-            _selectEndRow = null;
-            _selectEndCol = null;
-          });
-        }
-      });
-    } else {
-      // Reset selection immediately if not found
-      setState(() {
-        _selectStartRow = null;
-        _selectStartCol = null;
-        _selectEndRow = null;
-        _selectEndCol = null;
-      });
-    }
+    // Reset selection immediately if not found
+    setState(() {
+      _selectStartRow = null;
+      _selectStartCol = null;
+      _selectEndRow = null;
+      _selectEndCol = null;
+    });
   }
 
   List<int> _getSelectedCells() {
@@ -1677,6 +1682,22 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     return false;
   }
 
+  bool _isCellSelected(int row, int col) {
+    if (_selectStartRow == null || _selectStartCol == null) return false;
+    if (_selectEndRow == null || _selectEndCol == null) {
+      return row == _selectStartRow && col == _selectStartCol;
+    }
+    // Only horizontal or vertical
+    if (_selectStartRow == _selectEndRow) {
+      if (row == _selectStartRow && col >= _selectStartCol! && col <= _selectEndCol!) return true;
+      if (row == _selectStartRow && col <= _selectStartCol! && col >= _selectEndCol!) return true;
+    } else if (_selectStartCol == _selectEndCol) {
+      if (col == _selectStartCol && row >= _selectStartRow! && row <= _selectEndRow!) return true;
+      if (col == _selectStartCol && row <= _selectStartRow! && row >= _selectEndRow!) return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     const double cellSize = 36.0;
@@ -1703,8 +1724,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                     itemBuilder: (context, index) {
                       final row = index ~/ _gridSize;
                       final col = index % _gridSize;
-                      final isSelected = selectedCells.contains(index);
-                      final isFound = _isCellInFoundWord(row, col);
+                      final isSelected = _isCellSelected(row, col);
+                      final isFound = _foundMatrix[row][col];
                       return GestureDetector(
                         onTap: () => _onCellTap(row, col),
                         child: Container(
@@ -1713,10 +1734,10 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                           margin: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.blueGrey),
-                            color: isFound
-                                ? Colors.greenAccent
-                                : isSelected
-                                    ? Colors.yellowAccent
+                            color: isSelected
+                                ? Colors.yellowAccent
+                                : isFound
+                                    ? Colors.greenAccent
                                     : Colors.white,
                           ),
                           child: Center(
