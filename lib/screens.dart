@@ -1226,6 +1226,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   int? _selectStartCol;
   int? _selectEndRow;
   int? _selectEndCol;
+  bool _showSourceHints = true;
 
   @override
   void initState() {
@@ -1713,37 +1714,76 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Switch(
+                      value: _showSourceHints,
+                      onChanged: (val) {
+                        setState(() {
+                          _showSourceHints = val;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    Text(_showSourceHints ? 'Hard' : 'Easy'),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Hints (Source Language):',
+                    _showSourceHints ? 'Hints (Source Language):' : 'Target Words:',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 12,
-                  children: _selectedWords
-                      .map((w) => Chip(label: Text(w.source)))
-                      .toList(),
+                  children: _showSourceHints
+                      ? _selectedWords.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final word = entry.value;
+                          final foundIdx = _foundWords.indexWhere((fw) => fw.word == word.target.trim().toUpperCase());
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Chip(label: Text(word.source)),
+                              if (foundIdx != -1)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2.0),
+                                  child: Chip(
+                                    label: Text(word.target),
+                                    backgroundColor: Colors.greenAccent,
+                                  ),
+                                ),
+                            ],
+                          );
+                        }).toList()
+                      : _selectedWords.map((w) {
+                          final found = _foundWords.any((fw) => fw.word == w.target.trim().toUpperCase());
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Chip(
+                                label: Text(w.target),
+                                backgroundColor: found ? Colors.greenAccent : null,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2.0),
+                                child: Text(
+                                  w.source,
+                                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
                 ),
                 const SizedBox(height: 24),
                 Text('Found: ${_foundWords.length} / ${_selectedWords.length}', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
                 // Show found words in full at the bottom
-                if (_foundWords.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Found Words:', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Wrap(
-                        spacing: 8,
-                        children: _foundWords
-                            .map((fw) => Chip(label: Text(fw.word)))
-                            .toList(),
-                      ),
-                    ],
-                  ),
                 ElevatedButton(
                   onPressed: () => setState(_initGame),
                   child: const Text('Restart'),
