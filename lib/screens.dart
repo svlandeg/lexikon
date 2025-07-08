@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'dart:math';
+import 'package:unicode_data/unicode_data.dart';
 
 // Helper class for placement options
 class _PlacementOption {
@@ -1260,6 +1261,42 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     final grid = List.generate(gridSize, (_) => List.generate(gridSize, (_) => ''));
     final rand = Random();
     final placed = <_PlacedWord>[];
+
+    // --- Begin: Unicode-aware alphabet detection ---
+    // 1. Collect all unique letters from all words
+    final Set<String> uniqueLetters = {};
+    for (final word in wordList) {
+      for (final rune in word.runes) {
+        final char = String.fromCharCode(rune);
+        if (RegExp(r'\p{L}', unicode: true).hasMatch(char)) {
+          uniqueLetters.add(char);
+        }
+      }
+    }
+
+    // 2. Determine script for each letter
+    String? detectedScript;
+    final Map<String, int> scriptCounts = {};
+    for (final letter in uniqueLetters) {
+      final script = _getUnicodeScript(letter);
+      if (script != null) {
+        scriptCounts[script] = (scriptCounts[script] ?? 0) + 1;
+      }
+    }
+    if (scriptCounts.isNotEmpty) {
+      detectedScript = scriptCounts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+    }
+
+    // 3. Get full alphabet for the detected script
+    List<String> alphabet;
+    if (detectedScript != null) {
+      alphabet = _getAlphabetForScript(detectedScript, uniqueLetters);
+    } else {
+      // fallback: use unique letters only
+      alphabet = uniqueLetters.toList();
+    }
+    // --- End: Unicode-aware alphabet detection ---
+
     for (final word in wordList) {
       List<_PlacementOption> bestOptions = [];
       int maxOverlap = -1;
@@ -1357,7 +1394,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     for (int r = 0; r < gridSize; r++) {
       for (int c = 0; c < gridSize; c++) {
         if (grid[r][c] == '') {
-          grid[r][c] = String.fromCharCode(rand.nextInt(26) + 65);
+          grid[r][c] = alphabet[rand.nextInt(alphabet.length)];
         }
       }
     }
@@ -1366,6 +1403,52 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
       actuallyPlaced.addAll(placed);
     }
     return grid;
+  }
+
+  // Helper: Detect Unicode script of a single character using unicode_data
+  String? _getUnicodeScript(String char) {
+    if (char.isEmpty) return null;
+    final code = char.runes.first;
+    final script = UnicodeScript.scripts.where((s) => code >= s.start && code <= s.end).toList();
+    if (script.isEmpty) return null;
+    return script.first.name;
+  }
+
+  // Helper: Get the alphabet for the script: all unique letters from all target words in the vocabulary, plus common letters for the script
+  List<String> _getAlphabetForScript(String script, Set<String> vocabLetters) {
+    // 1. Start with all unique letters from the vocabulary (already filtered for letters)
+    final Set<String> alphabet = {...vocabLetters};
+
+    // 2. Add most common letters for the script (if available)
+    final List<String>? common = _commonLettersForScript(script);
+    if (common != null) {
+      for (final letter in common) {
+        // Only add if it's not already present and is a printable, non-combining letter
+        if (!alphabet.contains(letter) &&
+            RegExp(r'^[\p{L}]$', unicode: true).hasMatch(letter) &&
+            !RegExp(r'^[\p{M}]$', unicode: true).hasMatch(letter)) {
+          alphabet.add(letter);
+        }
+      }
+    }
+    final sorted = alphabet.toList()..sort((a, b) => a.compareTo(b));
+    return sorted;
+  }
+
+  // Helper: Curated list of most common letters for major scripts (alphabetized)
+  List<String>? _commonLettersForScript(String script) {
+    switch (script.toLowerCase()) {
+      case 'latin':
+        return ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+      case 'cyrillic':
+        return ['А','Б','В','Г','Д','Е','Ё','Ж','З','И','Й','К','Л','М','Н','О','П','Р','С','Т','У','Ф','Х','Ц','Ч','Ш','Щ','Ъ','Ы','Ь','Э','Ю','Я'];
+      case 'greek':
+        return ['Α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν','Ξ','Ο','Π','Ρ','Σ','Τ','Υ','Φ','Χ','Ψ','Ω'];
+      case 'arabic':
+        return ['ا','ب','ت','ث','ج','ح','خ','د','ذ','ر','ز','س','ش','ص','ض','ط','ظ','ع','غ','ف','ق','ك','ل','م','ن','ه','و','ي'];
+      default:
+        return null;
+    }
   }
 
   void _onCellTap(int row, int col) {
