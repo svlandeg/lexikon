@@ -692,12 +692,16 @@ class FlashcardScreen extends StatefulWidget {
   final int count;
   final ReadingDirection sourceReadingDirection;
   final ReadingDirection targetReadingDirection;
+  final String sourceLanguage;
+  final String targetLanguage;
   const FlashcardScreen({
     super.key, 
     required this.words, 
     required this.count,
     required this.sourceReadingDirection,
     required this.targetReadingDirection,
+    required this.sourceLanguage,
+    required this.targetLanguage,
   });
 
   @override
@@ -775,14 +779,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     if (userInput == correctAnswer) {
       setState(() {
         _correct++;
-        _feedback = 'Correct! The translation is: ${_quizWords[_current].target}';
+        _feedback = 'Correct!\nThe ${widget.targetLanguage} translation is: ${_quizWords[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
     } else {
       setState(() {
         _incorrect++;
-        _feedback = 'Incorrect. The correct answer is: ${_quizWords[_current].target}';
+        _feedback = 'Incorrect.\nThe correct ${widget.targetLanguage} translation is: ${_quizWords[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
@@ -825,7 +829,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Source Language:', style: Theme.of(context).textTheme.titleLarge),
+            Text('${widget.sourceLanguage}:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
               word.source, 
@@ -853,9 +857,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                     TextField(
                       controller: _controller,
                       focusNode: _inputFocusNode,
-                      decoration: const InputDecoration(
-                        labelText: 'Type the target language equivalent',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: '${widget.targetLanguage} translation',
+                        border: const OutlineInputBorder(),
                       ),
                       onSubmitted: (_) => _submit(),
                       enabled: !_showingFeedback,
@@ -866,7 +870,12 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       child: const Text('Submit'),
                     ),
                   ] else ...[
-                    Text(_feedback!, style: TextStyle(fontSize: 20, color: _feedback!.startsWith('Correct!') ? Colors.green : Colors.red)),
+                    Text(
+                      _feedback!,
+                      style: TextStyle(fontSize: 20, color: _feedback!.startsWith('Correct!') ? Colors.green : Colors.red),
+                      softWrap: true,
+                      maxLines: null,
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
@@ -1056,6 +1065,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                           count: count,
                           sourceReadingDirection: _selectedVocabulary!.sourceReadingDirection,
                           targetReadingDirection: _selectedVocabulary!.targetReadingDirection,
+                          sourceLanguage: _selectedVocabulary!.sourceLanguage,
+                          targetLanguage: _selectedVocabulary!.targetLanguage,
                         ),
                         ),
                       );
@@ -1180,6 +1191,8 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
                       count: count,
                       sourceReadingDirection: widget.vocabulary.sourceReadingDirection,
                       targetReadingDirection: widget.vocabulary.targetReadingDirection,
+                      sourceLanguage: widget.vocabulary.sourceLanguage,
+                      targetLanguage: widget.vocabulary.targetLanguage,
                     ),
                   ),
                 );
