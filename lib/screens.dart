@@ -1070,7 +1070,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => WordSearchScreen(words: _selectedVocabulary!.words),
+                        builder: (context) => WordSearchScreen(words: _selectedVocabulary!.words, readingDirection: _selectedVocabulary!.targetReadingDirection),
                       ),
                     );
                   },
@@ -1194,7 +1194,7 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => WordSearchScreen(words: _words),
+                  builder: (context) => WordSearchScreen(words: _words, readingDirection: widget.vocabulary.targetReadingDirection),
                 ),
               );
             },
@@ -1207,7 +1207,8 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
 
 class WordSearchScreen extends StatefulWidget {
   final List<Word> words;
-  const WordSearchScreen({super.key, required this.words});
+  final ReadingDirection readingDirection;
+  const WordSearchScreen({super.key, required this.words, required this.readingDirection});
 
   @override
   State<WordSearchScreen> createState() => _WordSearchScreenState();
@@ -1225,6 +1226,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   int? _selectStartCol;
   int? _selectEndRow;
   int? _selectEndCol;
+  bool _showSourceHints = true;
 
   @override
   void initState() {
@@ -1248,7 +1250,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     _selectedWords = allWords.take(_numPairs).toList();
     final wordList = _selectedWords.map((w) => w.target.trim().toUpperCase()).toList();
     _placedWords = [];
-    _grid = _generateGrid(_gridSize, wordList, actuallyPlaced: _placedWords);
+    _grid = _generateGrid(_gridSize, wordList, widget.readingDirection, actuallyPlaced: _placedWords);
     _foundWordIndexes.clear();
     _foundWords.clear();
     _selectStartRow = null;
@@ -1257,7 +1259,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     _selectEndCol = null;
   }
 
-  List<List<String>> _generateGrid(int gridSize, List<String> wordList, {List<_PlacedWord>? actuallyPlaced}) {
+  List<List<String>> _generateGrid(int gridSize, List<String> wordList, ReadingDirection direction, {List<_PlacedWord>? actuallyPlaced}) {
     final grid = List.generate(gridSize, (_) => List.generate(gridSize, (_) => ''));
     final rand = Random();
     final placed = <_PlacedWord>[];
@@ -1297,7 +1299,10 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     }
     // --- End: Unicode-aware alphabet detection ---
 
-    for (final word in wordList) {
+    for (final wordOrig in wordList) {
+      // For RTL, reverse the word string, but placement logic is always left-to-right or top-to-bottom
+      final isRTL = direction == ReadingDirection.rightToLeft;
+      final word = isRTL ? wordOrig.split("").reversed.join("") : wordOrig;
       List<_PlacementOption> bestOptions = [];
       int maxOverlap = -1;
       for (final isHorizontal in [true, false]) {
@@ -1382,7 +1387,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
           grid[r][c] = word[i];
         }
         placed.add(_PlacedWord(
-          word: word,
+          word: wordOrig, // always store the original word
           start: [chosen.row, chosen.col],
           end: chosen.isHorizontal
               ? [chosen.row, chosen.col + word.length - 1]
@@ -1486,39 +1491,71 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     final end = [_selectEndRow!, _selectEndCol!];
     // Only allow horizontal or vertical
     if (start[0] != end[0] && start[1] != end[1]) return;
-    // Get the word
+    final isRTL = widget.readingDirection == ReadingDirection.rightToLeft;
     List<String> selected = [];
     if (start[0] == end[0]) {
-      // Horizontal - only allow left to right selection
+      // Horizontal
       int row = start[0];
-      if (start[1] > end[1]) {
-        // User selected right to left, which is not allowed
-        setState(() {
-          _selectStartRow = null;
-          _selectStartCol = null;
-          _selectEndRow = null;
-          _selectEndCol = null;
-        });
-        return;
-      }
-      for (int c = start[1]; c <= end[1]; c++) {
-        selected.add(_grid[row][c]);
+      if (!isRTL) {
+        // LTR: only allow left to right
+        if (start[1] > end[1]) {
+          setState(() {
+            _selectStartRow = null;
+            _selectStartCol = null;
+            _selectEndRow = null;
+            _selectEndCol = null;
+          });
+          return;
+        }
+        for (int c = start[1]; c <= end[1]; c++) {
+          selected.add(_grid[row][c]);
+        }
+      } else {
+        // RTL: only allow right to left
+        if (start[1] < end[1]) {
+          setState(() {
+            _selectStartRow = null;
+            _selectStartCol = null;
+            _selectEndRow = null;
+            _selectEndCol = null;
+          });
+          return;
+        }
+        for (int c = start[1]; c >= end[1]; c--) {
+          selected.add(_grid[row][c]);
+        }
       }
     } else {
-      // Vertical - only allow top to bottom selection
+      // Vertical
       int col = start[1];
-      if (start[0] > end[0]) {
-        // User selected bottom to top, which is not allowed
-        setState(() {
-          _selectStartRow = null;
-          _selectStartCol = null;
-          _selectEndRow = null;
-          _selectEndCol = null;
-        });
-        return;
-      }
-      for (int r = start[0]; r <= end[0]; r++) {
-        selected.add(_grid[r][col]);
+      if (!isRTL) {
+        // LTR: only allow top to bottom
+        if (start[0] > end[0]) {
+          setState(() {
+            _selectStartRow = null;
+            _selectStartCol = null;
+            _selectEndRow = null;
+            _selectEndCol = null;
+          });
+          return;
+        }
+        for (int r = start[0]; r <= end[0]; r++) {
+          selected.add(_grid[r][col]);
+        }
+      } else {
+        // RTL: only allow bottom to top
+        if (start[0] < end[0]) {
+          setState(() {
+            _selectStartRow = null;
+            _selectStartCol = null;
+            _selectEndRow = null;
+            _selectEndCol = null;
+          });
+          return;
+        }
+        for (int r = start[0]; r >= end[0]; r--) {
+          selected.add(_grid[r][col]);
+        }
       }
     }
     final selectedWord = selected.join();
@@ -1572,21 +1609,40 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     if (_selectStartRow == null || _selectStartCol == null || _selectEndRow == null || _selectEndCol == null) return [];
     final start = [_selectStartRow!, _selectStartCol!];
     final end = [_selectEndRow!, _selectEndCol!];
+    final isRTL = widget.readingDirection == ReadingDirection.rightToLeft;
     List<int> cells = [];
     if (start[0] == end[0]) {
-      // Horizontal - only highlight if left to right
-      if (start[1] <= end[1]) {
-        int row = start[0];
-        for (int c = start[1]; c <= end[1]; c++) {
-          cells.add(row * _gridSize + c);
+      // Horizontal
+      if (!isRTL) {
+        if (start[1] <= end[1]) {
+          int row = start[0];
+          for (int c = start[1]; c <= end[1]; c++) {
+            cells.add(row * _gridSize + c);
+          }
+        }
+      } else {
+        if (start[1] >= end[1]) {
+          int row = start[0];
+          for (int c = start[1]; c >= end[1]; c--) {
+            cells.add(row * _gridSize + c);
+          }
         }
       }
     } else if (start[1] == end[1]) {
-      // Vertical - only highlight if top to bottom
-      if (start[0] <= end[0]) {
-        int col = start[1];
-        for (int r = start[0]; r <= end[0]; r++) {
-          cells.add(r * _gridSize + col);
+      // Vertical
+      if (!isRTL) {
+        if (start[0] <= end[0]) {
+          int col = start[1];
+          for (int r = start[0]; r <= end[0]; r++) {
+            cells.add(r * _gridSize + col);
+          }
+        }
+      } else {
+        if (start[0] >= end[0]) {
+          int col = start[1];
+          for (int r = start[0]; r >= end[0]; r--) {
+            cells.add(r * _gridSize + col);
+          }
         }
       }
     }
@@ -1658,37 +1714,76 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Switch(
+                      value: _showSourceHints,
+                      onChanged: (val) {
+                        setState(() {
+                          _showSourceHints = val;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    Text(_showSourceHints ? 'Hard' : 'Easy'),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Hints (Source Language):',
+                    _showSourceHints ? 'Hints (Source Language):' : 'Target Words:',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 12,
-                  children: _selectedWords
-                      .map((w) => Chip(label: Text(w.source)))
-                      .toList(),
+                  children: _showSourceHints
+                      ? _selectedWords.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final word = entry.value;
+                          final foundIdx = _foundWords.indexWhere((fw) => fw.word == word.target.trim().toUpperCase());
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Chip(label: Text(word.source)),
+                              if (foundIdx != -1)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2.0),
+                                  child: Chip(
+                                    label: Text(word.target),
+                                    backgroundColor: Colors.greenAccent,
+                                  ),
+                                ),
+                            ],
+                          );
+                        }).toList()
+                      : _selectedWords.map((w) {
+                          final found = _foundWords.any((fw) => fw.word == w.target.trim().toUpperCase());
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Chip(
+                                label: Text(w.target),
+                                backgroundColor: found ? Colors.greenAccent : null,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2.0),
+                                child: Text(
+                                  w.source,
+                                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
                 ),
                 const SizedBox(height: 24),
-                Text('Found: ${_foundWords.length} / $_numPairs', style: Theme.of(context).textTheme.titleLarge),
+                Text('Found: ${_foundWords.length} / ${_selectedWords.length}', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
                 // Show found words in full at the bottom
-                if (_foundWords.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Found Words:', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Wrap(
-                        spacing: 8,
-                        children: _foundWords
-                            .map((fw) => Chip(label: Text(fw.word)))
-                            .toList(),
-                      ),
-                    ],
-                  ),
                 ElevatedButton(
                   onPressed: () => setState(_initGame),
                   child: const Text('Restart'),
