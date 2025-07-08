@@ -796,6 +796,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   @override
   Widget build(BuildContext context) {
     if (_current >= _quizWords.length) {
+      int total = _correct + _incorrect;
+      double percent = total > 0 ? (_correct / total) * 100 : 0;
       return Scaffold(
         appBar: AppBar(title: const Text('Flashcards')),
         body: Center(
@@ -804,8 +806,10 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             children: [
               Text('Quiz complete!', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 16),
-              Text('Correct:  [32m$_correct [0m'),
-              Text('Incorrect:  [31m$_incorrect [0m'),
+              Text('Correct: $_correct', style: const TextStyle(color: Colors.green, fontSize: 18)),
+              Text('Incorrect: $_incorrect', style: const TextStyle(color: Colors.red, fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Total score: ${percent.toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
