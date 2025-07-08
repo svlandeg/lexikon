@@ -692,12 +692,16 @@ class FlashcardScreen extends StatefulWidget {
   final int count;
   final ReadingDirection sourceReadingDirection;
   final ReadingDirection targetReadingDirection;
+  final String sourceLanguage;
+  final String targetLanguage;
   const FlashcardScreen({
     super.key, 
     required this.words, 
     required this.count,
     required this.sourceReadingDirection,
     required this.targetReadingDirection,
+    required this.sourceLanguage,
+    required this.targetLanguage,
   });
 
   @override
@@ -775,14 +779,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     if (userInput == correctAnswer) {
       setState(() {
         _correct++;
-        _feedback = 'Correct! The translation is: ${_quizWords[_current].target}';
+        _feedback = 'Correct!\nThe ${widget.targetLanguage} translation is: ${_quizWords[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
     } else {
       setState(() {
         _incorrect++;
-        _feedback = 'Incorrect. The correct answer is: ${_quizWords[_current].target}';
+        _feedback = 'Incorrect.\nThe correct ${widget.targetLanguage} translation is: ${_quizWords[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
@@ -792,6 +796,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   @override
   Widget build(BuildContext context) {
     if (_current >= _quizWords.length) {
+      int total = _correct + _incorrect;
+      double percent = total > 0 ? (_correct / total) * 100 : 0;
       return Scaffold(
         appBar: AppBar(title: const Text('Flashcards')),
         body: Center(
@@ -800,12 +806,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             children: [
               Text('Quiz complete!', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 16),
-              Text('Correct:  [32m$_correct [0m'),
-              Text('Incorrect:  [31m$_incorrect [0m'),
+              Text('Correct: $_correct', style: const TextStyle(color: Colors.green, fontSize: 18)),
+              Text('Incorrect: $_incorrect', style: const TextStyle(color: Colors.red, fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Total score: ${percent.toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Back to Words'),
+                child: const Text('Back to practice'),
               ),
             ],
           ),
@@ -825,7 +833,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Source Language:', style: Theme.of(context).textTheme.titleLarge),
+            Text('${widget.sourceLanguage}:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
               word.source, 
@@ -853,9 +861,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                     TextField(
                       controller: _controller,
                       focusNode: _inputFocusNode,
-                      decoration: const InputDecoration(
-                        labelText: 'Type the target language equivalent',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: '${widget.targetLanguage} translation',
+                        border: const OutlineInputBorder(),
                       ),
                       onSubmitted: (_) => _submit(),
                       enabled: !_showingFeedback,
@@ -866,7 +874,12 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       child: const Text('Submit'),
                     ),
                   ] else ...[
-                    Text(_feedback!, style: TextStyle(fontSize: 20, color: _feedback!.startsWith('Correct!') ? Colors.green : Colors.red)),
+                    Text(
+                      _feedback!,
+                      style: TextStyle(fontSize: 20, color: _feedback!.startsWith('Correct!') ? Colors.green : Colors.red),
+                      softWrap: true,
+                      maxLines: null,
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
@@ -1010,7 +1023,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ListTile(
                   leading: const Icon(Icons.quiz),
                   title: const Text('Flashcards'),
-                  subtitle: Text('Practice with ${_selectedVocabulary!.words.length} words'),
+                  subtitle: const Text('Type the correct translation'),
                   onTap: () async {
                     final count = await showDialog<int>(
                       context: context,
@@ -1056,6 +1069,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                           count: count,
                           sourceReadingDirection: _selectedVocabulary!.sourceReadingDirection,
                           targetReadingDirection: _selectedVocabulary!.targetReadingDirection,
+                          sourceLanguage: _selectedVocabulary!.sourceLanguage,
+                          targetLanguage: _selectedVocabulary!.targetLanguage,
                         ),
                         ),
                       );
@@ -1180,6 +1195,8 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
                       count: count,
                       sourceReadingDirection: widget.vocabulary.sourceReadingDirection,
                       targetReadingDirection: widget.vocabulary.targetReadingDirection,
+                      sourceLanguage: widget.vocabulary.sourceLanguage,
+                      targetLanguage: widget.vocabulary.targetLanguage,
                     ),
                   ),
                 );
@@ -1227,6 +1244,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   int? _selectEndRow;
   int? _selectEndCol;
   bool _showSourceHints = true;
+  late List<List<bool>> _foundMatrix;
 
   @override
   void initState() {
@@ -1257,6 +1275,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     _selectStartCol = null;
     _selectEndRow = null;
     _selectEndCol = null;
+    _foundMatrix = List.generate(_gridSize, (_) => List.filled(_gridSize, false));
   }
 
   List<List<String>> _generateGrid(int gridSize, List<String> wordList, ReadingDirection direction, {List<_PlacedWord>? actuallyPlaced}) {
@@ -1485,6 +1504,20 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     });
   }
 
+  void _markWordFound(_PlacedWord word) {
+    final start = word.start;
+    final end = word.end;
+    if (word.isHorizontal) {
+      for (int c = start[1]; c <= end[1]; c++) {
+        _foundMatrix[start[0]][c] = true;
+      }
+    } else {
+      for (int r = start[0]; r <= end[0]; r++) {
+        _foundMatrix[r][start[1]] = true;
+      }
+    }
+  }
+
   void _checkSelection() {
     if (_selectStartRow == null || _selectStartCol == null || _selectEndRow == null || _selectEndCol == null) return;
     final start = [_selectStartRow!, _selectStartCol!];
@@ -1560,7 +1593,6 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     }
     final selectedWord = selected.join();
     // Check if matches any placed word and not already found
-    bool found = false;
     for (int i = 0; i < _placedWords.length; i++) {
       if (_foundWordIndexes.contains(i)) continue;
       if (_placedWords[i].word == selectedWord) {
@@ -1573,32 +1605,22 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
             end: _placedWords[i].end,
             isHorizontal: _placedWords[i].isHorizontal,
           ));
+          _markWordFound(_placedWords[i]);
+          _selectStartRow = null;
+          _selectStartCol = null;
+          _selectEndRow = null;
+          _selectEndCol = null;
         });
-        found = true;
-        break;
+        return;
       }
     }
-    if (found) {
-      // Keep highlight for a short delay before resetting
-      Future.delayed(const Duration(milliseconds: 600), () {
-        if (mounted) {
-          setState(() {
-            _selectStartRow = null;
-            _selectStartCol = null;
-            _selectEndRow = null;
-            _selectEndCol = null;
-          });
-        }
-      });
-    } else {
-      // Reset selection immediately if not found
-      setState(() {
-        _selectStartRow = null;
-        _selectStartCol = null;
-        _selectEndRow = null;
-        _selectEndCol = null;
-      });
-    }
+    // Reset selection immediately if not found
+    setState(() {
+      _selectStartRow = null;
+      _selectStartCol = null;
+      _selectEndRow = null;
+      _selectEndCol = null;
+    });
   }
 
   List<int> _getSelectedCells() {
@@ -1660,6 +1682,22 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     return false;
   }
 
+  bool _isCellSelected(int row, int col) {
+    if (_selectStartRow == null || _selectStartCol == null) return false;
+    if (_selectEndRow == null || _selectEndCol == null) {
+      return row == _selectStartRow && col == _selectStartCol;
+    }
+    // Only horizontal or vertical
+    if (_selectStartRow == _selectEndRow) {
+      if (row == _selectStartRow && col >= _selectStartCol! && col <= _selectEndCol!) return true;
+      if (row == _selectStartRow && col <= _selectStartCol! && col >= _selectEndCol!) return true;
+    } else if (_selectStartCol == _selectEndCol) {
+      if (col == _selectStartCol && row >= _selectStartRow! && row <= _selectEndRow!) return true;
+      if (col == _selectStartCol && row <= _selectStartRow! && row >= _selectEndRow!) return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     const double cellSize = 36.0;
@@ -1686,8 +1724,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                     itemBuilder: (context, index) {
                       final row = index ~/ _gridSize;
                       final col = index % _gridSize;
-                      final isSelected = selectedCells.contains(index);
-                      final isFound = _isCellInFoundWord(row, col);
+                      final isSelected = _isCellSelected(row, col);
+                      final isFound = _foundMatrix[row][col];
                       return GestureDetector(
                         onTap: () => _onCellTap(row, col),
                         child: Container(
@@ -1696,10 +1734,10 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                           margin: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.blueGrey),
-                            color: isFound
-                                ? Colors.greenAccent
-                                : isSelected
-                                    ? Colors.yellowAccent
+                            color: isSelected
+                                ? Colors.yellowAccent
+                                : isFound
+                                    ? Colors.greenAccent
                                     : Colors.white,
                           ),
                           child: Center(
