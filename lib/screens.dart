@@ -809,7 +809,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Back to Words'),
+                child: const Text('Back to practice'),
               ),
             ],
           ),
@@ -1019,7 +1019,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ListTile(
                   leading: const Icon(Icons.quiz),
                   title: const Text('Flashcards'),
-                  subtitle: Text('Practice with ${_selectedVocabulary!.words.length} words'),
+                  subtitle: const Text('Type the correct translation'),
                   onTap: () async {
                     final count = await showDialog<int>(
                       context: context,
