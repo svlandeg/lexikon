@@ -16,24 +16,25 @@ enum ReadingDirection {
       case 'rightToLeft':
         return ReadingDirection.rightToLeft;
       case 'leftToRight':
+        return ReadingDirection.leftToRight;
       default:
         return ReadingDirection.leftToRight;
     }
   }
 }
 
-class Word {
+class Entry {
   final String source;
   final String target;
 
-  Word({required this.source, required this.target});
+  Entry({required this.source, required this.target});
 
   Map<String, dynamic> toJson() => {
     'source': source,
     'target': target,
   };
 
-  factory Word.fromJson(Map<String, dynamic> json) => Word(
+  factory Entry.fromJson(Map<String, dynamic> json) => Entry(
     source: json['source'] as String,
     target: json['target'] as String,
   );
@@ -46,9 +47,7 @@ class Vocabulary {
   final String targetLanguage;
   final ReadingDirection sourceReadingDirection;
   final ReadingDirection targetReadingDirection;
-  final List<Word> words;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final List<Entry> entries;
 
   Vocabulary({
     required this.id,
@@ -57,9 +56,7 @@ class Vocabulary {
     required this.targetLanguage,
     this.sourceReadingDirection = ReadingDirection.leftToRight,
     this.targetReadingDirection = ReadingDirection.leftToRight,
-    required this.words,
-    required this.createdAt,
-    required this.updatedAt,
+    required this.entries,
   });
 
   Map<String, dynamic> toJson() => {
@@ -69,9 +66,7 @@ class Vocabulary {
     'targetLanguage': targetLanguage,
     'sourceReadingDirection': sourceReadingDirection.name,
     'targetReadingDirection': targetReadingDirection.name,
-    'words': words.map((w) => w.toJson()).toList(),
-    'createdAt': createdAt.toIso8601String(),
-    'updatedAt': updatedAt.toIso8601String(),
+    'entries': entries.map((e) => e.toJson()).toList(),
   };
 
   factory Vocabulary.fromJson(Map<String, dynamic> json) => Vocabulary(
@@ -79,15 +74,9 @@ class Vocabulary {
     name: json['name'] as String,
     sourceLanguage: json['sourceLanguage'] as String,
     targetLanguage: json['targetLanguage'] as String,
-    sourceReadingDirection: json.containsKey('sourceReadingDirection') 
-        ? ReadingDirection.fromString(json['sourceReadingDirection'] as String)
-        : ReadingDirection.leftToRight,
-    targetReadingDirection: json.containsKey('targetReadingDirection')
-        ? ReadingDirection.fromString(json['targetReadingDirection'] as String)
-        : ReadingDirection.leftToRight,
-    words: (json['words'] as List).map((w) => Word.fromJson(w)).toList(),
-    createdAt: DateTime.parse(json['createdAt'] as String),
-    updatedAt: DateTime.parse(json['updatedAt'] as String),
+    sourceReadingDirection: ReadingDirection.fromString(json['sourceReadingDirection'] as String),
+    targetReadingDirection: ReadingDirection.fromString(json['targetReadingDirection'] as String),
+    entries: (json['entries'] as List).map((e) => Entry.fromJson(e)).toList(),
   );
 
   Vocabulary copyWith({
@@ -97,9 +86,7 @@ class Vocabulary {
     String? targetLanguage,
     ReadingDirection? sourceReadingDirection,
     ReadingDirection? targetReadingDirection,
-    List<Word>? words,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    List<Entry>? entries,
   }) {
     return Vocabulary(
       id: id ?? this.id,
@@ -108,9 +95,7 @@ class Vocabulary {
       targetLanguage: targetLanguage ?? this.targetLanguage,
       sourceReadingDirection: sourceReadingDirection ?? this.sourceReadingDirection,
       targetReadingDirection: targetReadingDirection ?? this.targetReadingDirection,
-      words: words ?? this.words,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      entries: entries ?? this.entries,
     );
   }
 } 
