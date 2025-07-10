@@ -258,7 +258,7 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                 items: TextDirection.values.map((direction) {
                   return DropdownMenuItem<TextDirection>(
                     value: direction,
-                    child: Text(direction.name),
+                    child: Text(direction.displayName),
                   );
                 }).toList(),
                 onChanged: (TextDirection? newValue) {
@@ -278,7 +278,7 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                 items: TextDirection.values.map((direction) {
                   return DropdownMenuItem<TextDirection>(
                     value: direction,
-                    child: Text(direction.name),
+                    child: Text(direction.displayName),
                   );
                 }).toList(),
                 onChanged: (TextDirection? newValue) {
@@ -673,6 +673,10 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       ),
     );
   }
+}
+
+extension TextDirectionDisplayName on TextDirection {
+  String get displayName => this == TextDirection.ltr ? 'Left to Right' : 'Right to Left';
 }
 
 // --- End actual class code --- 
