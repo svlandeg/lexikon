@@ -236,10 +236,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     final List<String>? common = _commonLettersForScript(script);
     if (common != null) {
       for (final letter in common) {
-        // Only add if it's not already present and is a printable, non-combining letter
-        if (!alphabet.contains(letter) &&
-            RegExp(r'^[\p{L}]$', unicode: true).hasMatch(letter) &&
-            !RegExp(r'^[\p{M}]$', unicode: true).hasMatch(letter)) {
+        // Only add if it's not already present
+        if (!alphabet.contains(letter)) {
           alphabet.add(letter);
         }
       }
