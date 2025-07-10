@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lexikon/models.dart';
+import 'package:lexikon/vocabulary.dart';
 
 void main() {
   group('Entry JSON', () {

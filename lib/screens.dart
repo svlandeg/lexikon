@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'models.dart';
+import 'vocabulary.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
