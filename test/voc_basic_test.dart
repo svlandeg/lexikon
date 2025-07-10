@@ -43,25 +43,21 @@ void main() {
     });
 
     test('copyWith functionality', () {
-      final updated1 = vocab.copyWith(name: 'Updated');
+      final updated1 = vocab.copyWith(name: 'Updated', entries: []);
       expect(updated1.name, 'Updated');
+      expect(updated1.entries, isEmpty);
       expect(updated1.id, vocab.id);
-    
-      final updated2 = vocab.copyWith(entries: []);
-      expect(updated2.entries, isEmpty);
-      expect(updated2.id, vocab.id);
 
-      final updated3 = vocab.copyWith(sourceLanguage: 'French');
-      expect(updated3.sourceLanguage, 'French');
+      final updated2 = vocab.copyWith(sourceLanguage: 'French', targetLanguage: 'German');
+      expect(updated2.sourceLanguage, 'French');
+      expect(updated2.targetLanguage, 'German');
 
-      final updated4 = vocab.copyWith(targetLanguage: 'German');
-      expect(updated4.targetLanguage, 'German');
-
-      final updated5 = vocab.copyWith(sourceReadingDirection: ReadingDirection.rightToLeft);
-      expect(updated5.sourceReadingDirection, ReadingDirection.rightToLeft);
-
-      final updated6 = vocab.copyWith(targetReadingDirection: ReadingDirection.leftToRight);
-      expect(updated6.targetReadingDirection, ReadingDirection.leftToRight);
+      final updated3 = vocab.copyWith(
+        sourceReadingDirection: ReadingDirection.rightToLeft,
+        targetReadingDirection: ReadingDirection.leftToRight,
+      );
+      expect(updated3.sourceReadingDirection, ReadingDirection.rightToLeft);
+      expect(updated3.targetReadingDirection, ReadingDirection.leftToRight);
     });
   });
 } 
