@@ -336,20 +336,13 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
     _vocabulary = widget.vocabulary;
   }
 
-  Future<void> _saveVocabulary() async {
-    widget.onVocabularyUpdated(_vocabulary);
-    setState(() {
-      // no updatedAt
-    });
-  }
-
   void _addEntry(Entry entry) {
     setState(() {
       _vocabulary = _vocabulary.copyWith(
         entries: [..._vocabulary.entries, entry],
       );
     });
-    _saveVocabulary();
+    widget.onVocabularyUpdated(_vocabulary);
   }
 
   void _removeEntry(int index) {
@@ -358,7 +351,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
       newEntries.removeAt(index);
       _vocabulary = _vocabulary.copyWith(entries: newEntries);
     });
-    _saveVocabulary();
+    widget.onVocabularyUpdated(_vocabulary);
   }
 
   void _editEntry(int index, Entry newEntry) {
@@ -367,7 +360,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
       newEntries[index] = newEntry;
       _vocabulary = _vocabulary.copyWith(entries: newEntries);
     });
-    _saveVocabulary();
+    widget.onVocabularyUpdated(_vocabulary);
   }
 
   @override
@@ -554,7 +547,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                         entries: [..._vocabulary.entries, ...importedEntries],
                       );
                     });
-                    await _saveVocabulary();
+                    widget.onVocabularyUpdated(_vocabulary);
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entries added successfully.')));
                     }
@@ -562,7 +555,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     setState(() {
                       _vocabulary = _vocabulary.copyWith(entries: importedEntries);
                     });
-                    await _saveVocabulary();
+                    widget.onVocabularyUpdated(_vocabulary);
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vocabulary overwritten successfully.')));
                     }

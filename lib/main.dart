@@ -76,7 +76,7 @@ class WelcomeScreen extends StatelessWidget {
     return const Scaffold(
       body: Center(
         child: Text(
-          'Welcome to Lexikon!',
+          'Welcome to LexiKon!',
           style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
       ),
