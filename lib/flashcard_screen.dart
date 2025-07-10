@@ -2,23 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'vocabulary.dart';
 
-// --- Begin actual class code ---
-
 class FlashcardScreen extends StatefulWidget {
-  final List<Entry> entries;
+  final Vocabulary vocabulary;
   final int count;
-  final ReadingDirection sourceReadingDirection;
-  final ReadingDirection targetReadingDirection;
-  final String sourceLanguage;
-  final String targetLanguage;
   const FlashcardScreen({
-    super.key, 
-    required this.entries, 
+    super.key,
+    required this.vocabulary,
     required this.count,
-    required this.sourceReadingDirection,
-    required this.targetReadingDirection,
-    required this.sourceLanguage,
-    required this.targetLanguage,
   });
 
   @override
@@ -39,7 +29,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   @override
   void initState() {
     super.initState();
-    _quizEntries = List<Entry>.from(widget.entries);
+    _quizEntries = List<Entry>.from(widget.vocabulary.entries);
     _quizEntries.shuffle();
     if (_quizEntries.length > widget.count) {
       _quizEntries = _quizEntries.sublist(0, widget.count);
@@ -96,14 +86,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     if (userInput == correctAnswer) {
       setState(() {
         _correct++;
-        _feedback = 'Correct!\nThe ${widget.targetLanguage} translation is: ${_quizEntries[_current].target}';
+        _feedback = 'Correct!\nThe ${widget.vocabulary.targetLanguage} translation is: ${_quizEntries[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
     } else {
       setState(() {
         _incorrect++;
-        _feedback = 'Incorrect.\nThe correct ${widget.targetLanguage} translation is: ${_quizEntries[_current].target}';
+        _feedback = 'Incorrect.\nThe correct ${widget.vocabulary.targetLanguage} translation is: ${_quizEntries[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
@@ -150,12 +140,12 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${widget.sourceLanguage}:', style: Theme.of(context).textTheme.titleLarge),
+            Text('${widget.vocabulary.sourceLanguage}:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
-              entry.source, 
+              entry.source,
               style: Theme.of(context).textTheme.headlineMedium,
-              textDirection: _getTextDirection(widget.sourceReadingDirection),
+              textDirection: _getTextDirection(widget.vocabulary.sourceReadingDirection),
             ),
             const SizedBox(height: 32),
             RawKeyboardListener(
@@ -179,7 +169,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       controller: _controller,
                       focusNode: _inputFocusNode,
                       decoration: InputDecoration(
-                        labelText: '${widget.targetLanguage} translation',
+                        labelText: '${widget.vocabulary.targetLanguage} translation',
                         border: const OutlineInputBorder(),
                       ),
                       onSubmitted: (_) => _submit(),
@@ -222,5 +212,3 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     );
   }
 }
-
-// --- End actual class code --- 

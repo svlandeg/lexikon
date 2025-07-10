@@ -169,12 +169,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => FlashcardScreen(
-                            entries: _selectedVocabulary!.entries,
+                            vocabulary: _selectedVocabulary!,
                             count: count,
-                            sourceReadingDirection: _selectedVocabulary!.sourceReadingDirection,
-                            targetReadingDirection: _selectedVocabulary!.targetReadingDirection,
-                            sourceLanguage: _selectedVocabulary!.sourceLanguage,
-                            targetLanguage: _selectedVocabulary!.targetLanguage,
                           ),
                         ),
                       );
