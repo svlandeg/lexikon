@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lexikon/vocabulary.dart';
+import 'package:flutter/material.dart';
 
 void main() {
   group('Entry', () {
@@ -22,9 +23,8 @@ void main() {
       name: 'TestName',
       sourceLanguage: 'English',
       targetLanguage: 'Spanish',
-      sourceReadingDirection: ReadingDirection.leftToRight,
-      // while Spanish is LTR, setting it to RTL here just for testing
-      targetReadingDirection: ReadingDirection.rightToLeft,
+      sourceReadingDirection: TextDirection.ltr,
+      targetReadingDirection: TextDirection.rtl,
       entries: entryList,
     );
     test('toJson', () {
@@ -33,8 +33,8 @@ void main() {
       expect(json['name'], 'TestName');
       expect(json['sourceLanguage'], 'English');
       expect(json['targetLanguage'], 'Spanish');
-      expect(json['sourceReadingDirection'], ReadingDirection.leftToRight.name);
-      expect(json['targetReadingDirection'], ReadingDirection.rightToLeft.name);
+      expect(json['sourceReadingDirection'], TextDirection.ltr.name);
+      expect(json['targetReadingDirection'], TextDirection.rtl.name);
       expect(json['entries'], isA<List<dynamic>>());
       expect(json['entries'][0]['source'], 'cat');
       expect(json['entries'][0]['target'], 'gato');

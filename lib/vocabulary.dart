@@ -1,28 +1,4 @@
-enum ReadingDirection {
-  leftToRight,
-  rightToLeft;
-
-  String get displayName {
-    switch (this) {
-      case ReadingDirection.leftToRight:
-        return 'Left to Right';
-      case ReadingDirection.rightToLeft:
-        return 'Right to Left';
-    }
-  }
-
-  static ReadingDirection fromString(String value) {
-    final normalized = value.replaceAll(' ', '').toLowerCase();
-    switch (normalized) {
-      case 'righttoleft':
-        return ReadingDirection.rightToLeft;
-      case 'lefttoright':
-        return ReadingDirection.leftToRight;
-      default:
-        return ReadingDirection.leftToRight;
-    }
-  }
-}
+import 'package:flutter/material.dart';
 
 class Entry {
   final String source;
@@ -46,8 +22,8 @@ class Vocabulary {
   final String name;
   final String sourceLanguage;
   final String targetLanguage;
-  final ReadingDirection sourceReadingDirection;
-  final ReadingDirection targetReadingDirection;
+  final TextDirection sourceReadingDirection;
+  final TextDirection targetReadingDirection;
   final List<Entry> entries;
 
   Vocabulary({
@@ -55,8 +31,8 @@ class Vocabulary {
     required this.name,
     required this.sourceLanguage,
     required this.targetLanguage,
-    this.sourceReadingDirection = ReadingDirection.leftToRight,
-    this.targetReadingDirection = ReadingDirection.leftToRight,
+    this.sourceReadingDirection = TextDirection.ltr,
+    this.targetReadingDirection = TextDirection.ltr,
     required this.entries,
   });
 
@@ -75,8 +51,14 @@ class Vocabulary {
     name: json['name'] as String,
     sourceLanguage: json['sourceLanguage'] as String,
     targetLanguage: json['targetLanguage'] as String,
-    sourceReadingDirection: ReadingDirection.fromString(json['sourceReadingDirection'] as String),
-    targetReadingDirection: ReadingDirection.fromString(json['targetReadingDirection'] as String),
+    sourceReadingDirection: TextDirection.values.firstWhere(
+      (e) => e.name == (json['sourceReadingDirection'] as String),
+      orElse: () => TextDirection.ltr,
+    ),
+    targetReadingDirection: TextDirection.values.firstWhere(
+      (e) => e.name == (json['targetReadingDirection'] as String),
+      orElse: () => TextDirection.ltr,
+    ),
     entries: (json['entries'] as List).map((e) => Entry.fromJson(e)).toList(),
   );
 
@@ -85,8 +67,8 @@ class Vocabulary {
     String? name,
     String? sourceLanguage,
     String? targetLanguage,
-    ReadingDirection? sourceReadingDirection,
-    ReadingDirection? targetReadingDirection,
+    TextDirection? sourceReadingDirection,
+    TextDirection? targetReadingDirection,
     List<Entry>? entries,
   }) {
     return Vocabulary(

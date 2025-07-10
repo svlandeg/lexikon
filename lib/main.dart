@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens.dart';
+import 'practice_screen.dart';
+import 'vocabulary_screen.dart';
 
 void main() {
   runApp(const LexikonApp());
@@ -75,7 +76,7 @@ class WelcomeScreen extends StatelessWidget {
     return const Scaffold(
       body: Center(
         child: Text(
-          'Welcome to Lexikon!',
+          'Welcome to LexiKon!',
           style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
       ),
