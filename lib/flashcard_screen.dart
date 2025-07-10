@@ -123,8 +123,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             children: [
               Text('Quiz complete!', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 16),
-              Text('Correct:  [32m$_correct', style: const TextStyle(color: Colors.green, fontSize: 18)),
-              Text('Incorrect:  [31m$_incorrect', style: const TextStyle(color: Colors.red, fontSize: 18)),
+              Text('Correct:  $_correct', style: const TextStyle(color: Colors.green, fontSize: 18)),
+              Text('Incorrect:  $_incorrect', style: const TextStyle(color: Colors.red, fontSize: 18)),
               const SizedBox(height: 8),
               Text('Total score: ${percent.toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
               const SizedBox(height: 24),
