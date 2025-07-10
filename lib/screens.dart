@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'models.dart';
+import 'vocabulary.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
@@ -101,7 +101,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: ListTile(
                     title: Text(vocabulary.name),
-                    subtitle: Text('${vocabulary.sourceLanguage} → ${vocabulary.targetLanguage} (${vocabulary.words.length} words)'),
+                    subtitle: Text('${vocabulary.sourceLanguage} → ${vocabulary.targetLanguage} (${vocabulary.entries.length} entries)'),
                     leading: const Icon(Icons.book),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -131,7 +131,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                               context: context,
                               builder: (context) => AlertDialog(
                                 title: const Text('Delete Vocabulary'),
-                                content: Text('Are you sure you want to delete "${vocabulary.name}" and all its ${vocabulary.words.length} words?'),
+                                content: Text('Are you sure you want to delete "${vocabulary.name}" and all its ${vocabulary.entries.length} words?'),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context),
@@ -308,9 +308,7 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                       targetLanguage: _targetLanguageController.text,
                       sourceReadingDirection: _sourceReadingDirection,
                       targetReadingDirection: _targetReadingDirection,
-                      words: widget.initialVocabulary?.words ?? [],
-                      createdAt: widget.initialVocabulary?.createdAt ?? now,
-                      updatedAt: now,
+                      entries: widget.initialVocabulary?.entries ?? [],
                     );
                     Navigator.pop(context, vocabulary);
                   }
@@ -349,36 +347,35 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
   }
 
   Future<void> _saveVocabulary() async {
-    final updatedVocabulary = _vocabulary.copyWith(updatedAt: DateTime.now());
-    widget.onVocabularyUpdated(updatedVocabulary);
+    widget.onVocabularyUpdated(_vocabulary);
     setState(() {
-      _vocabulary = updatedVocabulary;
+      // no updatedAt
     });
   }
 
-  void _addWord(Word word) {
+  void _addEntry(Entry entry) {
     setState(() {
       _vocabulary = _vocabulary.copyWith(
-        words: [..._vocabulary.words, word],
+        entries: [..._vocabulary.entries, entry],
       );
     });
     _saveVocabulary();
   }
 
-  void _removeWord(int index) {
+  void _removeEntry(int index) {
     setState(() {
-      final newWords = List<Word>.from(_vocabulary.words);
-      newWords.removeAt(index);
-      _vocabulary = _vocabulary.copyWith(words: newWords);
+      final newEntries = List<Entry>.from(_vocabulary.entries);
+      newEntries.removeAt(index);
+      _vocabulary = _vocabulary.copyWith(entries: newEntries);
     });
     _saveVocabulary();
   }
 
-  void _editWord(int index, Word newWord) {
+  void _editEntry(int index, Entry newEntry) {
     setState(() {
-      final newWords = List<Word>.from(_vocabulary.words);
-      newWords[index] = newWord;
-      _vocabulary = _vocabulary.copyWith(words: newWords);
+      final newEntries = List<Entry>.from(_vocabulary.entries);
+      newEntries[index] = newEntry;
+      _vocabulary = _vocabulary.copyWith(entries: newEntries);
     });
     _saveVocabulary();
   }
@@ -405,7 +402,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(
-                        '${_vocabulary.words.length} words',
+                        '${_vocabulary.entries.length} words',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                       ),
                     ],
@@ -416,7 +413,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
             ),
           ),
           Expanded(
-            child: _vocabulary.words.isEmpty
+            child: _vocabulary.entries.isEmpty
                 ? const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -436,12 +433,12 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     ),
                   )
                 : ListView.builder(
-                    itemCount: _vocabulary.words.length,
+                    itemCount: _vocabulary.entries.length,
                     itemBuilder: (context, index) {
-                      final word = _vocabulary.words[index];
+                      final entry = _vocabulary.entries[index];
                       return ListTile(
-                        title: Text(word.source),
-                        subtitle: Text(word.target),
+                        title: Text(entry.source),
+                        subtitle: Text(entry.target),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -449,11 +446,11 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                               icon: const Icon(Icons.edit),
                               tooltip: 'Edit',
                               onPressed: () async {
-                                final result = await Navigator.push<Word>(
+                                final result = await Navigator.push<Entry>(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => AddWordScreen(
-                                      initialWord: word,
+                                    builder: (context) => AddEntryScreen(
+                                      initialEntry: entry,
                                       sourceLanguage: _vocabulary.sourceLanguage,
                                       targetLanguage: _vocabulary.targetLanguage,
                                       sourceReadingDirection: _vocabulary.sourceReadingDirection,
@@ -462,7 +459,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                                   ),
                                 );
                                 if (result != null) {
-                                  _editWord(index, result);
+                                  _editEntry(index, result);
                                 }
                               },
                             ),
@@ -483,7 +480,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                                       TextButton(
                                         onPressed: () {
                                           Navigator.pop(context);
-                                          _removeWord(index);
+                                          _removeEntry(index);
                                         },
                                         child: const Text('Delete'),
                                       ),
@@ -504,12 +501,12 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
                       FloatingActionButton(
-              heroTag: 'addWord',
+              heroTag: 'addEntry',
               onPressed: () async {
-                final result = await Navigator.push<Word>(
+                final result = await Navigator.push<Entry>(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AddWordScreen(
+                    builder: (context) => AddEntryScreen(
                       sourceLanguage: _vocabulary.sourceLanguage,
                       targetLanguage: _vocabulary.targetLanguage,
                       sourceReadingDirection: _vocabulary.sourceReadingDirection,
@@ -518,7 +515,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                   ),
                 );
                 if (result != null) {
-                  _addWord(result);
+                  _addEntry(result);
                 }
               },
               tooltip: 'Add Word',
@@ -533,13 +530,13 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                   final file = File(result.files.single.path!);
                   final content = await file.readAsString();
                   final rows = const CsvToListConverter().convert(content, eol: '\n');
-                  List<Word> importedWords = [];
+                  List<Entry> importedEntries = [];
                   for (var row in rows) {
                     if (row.length >= 2 && row[0] is String && row[1] is String) {
-                      importedWords.add(Word(source: row[0], target: row[1]));
+                      importedEntries.add(Entry(source: row[0], target: row[1]));
                     }
                   }
-                  if (importedWords.isNotEmpty) {
+                  if (importedEntries.isNotEmpty) {
                     final action = await showDialog<String>(
                       context: context,
                       builder: (context) => AlertDialog(
@@ -564,7 +561,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     if (action == 'add') {
                       setState(() {
                         _vocabulary = _vocabulary.copyWith(
-                          words: [..._vocabulary.words, ...importedWords],
+                          entries: [..._vocabulary.entries, ...importedEntries],
                         );
                       });
                       await _saveVocabulary();
@@ -573,7 +570,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                       }
                     } else if (action == 'overwrite') {
                       setState(() {
-                        _vocabulary = _vocabulary.copyWith(words: importedWords);
+                        _vocabulary = _vocabulary.copyWith(entries: importedEntries);
                       });
                       await _saveVocabulary();
                       if (mounted) {
@@ -596,15 +593,15 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
   }
 }
 
-class AddWordScreen extends StatefulWidget {
-  final Word? initialWord;
+class AddEntryScreen extends StatefulWidget {
+  final Entry? initialEntry;
   final String sourceLanguage;
   final String targetLanguage;
   final ReadingDirection sourceReadingDirection;
   final ReadingDirection targetReadingDirection;
-  const AddWordScreen({
+  const AddEntryScreen({
     super.key, 
-    this.initialWord, 
+    this.initialEntry, 
     required this.sourceLanguage, 
     required this.targetLanguage,
     required this.sourceReadingDirection,
@@ -612,10 +609,10 @@ class AddWordScreen extends StatefulWidget {
   });
 
   @override
-  State<AddWordScreen> createState() => _AddWordScreenState();
+  State<AddEntryScreen> createState() => _AddEntryScreenState();
 }
 
-class _AddWordScreenState extends State<AddWordScreen> {
+class _AddEntryScreenState extends State<AddEntryScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _sourceController;
   late final TextEditingController _targetController;
@@ -623,8 +620,8 @@ class _AddWordScreenState extends State<AddWordScreen> {
   @override
   void initState() {
     super.initState();
-    _sourceController = TextEditingController(text: widget.initialWord?.source ?? '');
-    _targetController = TextEditingController(text: widget.initialWord?.target ?? '');
+    _sourceController = TextEditingController(text: widget.initialEntry?.source ?? '');
+    _targetController = TextEditingController(text: widget.initialEntry?.target ?? '');
   }
 
   @override
@@ -636,7 +633,7 @@ class _AddWordScreenState extends State<AddWordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.initialWord != null;
+    final isEditing = widget.initialEntry != null;
     return Scaffold(
       appBar: AppBar(title: Text(isEditing ? 'Edit Entry' : 'Add Entry')),
       body: Padding(
@@ -648,19 +645,19 @@ class _AddWordScreenState extends State<AddWordScreen> {
               TextFormField(
                 controller: _sourceController,
                 decoration: InputDecoration(
-                  labelText: 'Source Language (${widget.sourceLanguage})',
-                  hintText: 'Enter a source language word',
+                  labelText: 'Source Language ( ${widget.sourceLanguage})',
+                  hintText: 'Enter a word from the source language',
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Enter a source language word' : null,
+                validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _targetController,
                 decoration: InputDecoration(
-                  labelText: 'Target Language (${widget.targetLanguage})',
-                  hintText: 'Enter a target language word',
+                  labelText: 'Target Language ( ${widget.targetLanguage})',
+                  hintText: 'Enter a word from the target language',
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Enter a target language word' : null,
+                validator: (value) => value == null || value.isEmpty ? 'Enter a target language entry' : null,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -668,7 +665,7 @@ class _AddWordScreenState extends State<AddWordScreen> {
                   if (_formKey.currentState!.validate()) {
                     Navigator.pop(
                       context,
-                      Word(
+                      Entry(
                         source: _sourceController.text,
                         target: _targetController.text,
                       ),
@@ -688,7 +685,7 @@ class _AddWordScreenState extends State<AddWordScreen> {
 
 
 class FlashcardScreen extends StatefulWidget {
-  final List<Word> words;
+  final List<Entry> entries;
   final int count;
   final ReadingDirection sourceReadingDirection;
   final ReadingDirection targetReadingDirection;
@@ -696,7 +693,7 @@ class FlashcardScreen extends StatefulWidget {
   final String targetLanguage;
   const FlashcardScreen({
     super.key, 
-    required this.words, 
+    required this.entries, 
     required this.count,
     required this.sourceReadingDirection,
     required this.targetReadingDirection,
@@ -709,7 +706,7 @@ class FlashcardScreen extends StatefulWidget {
 }
 
 class _FlashcardScreenState extends State<FlashcardScreen> {
-  late List<Word> _quizWords;
+  late List<Entry> _quizEntries;
   int _current = 0;
   int _correct = 0;
   int _incorrect = 0;
@@ -722,10 +719,10 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   @override
   void initState() {
     super.initState();
-    _quizWords = List<Word>.from(widget.words);
-    _quizWords.shuffle();
-    if (_quizWords.length > widget.count) {
-      _quizWords = _quizWords.sublist(0, widget.count);
+    _quizEntries = List<Entry>.from(widget.entries);
+    _quizEntries.shuffle();
+    if (_quizEntries.length > widget.count) {
+      _quizEntries = _quizEntries.sublist(0, widget.count);
     }
   }
 
@@ -775,18 +772,18 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       return;
     }
     final userInput = _controller.text.trim().toLowerCase();
-    final correctAnswer = _quizWords[_current].target.trim().toLowerCase();
+    final correctAnswer = _quizEntries[_current].target.trim().toLowerCase();
     if (userInput == correctAnswer) {
       setState(() {
         _correct++;
-        _feedback = 'Correct!\nThe ${widget.targetLanguage} translation is: ${_quizWords[_current].target}';
+        _feedback = 'Correct!\nThe ${widget.targetLanguage} translation is: ${_quizEntries[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
     } else {
       setState(() {
         _incorrect++;
-        _feedback = 'Incorrect.\nThe correct ${widget.targetLanguage} translation is: ${_quizWords[_current].target}';
+        _feedback = 'Incorrect.\nThe correct ${widget.targetLanguage} translation is: ${_quizEntries[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
@@ -795,7 +792,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_current >= _quizWords.length) {
+    if (_current >= _quizEntries.length) {
       int total = _correct + _incorrect;
       double percent = total > 0 ? (_correct / total) * 100 : 0;
       return Scaffold(
@@ -820,7 +817,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         ),
       );
     }
-    final word = _quizWords[_current];
+    final entry = _quizEntries[_current];
     if (!_showingFeedback) {
       _requestInputFocus();
     } else {
@@ -836,7 +833,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             Text('${widget.sourceLanguage}:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
-              word.source, 
+              entry.source, 
               style: Theme.of(context).textTheme.headlineMedium,
               textDirection: _getTextDirection(widget.sourceReadingDirection),
             ),
@@ -898,7 +895,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            Text('Progress: ${_current + 1} / ${_quizWords.length}'),
+            Text('Progress: ${_current + 1} / ${_quizEntries.length}'),
           ],
         ),
       ),
@@ -982,7 +979,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
               items: _vocabularies.map((vocabulary) {
                 return DropdownMenuItem<Vocabulary>(
                   value: vocabulary,
-                  child: Text('${vocabulary.name} (${vocabulary.words.length} words)'),
+                  child: Text('${vocabulary.name} (${vocabulary.entries.length} entries)'),
                 );
               }).toList(),
               onChanged: (Vocabulary? newValue) {
@@ -1001,7 +998,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
               ),
               const SizedBox(height: 16),
               
-              if (_selectedVocabulary!.words.isEmpty) ...[
+              if (_selectedVocabulary!.entries.isEmpty) ...[
                 const Card(
                   child: Padding(
                     padding: EdgeInsets.all(16),
@@ -1028,7 +1025,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     final count = await showDialog<int>(
                       context: context,
                       builder: (context) {
-                        int selected = _selectedVocabulary!.words.length;
+                        int selected = _selectedVocabulary!.entries.length;
                         return AlertDialog(
                           title: const Text('How many words to practice?'),
                           content: StatefulBuilder(
@@ -1038,8 +1035,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                                 Slider(
                                   value: selected.toDouble(),
                                   min: 1,
-                                  max: _selectedVocabulary!.words.length.toDouble(),
-                                  divisions: _selectedVocabulary!.words.length - 1,
+                                  max: _selectedVocabulary!.entries.length.toDouble(),
+                                  divisions: _selectedVocabulary!.entries.length - 1,
                                   label: selected.toString(),
                                   onChanged: (v) => setState(() => selected = v.round()),
                                 ),
@@ -1065,7 +1062,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         context,
                         MaterialPageRoute(
                                                   builder: (context) => FlashcardScreen(
-                          words: _selectedVocabulary!.words,
+                          entries: _selectedVocabulary!.entries,
                           count: count,
                           sourceReadingDirection: _selectedVocabulary!.sourceReadingDirection,
                           targetReadingDirection: _selectedVocabulary!.targetReadingDirection,
@@ -1085,7 +1082,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => WordSearchScreen(words: _selectedVocabulary!.words, readingDirection: _selectedVocabulary!.targetReadingDirection),
+                        builder: (context) => WordSearchScreen(entries: _selectedVocabulary!.entries, readingDirection: _selectedVocabulary!.targetReadingDirection),
                       ),
                     );
                   },
@@ -1108,17 +1105,17 @@ class PracticeHomeScreen extends StatefulWidget {
 }
 
 class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
-  List<Word> _words = [];
+  List<Entry> _entries = [];
 
   @override
   void initState() {
     super.initState();
-    _words = List<Word>.from(widget.vocabulary.words);
+    _entries = List<Entry>.from(widget.vocabulary.entries);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_words.isEmpty) {
+    if (_entries.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: Text('Practice: ${widget.vocabulary.name}')),
         body: const Center(
@@ -1154,7 +1151,7 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
               final count = await showDialog<int>(
                 context: context,
                 builder: (context) {
-                  int selected = _words.length;
+                  int selected = _entries.length;
                   return AlertDialog(
                     title: const Text('How many words to practice?'),
                     content: StatefulBuilder(
@@ -1164,8 +1161,8 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
                           Slider(
                             value: selected.toDouble(),
                             min: 1,
-                            max: _words.length.toDouble(),
-                            divisions: _words.length - 1,
+                            max: _entries.length.toDouble(),
+                            divisions: _entries.length - 1,
                             label: selected.toString(),
                             onChanged: (v) => setState(() => selected = v.round()),
                           ),
@@ -1191,7 +1188,7 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => FlashcardScreen(
-                      words: _words, 
+                      entries: _entries, 
                       count: count,
                       sourceReadingDirection: widget.vocabulary.sourceReadingDirection,
                       targetReadingDirection: widget.vocabulary.targetReadingDirection,
@@ -1211,7 +1208,7 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => WordSearchScreen(words: _words, readingDirection: widget.vocabulary.targetReadingDirection),
+                  builder: (context) => WordSearchScreen(entries: _entries, readingDirection: widget.vocabulary.targetReadingDirection),
                 ),
               );
             },
@@ -1223,9 +1220,9 @@ class _PracticeHomeScreenState extends State<PracticeHomeScreen> {
 }
 
 class WordSearchScreen extends StatefulWidget {
-  final List<Word> words;
+  final List<Entry> entries;
   final ReadingDirection readingDirection;
-  const WordSearchScreen({super.key, required this.words, required this.readingDirection});
+  const WordSearchScreen({super.key, required this.entries, required this.readingDirection});
 
   @override
   State<WordSearchScreen> createState() => _WordSearchScreenState();
@@ -1233,7 +1230,7 @@ class WordSearchScreen extends StatefulWidget {
 
 class _WordSearchScreenState extends State<WordSearchScreen> {
   static const int _numPairs = 12;
-  late List<Word> _selectedWords;
+  late List<Entry> _selectedEntries;
   late List<List<String>> _grid;
   late int _gridSize;
   late List<_PlacedWord> _placedWords;
@@ -1256,17 +1253,17 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     // Set grid size to always be 10x10
     _gridSize = 10;
     final rand = Random();
-    final allWords = List<Word>.from(widget.words)
-        .where((w) {
-          final trimmed = w.target.trim();
+    final allEntries = List<Entry>.from(widget.entries)
+        .where((e) {
+          final trimmed = e.target.trim();
           // Exclude words with spaces or punctuation
           final hasPunctuation = RegExp(r'[\p{P}]', unicode: true).hasMatch(trimmed);
           return !trimmed.contains(' ') && !hasPunctuation && trimmed.length <= _gridSize;
         })
         .toList();
-    allWords.shuffle(rand);
-    _selectedWords = allWords.take(_numPairs).toList();
-    final wordList = _selectedWords.map((w) => w.target.trim().toUpperCase()).toList();
+    allEntries.shuffle(rand);
+    _selectedEntries = allEntries.take(_numPairs).toList();
+    final wordList = _selectedEntries.map((e) => e.target.trim().toUpperCase()).toList();
     _placedWords = [];
     _grid = _generateGrid(_gridSize, wordList, widget.readingDirection, actuallyPlaced: _placedWords);
     _foundWordIndexes.clear();
@@ -1779,7 +1776,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                 Wrap(
                   spacing: 12,
                   children: _showSourceHints
-                      ? _selectedWords.asMap().entries.map((entry) {
+                      ? _selectedEntries.asMap().entries.map((entry) {
                           final idx = entry.key;
                           final word = entry.value;
                           final foundIdx = _foundWords.indexWhere((fw) => fw.word == word.target.trim().toUpperCase());
@@ -1798,19 +1795,19 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                             ],
                           );
                         }).toList()
-                      : _selectedWords.map((w) {
-                          final found = _foundWords.any((fw) => fw.word == w.target.trim().toUpperCase());
+                      : _selectedEntries.map((e) {
+                          final found = _foundWords.any((fw) => fw.word == e.target.trim().toUpperCase());
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Chip(
-                                label: Text(w.target),
+                                label: Text(e.target),
                                 backgroundColor: found ? Colors.greenAccent : null,
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(top: 2.0),
                                 child: Text(
-                                  w.source,
+                                  e.source,
                                   style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                                 ),
                               ),
@@ -1819,7 +1816,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                         }).toList(),
                 ),
                 const SizedBox(height: 24),
-                Text('Found: ${_foundWords.length} / ${_selectedWords.length}', style: Theme.of(context).textTheme.titleLarge),
+                Text('Found: ${_foundWords.length} / ${_selectedEntries.length}', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
                 // Show found words in full at the bottom
                 ElevatedButton(
