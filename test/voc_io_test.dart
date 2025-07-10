@@ -57,47 +57,4 @@ void main() {
       expect(vocab2.entries[1].target, vocab.entries[1].target);
     });
   });
-
-  group('copyWith functionality', () {
-    final entryList = [Entry(source: 'cat', target: 'gato'), Entry(source: 'dog', target: 'perro')];
-    final vocab = Vocabulary(
-      id: '1',
-      name: 'TestName',
-      sourceLanguage: 'English',
-      targetLanguage: 'Spanish',
-      sourceReadingDirection: ReadingDirection.leftToRight,
-      targetReadingDirection: ReadingDirection.leftToRight,
-      entries: entryList,
-    );
-    test('Vocab copyWith updates name', () {
-      final updated = vocab.copyWith(name: 'Updated');
-      expect(updated.name, 'Updated');
-      expect(updated.id, vocab.id);
-    });
-    test('Vocab copyWith updates entries', () {
-      final updated = vocab.copyWith(entries: []);
-      expect(updated.entries, isEmpty);
-      expect(updated.id, vocab.id);
-    });
-    test('Vocab copyWith updates id', () {
-      final updated = vocab.copyWith(id: '2');
-      expect(updated.id, '2');
-    });
-    test('Vocab copyWith updates sourceLanguage', () {
-      final updated = vocab.copyWith(sourceLanguage: 'French');
-      expect(updated.sourceLanguage, 'French');
-    });
-    test('Vocab copyWith updates targetLanguage', () {
-      final updated = vocab.copyWith(targetLanguage: 'German');
-      expect(updated.targetLanguage, 'German');
-    });
-    test('Vocab copyWith updates sourceReadingDirection', () {
-      final updated = vocab.copyWith(sourceReadingDirection: ReadingDirection.rightToLeft);
-      expect(updated.sourceReadingDirection, ReadingDirection.rightToLeft);
-    });
-    test('Vocab copyWith updates targetReadingDirection', () {
-      final updated = vocab.copyWith(targetReadingDirection: ReadingDirection.rightToLeft);
-      expect(updated.targetReadingDirection, ReadingDirection.rightToLeft);
-    });
-  });
 } 

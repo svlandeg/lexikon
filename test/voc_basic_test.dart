@@ -25,7 +25,8 @@ void main() {
       sourceLanguage: 'English',
       targetLanguage: 'Spanish',
       sourceReadingDirection: ReadingDirection.leftToRight,
-      targetReadingDirection: ReadingDirection.leftToRight,
+      // while Spanish is LTR, setting it to RTL here just for testing
+      targetReadingDirection: ReadingDirection.rightToLeft,
       entries: entryList,
     );
     test('contents', () {
@@ -33,12 +34,34 @@ void main() {
       expect(vocab.sourceLanguage, 'English');
       expect(vocab.targetLanguage, 'Spanish');
       expect(vocab.sourceReadingDirection, ReadingDirection.leftToRight);
-      expect(vocab.targetReadingDirection, ReadingDirection.leftToRight);
+      expect(vocab.targetReadingDirection, ReadingDirection.rightToLeft);
       expect(vocab.entries.length, entryList.length);
       expect(vocab.entries[0].source, 'cat');
       expect(vocab.entries[0].target, 'gato');
       expect(vocab.entries[1].source, 'dog');
       expect(vocab.entries[1].target, 'perro');
+    });
+
+    test('copyWith functionality', () {
+      final updated1 = vocab.copyWith(name: 'Updated');
+      expect(updated1.name, 'Updated');
+      expect(updated1.id, vocab.id);
+    
+      final updated2 = vocab.copyWith(entries: []);
+      expect(updated2.entries, isEmpty);
+      expect(updated2.id, vocab.id);
+
+      final updated3 = vocab.copyWith(sourceLanguage: 'French');
+      expect(updated3.sourceLanguage, 'French');
+
+      final updated4 = vocab.copyWith(targetLanguage: 'German');
+      expect(updated4.targetLanguage, 'German');
+
+      final updated5 = vocab.copyWith(sourceReadingDirection: ReadingDirection.rightToLeft);
+      expect(updated5.sourceReadingDirection, ReadingDirection.rightToLeft);
+
+      final updated6 = vocab.copyWith(targetReadingDirection: ReadingDirection.leftToRight);
+      expect(updated6.targetReadingDirection, ReadingDirection.leftToRight);
     });
   });
 } 
