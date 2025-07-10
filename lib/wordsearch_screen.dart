@@ -3,7 +3,6 @@ import 'dart:math';
 import 'vocabulary.dart';
 import 'package:unicode_data/unicode_data.dart';
 
-// Add the _PlacementOption class here, before WordSearchScreen.
 class _PlacementOption {
   final int row;
   final int col;

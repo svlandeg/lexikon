@@ -7,9 +7,6 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'practice_screen.dart';
 
-// VocabularyListScreen, AddVocabularyScreen, VocabularyDetailScreen, and their state classes
-
-// --- Begin actual class code ---
 
 class VocabularyListScreen extends StatefulWidget {
   const VocabularyListScreen({super.key});
@@ -678,5 +675,3 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 extension TextDirectionDisplayName on TextDirection {
   String get displayName => this == TextDirection.ltr ? 'Left to Right' : 'Right to Left';
 }
-
-// --- End actual class code --- 
