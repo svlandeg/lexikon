@@ -2,12 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lexikon/vocabulary.dart';
 
 void main() {
-  group('Entry JSON', () {
-    final entry = Entry(source: 'hello', target: 'hola');
-    test('toJson returns correct map', () {
+  group('Entry', () {
+    test('toJson', () {
+      final entry = Entry(source: 'hello', target: 'hola');
       expect(entry.toJson(), {'source': 'hello', 'target': 'hola'});
     });
-    test('fromJson creates correct Entry', () {
+    test('fromJson', () {
       final json = {'source': 'hello', 'target': 'hola'};
       final entry2 = Entry.fromJson(json);
       expect(entry2.source, 'hello');
@@ -15,7 +15,7 @@ void main() {
     });
   });
 
-  group('Vocabulary JSON', () {
+  group('Vocabulary', () {
     final entryList = [Entry(source: 'cat', target: 'gato'), Entry(source: 'dog', target: 'perro')];
     final vocab = Vocabulary(
       id: '1',
@@ -23,37 +23,25 @@ void main() {
       sourceLanguage: 'English',
       targetLanguage: 'Spanish',
       sourceReadingDirection: ReadingDirection.leftToRight,
-      targetReadingDirection: ReadingDirection.leftToRight,
+      // while Spanish is LTR, setting it to RTL here just for testing
+      targetReadingDirection: ReadingDirection.rightToLeft,
       entries: entryList,
     );
-    test('Vocab contents', () {
-      expect(vocab.name, 'TestName');
-      expect(vocab.sourceLanguage, 'English');
-      expect(vocab.targetLanguage, 'Spanish');
-      expect(vocab.sourceReadingDirection, ReadingDirection.leftToRight);
-      expect(vocab.targetReadingDirection, ReadingDirection.leftToRight);
-      expect(vocab.entries.length, entryList.length);
-      expect(vocab.entries[0].source, 'cat');
-      expect(vocab.entries[0].target, 'gato');
-      expect(vocab.entries[1].source, 'dog');
-      expect(vocab.entries[1].target, 'perro');
-    });
-    test('Vocab toJson', () {
+    test('toJson', () {
       final json = vocab.toJson();
       expect(json['id'], vocab.id);
       expect(json['name'], 'TestName');
-      expect(json['sourceLanguage'], vocab.sourceLanguage);
-      expect(json['targetLanguage'], vocab.targetLanguage);
-      expect(json['sourceReadingDirection'], vocab.sourceReadingDirection.name);
-      expect(json['targetReadingDirection'], vocab.targetReadingDirection.name);
+      expect(json['sourceLanguage'], 'English');
+      expect(json['targetLanguage'], 'Spanish');
+      expect(json['sourceReadingDirection'], ReadingDirection.leftToRight.name);
+      expect(json['targetReadingDirection'], ReadingDirection.rightToLeft.name);
       expect(json['entries'], isA<List<dynamic>>());
-      // test content of entries
       expect(json['entries'][0]['source'], 'cat');
       expect(json['entries'][0]['target'], 'gato');
       expect(json['entries'][1]['source'], 'dog');
       expect(json['entries'][1]['target'], 'perro');
     });
-    test('Vocab fromJson', () {
+    test('fromJson', () {
       final json = vocab.toJson();
       final vocab2 = Vocabulary.fromJson(json);
       expect(vocab2.id, vocab.id);

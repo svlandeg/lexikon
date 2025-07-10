@@ -17,16 +17,28 @@ void main() {
     });
   });
 
-  group('Entry', () {
-    test('toJson', () {
-      final entry = Entry(source: 'hello', target: 'hola');
-      expect(entry.toJson(), {'source': 'hello', 'target': 'hola'});
-    });
-    test('fromJson', () {
-      final json = {'source': 'hello', 'target': 'hola'};
-      final entry = Entry.fromJson(json);
-      expect(entry.source, 'hello');
-      expect(entry.target, 'hola');
+  group('Vocabulary', () {
+    final entryList = [Entry(source: 'cat', target: 'gato'), Entry(source: 'dog', target: 'perro')];
+    final vocab = Vocabulary(
+      id: '1',
+      name: 'TestName',
+      sourceLanguage: 'English',
+      targetLanguage: 'Spanish',
+      sourceReadingDirection: ReadingDirection.leftToRight,
+      targetReadingDirection: ReadingDirection.leftToRight,
+      entries: entryList,
+    );
+    test('contents', () {
+      expect(vocab.name, 'TestName');
+      expect(vocab.sourceLanguage, 'English');
+      expect(vocab.targetLanguage, 'Spanish');
+      expect(vocab.sourceReadingDirection, ReadingDirection.leftToRight);
+      expect(vocab.targetReadingDirection, ReadingDirection.leftToRight);
+      expect(vocab.entries.length, entryList.length);
+      expect(vocab.entries[0].source, 'cat');
+      expect(vocab.entries[0].target, 'gato');
+      expect(vocab.entries[1].source, 'dog');
+      expect(vocab.entries[1].target, 'perro');
     });
   });
 } 
