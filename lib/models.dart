@@ -12,10 +12,11 @@ enum ReadingDirection {
   }
 
   static ReadingDirection fromString(String value) {
-    switch (value) {
-      case 'rightToLeft':
+    final normalized = value.replaceAll(' ', '').toLowerCase();
+    switch (normalized) {
+      case 'righttoleft':
         return ReadingDirection.rightToLeft;
-      case 'leftToRight':
+      case 'lefttoright':
         return ReadingDirection.leftToRight;
       default:
         return ReadingDirection.leftToRight;
