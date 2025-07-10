@@ -434,10 +434,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                                   MaterialPageRoute(
                                     builder: (context) => AddEntryScreen(
                                       initialEntry: entry,
-                                      sourceLanguage: _vocabulary.sourceLanguage,
-                                      targetLanguage: _vocabulary.targetLanguage,
-                                      sourceReadingDirection: _vocabulary.sourceReadingDirection,
-                                      targetReadingDirection: _vocabulary.targetReadingDirection,
+                                      vocabulary: _vocabulary,
                                     ),
                                   ),
                                 );
@@ -490,10 +487,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => AddEntryScreen(
-                    sourceLanguage: _vocabulary.sourceLanguage,
-                    targetLanguage: _vocabulary.targetLanguage,
-                    sourceReadingDirection: _vocabulary.sourceReadingDirection,
-                    targetReadingDirection: _vocabulary.targetReadingDirection,
+                    vocabulary: _vocabulary,
                   ),
                 ),
               );
@@ -578,17 +572,11 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
 
 class AddEntryScreen extends StatefulWidget {
   final Entry? initialEntry;
-  final String sourceLanguage;
-  final String targetLanguage;
-  final TextDirection sourceReadingDirection;
-  final TextDirection targetReadingDirection;
+  final Vocabulary vocabulary;
   const AddEntryScreen({
     super.key, 
     this.initialEntry, 
-    required this.sourceLanguage, 
-    required this.targetLanguage,
-    required this.sourceReadingDirection,
-    required this.targetReadingDirection,
+    required this.vocabulary,
   });
 
   @override
@@ -628,7 +616,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               TextFormField(
                 controller: _sourceController,
                 decoration: InputDecoration(
-                  labelText: 'Source Language ( ${widget.sourceLanguage})',
+                  labelText: 'Source Language ( ${widget.vocabulary.sourceLanguage})',
                   hintText: 'Enter a word from the source language',
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
@@ -637,7 +625,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               TextFormField(
                 controller: _targetController,
                 decoration: InputDecoration(
-                  labelText: 'Target Language ( ${widget.targetLanguage})',
+                  labelText: 'Target Language ( ${widget.vocabulary.targetLanguage})',
                   hintText: 'Enter a word from the target language',
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'Enter a target language entry' : null,
