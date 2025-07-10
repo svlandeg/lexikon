@@ -191,8 +191,8 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _sourceLanguageController;
   late final TextEditingController _targetLanguageController;
-  late ReadingDirection _sourceReadingDirection;
-  late ReadingDirection _targetReadingDirection;
+  late TextDirection _sourceReadingDirection;
+  late TextDirection _targetReadingDirection;
 
   @override
   void initState() {
@@ -200,8 +200,8 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
     _nameController = TextEditingController(text: widget.initialVocabulary?.name ?? '');
     _sourceLanguageController = TextEditingController(text: widget.initialVocabulary?.sourceLanguage ?? '');
     _targetLanguageController = TextEditingController(text: widget.initialVocabulary?.targetLanguage ?? '');
-    _sourceReadingDirection = widget.initialVocabulary?.sourceReadingDirection ?? ReadingDirection.leftToRight;
-    _targetReadingDirection = widget.initialVocabulary?.targetReadingDirection ?? ReadingDirection.leftToRight;
+    _sourceReadingDirection = widget.initialVocabulary?.sourceReadingDirection ?? TextDirection.ltr;
+    _targetReadingDirection = widget.initialVocabulary?.targetReadingDirection ?? TextDirection.ltr;
   }
 
   @override
@@ -250,18 +250,18 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                 validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<ReadingDirection>(
+              DropdownButtonFormField<TextDirection>(
                 value: _sourceReadingDirection,
                 decoration: const InputDecoration(
                   labelText: 'Source Language Reading Direction',
                 ),
-                items: ReadingDirection.values.map((direction) {
-                  return DropdownMenuItem<ReadingDirection>(
+                items: TextDirection.values.map((direction) {
+                  return DropdownMenuItem<TextDirection>(
                     value: direction,
-                    child: Text(direction.displayName),
+                    child: Text(direction.name),
                   );
                 }).toList(),
-                onChanged: (ReadingDirection? newValue) {
+                onChanged: (TextDirection? newValue) {
                   if (newValue != null) {
                     setState(() {
                       _sourceReadingDirection = newValue;
@@ -270,18 +270,18 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<ReadingDirection>(
+              DropdownButtonFormField<TextDirection>(
                 value: _targetReadingDirection,
                 decoration: const InputDecoration(
                   labelText: 'Target Language Reading Direction',
                 ),
-                items: ReadingDirection.values.map((direction) {
-                  return DropdownMenuItem<ReadingDirection>(
+                items: TextDirection.values.map((direction) {
+                  return DropdownMenuItem<TextDirection>(
                     value: direction,
-                    child: Text(direction.displayName),
+                    child: Text(direction.name),
                   );
                 }).toList(),
-                onChanged: (ReadingDirection? newValue) {
+                onChanged: (TextDirection? newValue) {
                   if (newValue != null) {
                     setState(() {
                       _targetReadingDirection = newValue;
@@ -391,7 +391,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${_vocabulary.sourceLanguage} (${_vocabulary.sourceReadingDirection.displayName}) → ${_vocabulary.targetLanguage} (${_vocabulary.targetReadingDirection.displayName})',
+                        '${_vocabulary.sourceLanguage} (${_vocabulary.sourceReadingDirection.name}) → ${_vocabulary.targetLanguage} (${_vocabulary.targetReadingDirection.name})',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(
@@ -590,8 +590,8 @@ class AddEntryScreen extends StatefulWidget {
   final Entry? initialEntry;
   final String sourceLanguage;
   final String targetLanguage;
-  final ReadingDirection sourceReadingDirection;
-  final ReadingDirection targetReadingDirection;
+  final TextDirection sourceReadingDirection;
+  final TextDirection targetReadingDirection;
   const AddEntryScreen({
     super.key, 
     this.initialEntry, 

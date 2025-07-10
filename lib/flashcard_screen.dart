@@ -60,16 +60,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     });
   }
 
-  TextDirection _getTextDirection(ReadingDirection direction) {
-    switch (direction) {
-      case ReadingDirection.rightToLeft:
-        return TextDirection.rtl;
-      case ReadingDirection.leftToRight:
-      default:
-        return TextDirection.ltr;
-    }
-  }
-
   void _submit() {
     if (_showingFeedback) {
       setState(() {
@@ -145,7 +135,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             Text(
               entry.source,
               style: Theme.of(context).textTheme.headlineMedium,
-              textDirection: _getTextDirection(widget.vocabulary.sourceReadingDirection),
+              textDirection: widget.vocabulary.sourceReadingDirection,
             ),
             const SizedBox(height: 32),
             RawKeyboardListener(

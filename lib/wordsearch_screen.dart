@@ -14,7 +14,7 @@ class _PlacementOption {
 
 class WordSearchScreen extends StatefulWidget {
   final List<Entry> entries;
-  final ReadingDirection readingDirection;
+  final TextDirection readingDirection;
   const WordSearchScreen({super.key, required this.entries, required this.readingDirection});
 
   @override
@@ -68,7 +68,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     _foundMatrix = List.generate(_gridSize, (_) => List.filled(_gridSize, false));
   }
 
-  List<List<String>> _generateGrid(int gridSize, List<String> wordList, ReadingDirection direction, {List<_PlacedWord>? actuallyPlaced}) {
+  List<List<String>> _generateGrid(int gridSize, List<String> wordList, TextDirection direction, {List<_PlacedWord>? actuallyPlaced}) {
     final grid = List.generate(gridSize, (_) => List.generate(gridSize, (_) => ''));
     final rand = Random();
     final placed = <_PlacedWord>[];
@@ -110,7 +110,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
 
     for (final wordOrig in wordList) {
       // For RTL, reverse the word string, but placement logic is always left-to-right or top-to-bottom
-      final isRTL = direction == ReadingDirection.rightToLeft;
+      final isRTL = direction == TextDirection.rtl;
       final word = isRTL ? wordOrig.split("").reversed.join("") : wordOrig;
       List<_PlacementOption> bestOptions = [];
       int maxOverlap = -1;
@@ -314,7 +314,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     final end = [_selectEndRow!, _selectEndCol!];
     // Only allow horizontal or vertical
     if (start[0] != end[0] && start[1] != end[1]) return;
-    final isRTL = widget.readingDirection == ReadingDirection.rightToLeft;
+    final isRTL = widget.readingDirection == TextDirection.rtl;
     List<String> selected = [];
     if (start[0] == end[0]) {
       // Horizontal
@@ -421,7 +421,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     if (_selectStartRow == null || _selectStartCol == null || _selectEndRow == null || _selectEndCol == null) return [];
     final start = [_selectStartRow!, _selectStartCol!];
     final end = [_selectEndRow!, _selectEndCol!];
-    final isRTL = widget.readingDirection == ReadingDirection.rightToLeft;
+    final isRTL = widget.readingDirection == TextDirection.rtl;
     List<int> cells = [];
     if (start[0] == end[0]) {
       // Horizontal
