@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'vocabulary.dart';
 import 'wordsearch_screen.dart';
-import 'vocabulary_screen.dart';
 import 'flashcard_screen.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,8 +9,6 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'dart:math';
-
-export 'vocabulary_screen.dart' show VocabularyListScreen;
 
 class PracticeScreen extends StatefulWidget {
   const PracticeScreen({super.key});
@@ -171,14 +168,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                                                  builder: (context) => FlashcardScreen(
-                          entries: _selectedVocabulary!.entries,
-                          count: count,
-                          sourceReadingDirection: _selectedVocabulary!.sourceReadingDirection,
-                          targetReadingDirection: _selectedVocabulary!.targetReadingDirection,
-                          sourceLanguage: _selectedVocabulary!.sourceLanguage,
-                          targetLanguage: _selectedVocabulary!.targetLanguage,
-                        ),
+                          builder: (context) => FlashcardScreen(
+                            entries: _selectedVocabulary!.entries,
+                            count: count,
+                            sourceReadingDirection: _selectedVocabulary!.sourceReadingDirection,
+                            targetReadingDirection: _selectedVocabulary!.targetReadingDirection,
+                            sourceLanguage: _selectedVocabulary!.sourceLanguage,
+                            targetLanguage: _selectedVocabulary!.targetLanguage,
+                          ),
                         ),
                       );
                     }

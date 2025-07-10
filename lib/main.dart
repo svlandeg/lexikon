@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens.dart';
+import 'practice_screen.dart';
+import 'vocabulary_screen.dart';
 
 void main() {
   runApp(const LexikonApp());

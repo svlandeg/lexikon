@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
-import 'screens.dart';
+import 'practice_screen.dart';
 
 // VocabularyListScreen, AddVocabularyScreen, VocabularyDetailScreen, and their state classes
 
