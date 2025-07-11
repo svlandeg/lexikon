@@ -63,7 +63,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lexikon - Vocabularies')),
+      appBar: AppBar(title: const Text('LexiKon - Vocabularies')),
       body: _vocabularies.isEmpty
           ? const Center(
               child: Column(

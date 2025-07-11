@@ -129,48 +129,70 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   title: const Text('Flashcards'),
                   subtitle: const Text('Type the correct translation'),
                   onTap: () async {
-                    final count = await showDialog<int>(
-                      context: context,
-                      builder: (context) {
-                        int selected = _selectedVocabulary!.entries.length;
-                        return AlertDialog(
-                          title: const Text('How many words to practice?'),
-                          content: StatefulBuilder(
-                            builder: (context, setState) => Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Slider(
-                                  value: selected.toDouble(),
-                                  min: 1,
-                                  max: _selectedVocabulary!.entries.length.toDouble(),
-                                  divisions: _selectedVocabulary!.entries.length - 1,
-                                  label: selected.toString(),
-                                  onChanged: (v) => setState(() => selected = v.round()),
-                                ),
-                                Text('Words: $selected'),
-                              ],
-                            ),
-                          ),
+                    final entryCount = _selectedVocabulary!.entries.length;
+                    int? count;
+                    if (entryCount == 1) {
+                      count = await showDialog<int>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Practice Flashcards'),
+                          content: const Text('There is only one word in this vocabulary.'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
                               child: const Text('Cancel'),
                             ),
                             TextButton(
-                              onPressed: () => Navigator.pop(context, selected),
+                              onPressed: () => Navigator.pop(context, 1),
                               child: const Text('Start'),
                             ),
                           ],
-                        );
-                      },
-                    );
+                        ),
+                      );
+                    } else {
+                      count = await showDialog<int>(
+                        context: context,
+                        builder: (context) {
+                          int selected = entryCount;
+                          return AlertDialog(
+                            title: const Text('How many words to practice?'),
+                            content: StatefulBuilder(
+                              builder: (context, setState) => Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Slider(
+                                    value: selected.toDouble(),
+                                    min: 1,
+                                    max: entryCount.toDouble(),
+                                    divisions: entryCount - 1,
+                                    label: selected.toString(),
+                                    onChanged: (v) => setState(() => selected = v.round()),
+                                  ),
+                                  Text('Words: $selected'),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, selected),
+                                child: const Text('Start'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }
                     if (count != null && count > 0) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => FlashcardScreen(
                             vocabulary: _selectedVocabulary!,
-                            count: count,
+                            count: count!, // use non-null assertion
                           ),
                         ),
                       );

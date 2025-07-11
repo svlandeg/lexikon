@@ -401,13 +401,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
         return;
       }
     }
-    // Reset selection immediately if not found
-    setState(() {
-      _selectStartRow = null;
-      _selectStartCol = null;
-      _selectEndRow = null;
-      _selectEndCol = null;
-    });
+    // Keep the yellow highlight until a new selection is started
   }
 
   List<int> _getSelectedCells() {
