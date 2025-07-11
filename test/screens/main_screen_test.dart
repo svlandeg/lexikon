@@ -12,5 +12,7 @@ void main() {
 
     // Verify that the app starts without crashing
     expect(find.byType(MaterialApp), findsOneWidget);
+    await tester.pumpWidget(Container());
+    await tester.pumpAndSettle();
   });
 }

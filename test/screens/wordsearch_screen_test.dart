@@ -52,6 +52,8 @@ void main() {
 
       // Assert switch is present
       expect(find.byType(Switch), findsOneWidget);
+      await tester.pumpWidget(Container());
+      await tester.pumpAndSettle();
     });
 
     testWidgets('toggles difficulty correctly', (WidgetTester tester) async {
@@ -96,6 +98,8 @@ void main() {
         );
         expect(find.text(entry.source), findsWidgets); // source is present somewhere below
       }
+      await tester.pumpWidget(Container());
+      await tester.pumpAndSettle();
     });
 
     testWidgets('highlights cells on selection (yellow)', (WidgetTester tester) async {
@@ -160,6 +164,8 @@ void main() {
         }
       }
       expect(highlightedCount, 5);
+      await tester.pumpWidget(Container());
+      await tester.pumpAndSettle();
     });
 
     testWidgets('permanently highlights correct word (green)', (WidgetTester tester) async {
@@ -290,6 +296,8 @@ void main() {
           reason: 'Cell ($row, $col) should remain highlighted green after new selection',
         );
       }
+      await tester.pumpWidget(Container());
+      await tester.pumpAndSettle();
     });
   });
 } 
