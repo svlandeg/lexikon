@@ -97,5 +97,69 @@ void main() {
         expect(find.text(entry.source), findsWidgets); // source is present somewhere below
       }
     });
+
+    testWidgets('highlights cells on selection', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WordSearchScreen(
+            entries: greekEntries,
+            readingDirection: TextDirection.ltr,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Find the GridView
+      final gridFinder = find.byType(GridView);
+      expect(gridFinder, findsOneWidget);
+
+      // Helper to get the index for (row, col)
+      int cellIndex(int row, int col) => row * 10 + col;
+
+      // Tap cell (4,2)
+      final cellA = find.descendant(
+        of: gridFinder,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+            widget is Container &&
+            widget.child is Center &&
+            (widget.child as Center).child is Text &&
+            ((widget.child as Center).child as Text).data != null &&
+            ((widget.child as Center).child as Text).data!.length == 1,
+        ),
+      ).at(cellIndex(4, 2));
+      await tester.tap(cellA);
+      await tester.pumpAndSettle();
+
+      // Tap cell (4,6)
+      final cellB = find.descendant(
+        of: gridFinder,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+            widget is Container &&
+            widget.child is Center &&
+            (widget.child as Center).child is Text &&
+            ((widget.child as Center).child as Text).data != null &&
+            ((widget.child as Center).child as Text).data!.length == 1,
+        ),
+      ).at(cellIndex(4, 6));
+      await tester.tap(cellB);
+      await tester.pumpAndSettle();
+
+      // After two taps, at least the selected cells should be highlighted (yellow)
+      int highlightedCount = 0;
+      final cellWidgets = tester.widgetList<Container>(find.descendant(
+        of: gridFinder,
+        matching: find.byType(Container),
+      ));
+      for (final container in cellWidgets) {
+        final decoration = container.decoration;
+        if (decoration is BoxDecoration &&
+            decoration.color == Colors.yellowAccent) {
+          highlightedCount++;
+        }
+      }
+      expect(highlightedCount, 5);
+    });
   });
 } 
