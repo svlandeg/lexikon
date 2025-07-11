@@ -53,5 +53,49 @@ void main() {
       // Assert switch is present
       expect(find.byType(Switch), findsOneWidget);
     });
+
+    testWidgets('toggles difficulty correctly', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WordSearchScreen(
+            entries: greekEntries,
+            readingDirection: TextDirection.ltr,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Initially, the toggle should show 'Hints (Source Language):'
+      expect(find.text('Hints (Source Language):'), findsOneWidget);
+      expect(find.text('Target Words:'), findsNothing);
+
+      // Only source words should be shown as chips
+      for (final entry in greekEntries) {
+        expect(find.widgetWithText(Chip, entry.source), findsOneWidget);
+        expect(find.widgetWithText(Chip, entry.target), findsNothing);
+      }
+
+      // Tap the switch to toggle mode from Difficult to Easy
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      // Now, the toggle should show 'Target Words:'
+      expect(find.text('Target Words:'), findsOneWidget);
+      expect(find.text('Hints (Source Language):'), findsNothing);
+
+      // Now, all target words should be shown as chips, with their source words beneath
+      for (final entry in greekEntries) {
+        expect(find.widgetWithText(Chip, entry.target), findsOneWidget);
+        // The source word should be present as a Text widget (not in a chip)
+        expect(
+          find.descendant(
+            of: find.widgetWithText(Chip, entry.target),
+            matching: find.text(entry.source),
+          ),
+          findsNothing, // source is not inside the chip
+        );
+        expect(find.text(entry.source), findsWidgets); // source is present somewhere below
+      }
+    });
   });
 } 
