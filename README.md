@@ -41,8 +41,9 @@ When starting this exercise, a 10x10 word search will be displayed with at most 
 ## 📝 FAQ
 
 * How do I start using the app?
-
   * First, fetch yourself a word list that suites your learning goals. You can create one yourself (in CSV format, using a simple text editor) or download a dummy one from https://github.com/svlandeg/lexivok
   * Create a new vocabulary on the "Vocabularies" tab, then tap it, and upload this CSV file with the "Import CSV" button
   * Navigate to the "Practice" tab and pick an exercise to start practicing your vocabulary knowledge!
+* Why doesn't the app come with built-in vocabulary lists?
+  * The app is specifically designed to be agnostic to which languages you want to learn, and which words you want to practice. This should depend entirely on the language journey you're already on, be it in a school setting, a hobby or a language class you're taking for work. You should generate vocabulary lists that are relevant to your knowledge and skill level of the language you're currently learning.
 
