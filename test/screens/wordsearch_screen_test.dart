@@ -265,10 +265,15 @@ void main() {
 
       // Check that all cells in the word are highlighted green
       final updatedCellWidgets = tester.widgetList<Container>(cellFinder).toList();
+      // Collect indices for ΠΟΥΛΙ
+      List<int> pouliIndices = [];
       for (int k = 0; k < wordLen; k++) {
+        // If the word is horizontal, the row is the same for all cells
         int row = (startRow == endRow) ? startRow : startRow + k;
+        // If the word is vertical, the column is the same for all cells
         int col = (startCol == endCol) ? startCol : startCol + k;
         final idx = cellIndex(row, col);
+        pouliIndices.add(idx);
         final container = updatedCellWidgets[idx];
         final decoration = container.decoration;
         expect(
@@ -278,22 +283,49 @@ void main() {
         );
       }
 
-      // Tap a different cell to start a new selection
-      await tester.tap(cellFinder.at(cellIndex(0, 0)));
+      // 1. Tap the second letter of ΠΟΥΛΙ
+      await tester.tap(cellFinder.at(pouliIndices[1]));
       await tester.pumpAndSettle();
 
-      // The word ΠΟΥΛΙ should still be highlighted green
-      final afterTapCellWidgets = tester.widgetList<Container>(cellFinder).toList();
+      // Check: all ΠΟΥΛΙ cells are green except the second, which is yellow
+      final afterTapWidgets = tester.widgetList<Container>(cellFinder).toList();
       for (int k = 0; k < wordLen; k++) {
-        int row = (startRow == endRow) ? startRow : startRow + k;
-        int col = (startCol == endCol) ? startCol : startCol + k;
-        final idx = cellIndex(row, col);
-        final container = afterTapCellWidgets[idx];
+        final idx = pouliIndices[k];
+        final container = afterTapWidgets[idx];
+        final decoration = container.decoration;
+        if (k == 1) {
+          expect(
+            decoration is BoxDecoration && decoration.color == Colors.yellowAccent,
+            isTrue,
+            reason: 'Cell for 2nd letter should be yellow after tap',
+          );
+        } else {
+          expect(
+            decoration is BoxDecoration && decoration.color == Colors.greenAccent,
+            isTrue,
+            reason: 'Other cells should remain green after tapping 2nd letter',
+          );
+        }
+      }
+
+      // 2. Tap a cell not in ΠΟΥΛΙ: (1,1) if startRow==0, else (0,0)
+      int tapRow = (startRow == 0) ? 1 : 0;
+      int tapCol = (startRow == 0) ? 1 : 0;
+      int tapIdx = cellIndex(tapRow, tapCol);
+      // Make sure this cell is not part of ΠΟΥΛΙ
+      assert(!pouliIndices.contains(tapIdx));
+      await tester.tap(cellFinder.at(tapIdx));
+      await tester.pumpAndSettle();
+
+      // Check: all ΠΟΥΛΙ cells are green again
+      final afterSecondTapWidgets = tester.widgetList<Container>(cellFinder).toList();
+      for (final idx in pouliIndices) {
+        final container = afterSecondTapWidgets[idx];
         final decoration = container.decoration;
         expect(
           decoration is BoxDecoration && decoration.color == Colors.greenAccent,
           isTrue,
-          reason: 'Cell ($row, $col) should remain highlighted green after new selection',
+          reason: 'Cell $idx should be green after tapping outside ΠΟΥΛΙ',
         );
       }
       await tester.pumpWidget(Container());
