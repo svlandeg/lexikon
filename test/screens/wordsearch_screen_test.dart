@@ -5,6 +5,9 @@ import 'package:lexikon/vocabulary.dart';
 
 void main() {
   group('WordSearchScreen', () {
+    // Use the grid dimension from the widget
+    const gridDim = WordSearchScreen.gridDimension;
+
     // Mock Greek entries
     final greekEntries = [
       Entry(source: 'cat', target: 'ΓΑΤΑ'),
@@ -42,7 +45,7 @@ void main() {
             ((widget.child as Center).child as Text).data!.length == 1,
         ),
       );
-      expect(cellFinder, findsNWidgets(100));
+      expect(cellFinder, findsNWidgets(gridDim * gridDim));
 
       // Assert at least as many chips as entries (could be more due to hints)
       expect(find.byType(Chip), findsWidgets);
@@ -118,7 +121,7 @@ void main() {
       expect(gridFinder, findsOneWidget);
 
       // Helper to get the index for (row, col)
-      int cellIndex(int row, int col) => row * 10 + col;
+      int cellIndex(int row, int col) => row * gridDim + col;
 
       // Tap cell (4,2)
       final cellA = find.descendant(
@@ -183,10 +186,10 @@ void main() {
       expect(gridFinder, findsOneWidget);
 
       // Helper to get the index for (row, col)
-      int cellIndex(int row, int col) => row * 10 + col;
+      int cellIndex(int row, int col) => row * gridDim + col;
 
       // Read the grid into a 2D list of strings
-      List<List<String>> gridLetters = List.generate(10, (_) => List.filled(10, ''));
+      List<List<String>> gridLetters = List.generate(gridDim, (_) => List.filled(gridDim, ''));
       final cellFinder = find.descendant(
         of: gridFinder,
         matching: find.byWidgetPredicate(
@@ -199,8 +202,8 @@ void main() {
         ),
       );
       final cellWidgets = tester.widgetList<Container>(cellFinder).toList();
-      for (int row = 0; row < 10; row++) {
-        for (int col = 0; col < 10; col++) {
+      for (int row = 0; row < gridDim; row++) {
+        for (int col = 0; col < gridDim; col++) {
           final idx = cellIndex(row, col);
           final container = cellWidgets[idx];
           final center = container.child as Center;
@@ -216,8 +219,8 @@ void main() {
       bool found = false;
       int? startRow, startCol, endRow, endCol;
       // Search horizontally
-      for (int row = 0; row < 10 && !found; row++) {
-        for (int col = 0; col <= 10 - wordLen; col++) {
+      for (int row = 0; row < gridDim && !found; row++) {
+        for (int col = 0; col <= gridDim - wordLen; col++) {
           bool match = true;
           for (int k = 0; k < wordLen; k++) {
             if (gridLetters[row][col + k] != String.fromCharCode(wordRunes[k])) {
@@ -236,8 +239,8 @@ void main() {
         }
       }
       // Search vertically if not found
-      for (int col = 0; col < 10 && !found; col++) {
-        for (int row = 0; row <= 10 - wordLen; row++) {
+      for (int col = 0; col < gridDim && !found; col++) {
+        for (int row = 0; row <= gridDim - wordLen; row++) {
           bool match = true;
           for (int k = 0; k < wordLen; k++) {
             if (gridLetters[row + k][col] != String.fromCharCode(wordRunes[k])) {
@@ -265,10 +268,15 @@ void main() {
 
       // Check that all cells in the word are highlighted green
       final updatedCellWidgets = tester.widgetList<Container>(cellFinder).toList();
+      // Collect indices for ΠΟΥΛΙ
+      List<int> pouliIndices = [];
       for (int k = 0; k < wordLen; k++) {
+        // If the word is horizontal, the row is the same for all cells
         int row = (startRow == endRow) ? startRow : startRow + k;
+        // If the word is vertical, the column is the same for all cells
         int col = (startCol == endCol) ? startCol : startCol + k;
         final idx = cellIndex(row, col);
+        pouliIndices.add(idx);
         final container = updatedCellWidgets[idx];
         final decoration = container.decoration;
         expect(
@@ -278,22 +286,49 @@ void main() {
         );
       }
 
-      // Tap a different cell to start a new selection
-      await tester.tap(cellFinder.at(cellIndex(0, 0)));
+      // 1. Tap the second letter of ΠΟΥΛΙ
+      await tester.tap(cellFinder.at(pouliIndices[1]));
       await tester.pumpAndSettle();
 
-      // The word ΠΟΥΛΙ should still be highlighted green
-      final afterTapCellWidgets = tester.widgetList<Container>(cellFinder).toList();
+      // Check: all ΠΟΥΛΙ cells are green except the second, which is yellow
+      final afterTapWidgets = tester.widgetList<Container>(cellFinder).toList();
       for (int k = 0; k < wordLen; k++) {
-        int row = (startRow == endRow) ? startRow : startRow + k;
-        int col = (startCol == endCol) ? startCol : startCol + k;
-        final idx = cellIndex(row, col);
-        final container = afterTapCellWidgets[idx];
+        final idx = pouliIndices[k];
+        final container = afterTapWidgets[idx];
+        final decoration = container.decoration;
+        if (k == 1) {
+          expect(
+            decoration is BoxDecoration && decoration.color == Colors.yellowAccent,
+            isTrue,
+            reason: 'Cell for 2nd letter should be yellow after tap',
+          );
+        } else {
+          expect(
+            decoration is BoxDecoration && decoration.color == Colors.greenAccent,
+            isTrue,
+            reason: 'Other cells should remain green after tapping 2nd letter',
+          );
+        }
+      }
+
+      // 2. Tap a cell not in ΠΟΥΛΙ: (1,1) if startRow==0, else (0,0)
+      int tapRow = (startRow == 0) ? 1 : 0;
+      int tapCol = (startRow == 0) ? 1 : 0;
+      int tapIdx = cellIndex(tapRow, tapCol);
+      // Make sure this cell is not part of ΠΟΥΛΙ
+      assert(!pouliIndices.contains(tapIdx));
+      await tester.tap(cellFinder.at(tapIdx));
+      await tester.pumpAndSettle();
+
+      // Check: all ΠΟΥΛΙ cells are green again
+      final afterSecondTapWidgets = tester.widgetList<Container>(cellFinder).toList();
+      for (final idx in pouliIndices) {
+        final container = afterSecondTapWidgets[idx];
         final decoration = container.decoration;
         expect(
           decoration is BoxDecoration && decoration.color == Colors.greenAccent,
           isTrue,
-          reason: 'Cell ($row, $col) should remain highlighted green after new selection',
+          reason: 'Cell $idx should be green after tapping outside ΠΟΥΛΙ',
         );
       }
       await tester.pumpWidget(Container());

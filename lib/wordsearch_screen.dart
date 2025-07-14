@@ -14,6 +14,7 @@ class _PlacementOption {
 class WordSearchScreen extends StatefulWidget {
   final List<Entry> entries;
   final TextDirection readingDirection;
+  static const int gridDimension = 10;
   const WordSearchScreen({super.key, required this.entries, required this.readingDirection});
 
   @override
@@ -42,8 +43,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   }
 
   void _initGame() {
-    // Set grid size to always be 10x10
-    _gridSize = 10;
+    // Set grid size from the widget's static const
+    _gridSize = WordSearchScreen.gridDimension;
     final rand = Random();
     final allEntries = List<Entry>.from(widget.entries)
         .where((e) {
