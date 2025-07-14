@@ -1,7 +1,7 @@
 LexiKon is a free, open-source app to help you memorize vocabulary of a foreign language through fun exercises. The exercises are designed to help you get more familiar with the visual representation of the words in the foreign languages, and to help you memorize the translation from your 'source' language (e.g. your native tongue) to the 'target' language (the foreign language you're learning). This app is meant to be used as a (fun) supplement to standard language learning techniques and not as a standalone learning app, when learning a second (or third, or fourth) language as a teenager or as an adult.
 
 <p align="center">
-<img src="media/wordsearch_english.png" title="Example of a wordsearch grid" alt="Picture showing a wordsearch grid with several English words highlighted in green" width="300">
+<img src="media/wordsearch_english.png" title="Example of a wordsearch grid" alt="Picture showing a wordsearch grid with several English words highlighted in green" width="200">
 </p>
 
 You can upload any custom list of word pairs, or use a pre-defined one from https://github.com/svlandeg/lexivok.
@@ -26,6 +26,16 @@ The flashcards exercises presents you the 'source' word in the language you alre
 
 <p align="center">
 <img src="media/flashcard_arabic.png" title="Example of one flashcard question" alt="Picture showing a flashcard with the question 'English: student (fem.)' and expecting the Arabic translation, which should be طالبة" width="300">
+</p>
+
+### Word search
+
+When starting this exercise, a 10x10 word search will be displayed with at most 12 words, randomly selected from your vocabulary. There are two modes to use this:
+   * **Hard** (default, cf. image below): shows only the words in the source language as a hint to find the words of your target language in the grid. When a word is found, it is highlighted in green and automatically matched to the correct translation in the word list below the grid.
+   * **Easy**: shows the words in the target language to help you find them in the grid. The translation in the source language is displayed as well. When a word is found, it is highlighted in green in the grid and in the list of hints.
+
+<p align="center">
+<img src="media/wordsearch_arabic_hard.png" title="Example of grid search, hard mode" alt="Picture showing a grid search with Arabic letters, and the English translations shown as hint below" width="800">
 </p>
 
 ## 📝 FAQ
