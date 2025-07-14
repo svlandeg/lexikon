@@ -5,6 +5,9 @@ import 'package:lexikon/vocabulary.dart';
 
 void main() {
   group('WordSearchScreen', () {
+    // Use the grid dimension from the widget
+    const gridDim = WordSearchScreen.gridDimension;
+
     // Mock Greek entries
     final greekEntries = [
       Entry(source: 'cat', target: 'ΓΑΤΑ'),
@@ -42,7 +45,7 @@ void main() {
             ((widget.child as Center).child as Text).data!.length == 1,
         ),
       );
-      expect(cellFinder, findsNWidgets(100));
+      expect(cellFinder, findsNWidgets(gridDim * gridDim));
 
       // Assert at least as many chips as entries (could be more due to hints)
       expect(find.byType(Chip), findsWidgets);
@@ -118,7 +121,7 @@ void main() {
       expect(gridFinder, findsOneWidget);
 
       // Helper to get the index for (row, col)
-      int cellIndex(int row, int col) => row * 10 + col;
+      int cellIndex(int row, int col) => row * gridDim + col;
 
       // Tap cell (4,2)
       final cellA = find.descendant(
@@ -183,10 +186,10 @@ void main() {
       expect(gridFinder, findsOneWidget);
 
       // Helper to get the index for (row, col)
-      int cellIndex(int row, int col) => row * 10 + col;
+      int cellIndex(int row, int col) => row * gridDim + col;
 
       // Read the grid into a 2D list of strings
-      List<List<String>> gridLetters = List.generate(10, (_) => List.filled(10, ''));
+      List<List<String>> gridLetters = List.generate(gridDim, (_) => List.filled(gridDim, ''));
       final cellFinder = find.descendant(
         of: gridFinder,
         matching: find.byWidgetPredicate(
@@ -199,8 +202,8 @@ void main() {
         ),
       );
       final cellWidgets = tester.widgetList<Container>(cellFinder).toList();
-      for (int row = 0; row < 10; row++) {
-        for (int col = 0; col < 10; col++) {
+      for (int row = 0; row < gridDim; row++) {
+        for (int col = 0; col < gridDim; col++) {
           final idx = cellIndex(row, col);
           final container = cellWidgets[idx];
           final center = container.child as Center;
@@ -216,8 +219,8 @@ void main() {
       bool found = false;
       int? startRow, startCol, endRow, endCol;
       // Search horizontally
-      for (int row = 0; row < 10 && !found; row++) {
-        for (int col = 0; col <= 10 - wordLen; col++) {
+      for (int row = 0; row < gridDim && !found; row++) {
+        for (int col = 0; col <= gridDim - wordLen; col++) {
           bool match = true;
           for (int k = 0; k < wordLen; k++) {
             if (gridLetters[row][col + k] != String.fromCharCode(wordRunes[k])) {
@@ -236,8 +239,8 @@ void main() {
         }
       }
       // Search vertically if not found
-      for (int col = 0; col < 10 && !found; col++) {
-        for (int row = 0; row <= 10 - wordLen; row++) {
+      for (int col = 0; col < gridDim && !found; col++) {
+        for (int row = 0; row <= gridDim - wordLen; row++) {
           bool match = true;
           for (int k = 0; k < wordLen; k++) {
             if (gridLetters[row + k][col] != String.fromCharCode(wordRunes[k])) {
