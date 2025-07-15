@@ -544,6 +544,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                           _showSourceHints = val;
                         });
                       },
+                      materialTapTargetSize: MaterialTapTargetSize.padded,
                     ),
                     const SizedBox(width: 8),
                     Text(_showSourceHints ? 'Hard' : 'Easy'),
