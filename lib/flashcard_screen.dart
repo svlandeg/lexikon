@@ -25,6 +25,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   bool _showingFeedback = false;
   final FocusNode _inputFocusNode = FocusNode();
   final FocusNode _keyboardFocusNode = FocusNode();
+  final FocusNode _backButtonFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -41,7 +42,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     _controller.dispose();
     _inputFocusNode.dispose();
     _keyboardFocusNode.dispose();
+    _backButtonFocusNode.dispose();
     super.dispose();
+  }
+
+  void _requestBackButtonFocus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _backButtonFocusNode.requestFocus();
+    });
   }
 
   void _requestInputFocus() {
@@ -95,6 +103,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     if (_current >= _quizEntries.length) {
       int total = _correct + _incorrect;
       double percent = total > 0 ? (_correct / total) * 100 : 0;
+      _requestBackButtonFocus();
       return Scaffold(
         appBar: AppBar(title: const Text('Flashcards')),
         body: Center(
@@ -109,6 +118,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               Text('Total score: ${percent.toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
               const SizedBox(height: 24),
               ElevatedButton(
+                focusNode: _backButtonFocusNode,
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Back to practice'),
               ),
