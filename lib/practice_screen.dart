@@ -10,6 +10,8 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'dart:math';
 
+const int kDefaultFlashcardCount = 20;
+
 class PracticeScreen extends StatefulWidget {
   const PracticeScreen({super.key});
 
@@ -153,7 +155,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       count = await showDialog<int>(
                         context: context,
                         builder: (context) {
-                          int selected = entryCount;
+                          int selected = entryCount >= kDefaultFlashcardCount ? kDefaultFlashcardCount : entryCount;
+                          final FocusNode startButtonFocusNode = FocusNode();
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            startButtonFocusNode.requestFocus();
+                          });
                           return AlertDialog(
                             title: const Text('How many words to practice?'),
                             content: StatefulBuilder(
@@ -178,6 +184,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                                 child: const Text('Cancel'),
                               ),
                               TextButton(
+                                focusNode: startButtonFocusNode,
                                 onPressed: () => Navigator.pop(context, selected),
                                 child: const Text('Start'),
                               ),

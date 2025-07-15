@@ -63,6 +63,8 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Practice',
           ),
         ],
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
       ),
     );
   }
