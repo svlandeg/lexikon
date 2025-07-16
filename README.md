@@ -25,9 +25,9 @@ You can upload any custom list of word pairs, or use a pre-defined one from http
 This exercise shows the 'source' word in the language you already know (e.g. your native tongue), and the letters of the translation in the target language you're learning. You have to drag the letters in the correct order, and the app will tell you once it's correct and then you can move on to the next word. Before starting the exercise, you can chose how many words you want to get quized on, and the app will select a random subset of your vocabulary. 
 
 <p align="center">
-<img src="media/scramble_arabic_unsolved.png" title="Example of a scrambled word (unsolved)" alt="Picture showing 'English: tired (fem.)' and several (unordered) Arabic letters" width="300" align="top">
+<img src="media/scramble_arabic_unsolved.png" title="Example of a scrambled word (unsolved)" alt="Picture showing 'English: tired (fem.)' and several (unordered) Arabic letters" width="200" align="top">
   &nbsp;&nbsp; → &nbsp;&nbsp;
-<img src="media/scramble_arabic_solved.png" title="Example of an unscrambled word (solved)" alt="Picture showing 'English: tired (fem.)' and the corresponding Arabic letters in the correct order to form 'متعبة'" width="300" align="top">
+<img src="media/scramble_arabic_solved.png" title="Example of an unscrambled word (solved)" alt="Picture showing 'English: tired (fem.)' and the corresponding Arabic letters in the correct order to form 'متعبة'" width="200" align="top">
 </p>
 
 ### Word search
