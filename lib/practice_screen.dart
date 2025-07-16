@@ -9,7 +9,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'dart:math';
-import 'scrambled_word_screen.dart';
+import 'scrambledword_screen.dart';
 
 const int kDefaultFlashcardCount = 20;
 
