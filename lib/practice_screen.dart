@@ -9,6 +9,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'dart:math';
+import 'scrambled_word_screen.dart';
 
 const int kDefaultFlashcardCount = 20;
 
@@ -217,6 +218,86 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         builder: (context) => WordSearchScreen(entries: _selectedVocabulary!.entries, readingDirection: _selectedVocabulary!.targetReadingDirection),
                       ),
                     );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.shuffle),
+                  title: const Text('Scrambled Word'),
+                  subtitle: const Text('Reorder scrambled letters to form the translation'),
+                  onTap: () async {
+                    final entryCount = _selectedVocabulary!.entries.length;
+                    int? count;
+                    if (entryCount == 1) {
+                      count = await showDialog<int>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Practice Scrambled Words'),
+                          content: const Text('There is only one word in this vocabulary.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, 1),
+                              child: const Text('Start'),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else {
+                      count = await showDialog<int>(
+                        context: context,
+                        builder: (context) {
+                          int selected = entryCount >= kDefaultFlashcardCount ? kDefaultFlashcardCount : entryCount;
+                          final FocusNode startButtonFocusNode = FocusNode();
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            startButtonFocusNode.requestFocus();
+                          });
+                          return AlertDialog(
+                            title: const Text('How many words to practice?'),
+                            content: StatefulBuilder(
+                              builder: (context, setState) => Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Slider(
+                                    value: selected.toDouble(),
+                                    min: 1,
+                                    max: entryCount.toDouble(),
+                                    divisions: entryCount - 1,
+                                    label: selected.toString(),
+                                    onChanged: (v) => setState(() => selected = v.round()),
+                                  ),
+                                  Text('Words: $selected'),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                focusNode: startButtonFocusNode,
+                                onPressed: () => Navigator.pop(context, selected),
+                                child: const Text('Start'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }
+                    if (count != null && count > 0) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ScrambledWordScreen(
+                            vocabulary: _selectedVocabulary!,
+                            count: count!,
+                          ),
+                        ),
+                      );
+                    }
                   },
                 ),
               ],
