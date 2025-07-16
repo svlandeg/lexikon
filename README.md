@@ -12,7 +12,7 @@ You can upload any custom list of word pairs, or use a pre-defined one from http
 
 * Support for languages in either reading direction: left-to-right or right-to-left
 * Support for multiple vocabulary lists, allowing you to use the app for different languages or to create distinct word lists to practice separately.
-* Various types of exercises to practice your vocabulary knowledge, including flashcards and a word search - and more to come.
+* Various types of exercises to practice your vocabulary knowledge, including flashcards, a word search and unscrambling letters - and more to come.
 * Supported platforms:
    * Currently only developed and tested for Windows
    * Coming up soon: support for Android
@@ -20,12 +20,14 @@ You can upload any custom list of word pairs, or use a pre-defined one from http
  
 ## 🎉 Exercises
 
-### Flashcards
+### Unscrambling
 
-The flashcards exercise presents you the 'source' word in the language you already know (e.g. your native tongue), and asks you to type the word of the target language you're learning. You can chose how many cards you want to get quized on, and the app will select a random subset of your vocabulary. After each word, it will show whether the answer was correct or not. At the end of the quiz, it will give you a percentage of correct answers.
+This exercise shows the 'source' word in the language you already know (e.g. your native tongue), and the letters of the translation in the target language you're learning. You have to drag the letters in the correct order, and the app will tell you once it's correct and then you can move on to the next word. Before starting the exercise, you can chose how many words you want to get quized on, and the app will select a random subset of your vocabulary. 
 
 <p align="center">
-<img src="media/flashcard_arabic.png" title="Example of one flashcard question" alt="Picture showing a flashcard with the question 'English: student (fem.)' and expecting the Arabic translation, which should be طالبة" width="300">
+<img src="media/scramble_arabic_unsolved.png" title="Example of a scrambled word (unsolved)" alt="Picture showing 'English: tired (fem.)' and several (unordered) Arabic letters" width="300" align="top">
+  &nbsp;&nbsp; → &nbsp;&nbsp;
+<img src="media/scramble_arabic_solved.png" title="Example of an unscrambled word (solved)" alt="Picture showing 'English: tired (fem.)' and the corresponding Arabic letters in the correct order to form 'متعبة'" width="300" align="top">
 </p>
 
 ### Word search
@@ -36,6 +38,14 @@ When starting this exercise, a 10x10 word search will be displayed with at most 
 
 <p align="center">
 <img src="media/wordsearch_arabic_hard.png" title="Example of grid search, hard mode" alt="Picture showing a grid search with Arabic letters, and the English translations shown as hint below" width="800">
+</p>
+
+### Flashcards
+
+The flashcards exercise presents you the 'source' word in the language you already know (e.g. your native tongue), and asks you to type the word of the target language you're learning. You can chose how many cards you want to get quized on, and the app will select a random subset of your vocabulary. After each word, it will show whether the answer was correct or not. At the end of the quiz, it will give you a percentage of correct answers.
+
+<p align="center">
+<img src="media/flashcard_arabic.png" title="Example of one flashcard question" alt="Picture showing a flashcard with the question 'English: student (fem.)' and expecting the Arabic translation, which should be طالبة" width="300">
 </p>
 
 ## 📝 FAQ
