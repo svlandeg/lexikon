@@ -15,16 +15,32 @@ class _ConnectScreenState extends State<ConnectScreen> {
   int? selectedSourceIndex;
   int? selectedTargetIndex;
   List<_Connection> connections = [];
+  int? selectedWordCount;
+  List<Map<String, String>> selectedPairs = [];
 
   @override
   void initState() {
     super.initState();
-    // Shuffle and prepare lists
-    final pairs = List<Map<String, String>>.from(widget.wordPairs);
-    pairs.shuffle();
-    sourceWords = pairs.map((e) => e['source']!).toList();
-    targetWords = pairs.map((e) => e['target']!).toList();
-    targetWords.shuffle();
+    // No selection yet; wait for user to pick count if enough words
+  }
+
+  void startExercise(int count) {
+    setState(() {
+      selectedWordCount = count;
+      selectedPairs = List.from(widget.wordPairs);
+      selectedPairs.shuffle();
+      selectedPairs = selectedPairs.take(count).toList();
+      sourceWords = selectedPairs.map((e) => e['source']!).toList();
+      targetWords = selectedPairs.map((e) => e['target']!).toList();
+      targetWords.shuffle();
+      connections.clear();
+      selectedSourceIndex = null;
+      selectedTargetIndex = null;
+    });
+  }
+
+  void startExerciseAll() {
+    startExercise(widget.wordPairs.length);
   }
 
   void onWordTap(bool isSource, int index) {
@@ -56,7 +72,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
     if (selectedSourceIndex != null && selectedTargetIndex != null) {
       final source = sourceWords[selectedSourceIndex!];
       final target = targetWords[selectedTargetIndex!];
-      final match = widget.wordPairs.any((pair) => pair['source'] == source && pair['target'] == target);
+      final match = selectedPairs.any((pair) => pair['source'] == source && pair['target'] == target);
       if (match) {
         setState(() {
           connections.add(_Connection(
@@ -73,104 +89,138 @@ class _ConnectScreenState extends State<ConnectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('BUILD:');
-    print('  sourceWords: ${List.generate(sourceWords.length, (i) => '[$i] ${sourceWords[i]}').join(', ')}');
-    print('  targetWords: ${List.generate(targetWords.length, (i) => '[$i] ${targetWords[i]}').join(', ')}');
-    print('  connections: ${connections.map((c) => '(${c.sourceIndex},${c.targetIndex})').join(', ')}');
-    return Scaffold(
-      appBar: AppBar(title: Text('Connect Debug')),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          double width = constraints.maxWidth;
-          double height = constraints.maxHeight;
-          double wordHeight = 60.0;
-          double verticalPadding = 8.0;
-          double totalWordHeight = wordHeight + 2 * verticalPadding;
-          int n = sourceWords.length;
-          return Stack(
+    // Pre-exercise selection if enough words
+    if (selectedWordCount == null) {
+      int maxCount = widget.wordPairs.length;
+      List<int> options = [];
+      for (int i = 5; i <= maxCount; i += 5) {
+        options.add(i);
+      }
+      bool lessThanFive = maxCount < 5;
+      if (lessThanFive) {
+        // Go straight to exercise with all words
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (selectedWordCount == null) startExerciseAll();
+        });
+        return const SizedBox.shrink();
+      }
+      return Scaffold(
+        appBar: AppBar(title: const Text('Connect Exercise')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  // Source words
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(sourceWords.length, (i) {
-                        bool isSelected = selectedSourceIndex == i;
-                        bool isConnected = connections.any((c) => c.sourceIndex == i);
-                        return GestureDetector(
-                          onTap: isConnected ? null : () => onWordTap(true, i),
-                          child: Container(
-                            margin: EdgeInsets.symmetric(vertical: verticalPadding),
-                            padding: EdgeInsets.all(12),
-                            height: wordHeight,
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.red : isConnected ? Colors.grey[300] : Colors.white,
-                              border: Border.all(
-                                color: isSelected ? Colors.red : isConnected ? Colors.grey : Colors.blueGrey,
-                                width: 2,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(sourceWords[i], style: TextStyle(fontSize: 18)),
-                          ),
-                        );
-                      }),
+              const Text('How many word pairs to practice?'),
+              ...options.map((count) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: ElevatedButton(
+                      onPressed: () => startExercise(count),
+                      child: Text('$count pairs'),
                     ),
-                  ),
-                  // Target words
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(targetWords.length, (i) {
-                        bool isSelected = selectedTargetIndex == i;
-                        bool isConnected = connections.any((c) => c.targetIndex == i);
-                        return GestureDetector(
-                          onTap: isConnected ? null : () => onWordTap(false, i),
-                          child: Container(
-                            margin: EdgeInsets.symmetric(vertical: verticalPadding),
-                            padding: EdgeInsets.all(12),
-                            height: wordHeight,
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.orange : isConnected ? Colors.grey[300] : Colors.white,
-                              border: Border.all(
-                                color: isSelected ? Colors.orange : isConnected ? Colors.grey : Colors.blueGrey,
-                                width: 2,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
+                  )),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ... rest of the exercise UI ...
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double width = constraints.maxWidth;
+        double height = constraints.maxHeight;
+        double wordHeight = 60.0;
+        double verticalPadding = 8.0;
+        double totalWordHeight = wordHeight + 2 * verticalPadding;
+        int n = sourceWords.length;
+        return Stack(
+          children: [
+            Row(
+              children: [
+                // Source words
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(sourceWords.length, (i) {
+                      bool isSelected = selectedSourceIndex == i;
+                      bool isConnected = connections.any((c) => c.sourceIndex == i);
+                      return GestureDetector(
+                        onTap: isConnected ? null : () => onWordTap(true, i),
+                        child: Container(
+                          margin: EdgeInsets.symmetric(vertical: verticalPadding),
+                          padding: EdgeInsets.all(12),
+                          height: wordHeight,
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.red : isConnected ? Colors.grey[300] : Colors.white,
+                            border: Border.all(
+                              color: isSelected ? Colors.red : isConnected ? Colors.grey : Colors.blueGrey,
+                              width: 2,
                             ),
-                            child: Text(targetWords[i], style: TextStyle(fontSize: 18)),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        );
-                      }),
-                    ),
-                  ),
-                ],
-              ),
-              // Draw all connection lines
-              ...connections.map((conn) => IgnorePointer(
-                ignoring: true,
-                child: CustomPaint(
-                  size: Size(width, height),
-                  painter: _ConnectionLinePainter(
-                    sourceIndex: conn.sourceIndex,
-                    targetIndex: conn.targetIndex,
-                    n: n,
-                    wordHeight: totalWordHeight,
-                    width: width,
-                    height: height,
+                          child: Text(sourceWords[i], style: TextStyle(fontSize: 18)),
+                        ),
+                      );
+                    }),
                   ),
                 ),
-              )),
-            ],
-          );
-        },
-      ),
+                // Target words
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(targetWords.length, (i) {
+                      bool isSelected = selectedTargetIndex == i;
+                      bool isConnected = connections.any((c) => c.targetIndex == i);
+                      return GestureDetector(
+                        onTap: isConnected ? null : () => onWordTap(false, i),
+                        child: Container(
+                          margin: EdgeInsets.symmetric(vertical: verticalPadding),
+                          padding: EdgeInsets.all(12),
+                          height: wordHeight,
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.orange : isConnected ? Colors.grey[300] : Colors.white,
+                            border: Border.all(
+                              color: isSelected ? Colors.orange : isConnected ? Colors.grey : Colors.blueGrey,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(targetWords[i], style: TextStyle(fontSize: 18)),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ],
+            ),
+            // Draw all connection lines
+            ...connections.map((conn) => IgnorePointer(
+              ignoring: true,
+              child: CustomPaint(
+                size: Size(width, height),
+                painter: _ConnectionLinePainter(
+                  sourceIndex: conn.sourceIndex,
+                  targetIndex: conn.targetIndex,
+                  n: n,
+                  wordHeight: totalWordHeight,
+                  width: width,
+                  height: height,
+                ),
+              ),
+            )),
+          ],
+        );
+      },
     );
   }
 }
 
-// Draws a line between the selected source and target word
+class _Connection {
+  final int sourceIndex;
+  final int targetIndex;
+  _Connection({required this.sourceIndex, required this.targetIndex});
+}
+
 class _ConnectionLinePainter extends CustomPainter {
   final int sourceIndex;
   final int targetIndex;
@@ -205,10 +255,4 @@ class _ConnectionLinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-class _Connection {
-  final int sourceIndex;
-  final int targetIndex;
-  _Connection({required this.sourceIndex, required this.targetIndex});
 } 
