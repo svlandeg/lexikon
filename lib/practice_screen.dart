@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'dart:math';
 import 'scrambledword_screen.dart';
+import 'connect_screen.dart';
 
 const int kDefaultFlashcardCount = 20;
 
@@ -299,6 +300,27 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       );
                     }
                   },
+                ),
+                // Connect Exercise Option
+                ListTile(
+                  leading: const Icon(Icons.compare_arrows),
+                  title: const Text('Connect'),
+                  subtitle: const Text('Match source and target words by drawing connections'),
+                  enabled: _selectedVocabulary!.entries.isNotEmpty,
+                  onTap: _selectedVocabulary!.entries.isEmpty
+                      ? null
+                      : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ConnectScreen(
+                                wordPairs: _selectedVocabulary!.entries
+                                    .map((e) => {'source': e.source, 'target': e.target})
+                                    .toList(),
+                              ),
+                            ),
+                          );
+                        },
                 ),
               ],
             ],
