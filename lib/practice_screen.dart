@@ -309,17 +309,82 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   enabled: _selectedVocabulary!.entries.isNotEmpty,
                   onTap: _selectedVocabulary!.entries.isEmpty
                       ? null
-                      : () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ConnectScreen(
-                                wordPairs: _selectedVocabulary!.entries
-                                    .map((e) => {'source': e.source, 'target': e.target})
-                                    .toList(),
+                      : () async {
+                          final entries = _selectedVocabulary!.entries;
+                          final entryCount = entries.length;
+                          List<Map<String, String>> pairs = entries
+                              .map((e) => {'source': e.source, 'target': e.target})
+                              .toList();
+                          if (entryCount < 5) {
+                            // Fewer than 5: use all
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ConnectScreen(wordPairs: pairs),
                               ),
-                            ),
-                          );
+                            );
+                          } else if (entryCount < 10) {
+                            // 5-9: use 5 random
+                            pairs.shuffle();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ConnectScreen(wordPairs: pairs.take(5).toList()),
+                              ),
+                            );
+                          } else {
+                            // 10 or more: show slider dialog for multiples of 5
+                            int maxCount = (entryCount ~/ 5) * 5;
+                            int selected = 5;
+                            final FocusNode startButtonFocusNode = FocusNode();
+                            int? count = await showDialog<int>(
+                              context: context,
+                              builder: (context) {
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  startButtonFocusNode.requestFocus();
+                                });
+                                return AlertDialog(
+                                  title: const Text('How many word pairs to practice?'),
+                                  content: StatefulBuilder(
+                                    builder: (context, setState) => Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Slider(
+                                          value: selected.toDouble(),
+                                          min: 5,
+                                          max: maxCount.toDouble(),
+                                          divisions: (maxCount ~/ 5) - 1,
+                                          label: selected.toString(),
+                                          onChanged: (v) => setState(() => selected = (v ~/ 5) * 5),
+                                        ),
+                                        Text('Pairs: $selected'),
+                                      ],
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      focusNode: startButtonFocusNode,
+                                      onPressed: () => Navigator.pop(context, selected),
+                                      child: const Text('Start'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            if (count != null && count > 0) {
+                              pairs.shuffle();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ConnectScreen(wordPairs: pairs.take(count).toList()),
+                                ),
+                              );
+                            }
+                          }
                         },
                 ),
               ],
