@@ -120,6 +120,10 @@ class _ConnectScreenState extends State<ConnectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    int total = allPairs.length;
+    int solved = (batchIndex * batchSize) + connections.length;
+    int currentBatchStart = batchIndex * batchSize;
+    int currentBatchEnd = ((batchIndex + 1) * batchSize).clamp(0, total);
     return Scaffold(
       appBar: AppBar(title: const Text('Connect')),
       body: Padding(
@@ -134,79 +138,105 @@ class _ConnectScreenState extends State<ConnectScreen> {
             int n = sourceWords.length;
             return Stack(
               children: [
-                Row(
+                Column(
                   children: [
-                    // Source words
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(sourceWords.length, (i) {
-                          bool isSelected = selectedSourceIndex == i;
-                          bool isConnected = connections.any((c) => c.sourceIndex == i);
-                          return GestureDetector(
-                            onTap: isConnected ? null : () => onWordTap(true, i),
-                            child: Container(
-                              margin: EdgeInsets.symmetric(vertical: verticalPadding),
-                              padding: EdgeInsets.all(12),
-                              height: wordHeight,
-                              decoration: BoxDecoration(
-                                color: isSelected ? Colors.amber[100] : isConnected ? Colors.grey[300] : Colors.white,
-                                border: Border.all(
-                                  color: isConnected ? Colors.grey : Colors.blueGrey,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(sourceWords[i], style: TextStyle(fontSize: 18)),
+                    // Progress bar
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: LinearProgressIndicator(
+                              value: total == 0 ? 0 : solved / total,
+                              minHeight: 8,
                             ),
-                          );
-                        }),
+                          ),
+                          const SizedBox(width: 16),
+                          Text('$solved/$total', style: Theme.of(context).textTheme.bodyMedium),
+                        ],
                       ),
                     ),
-                    // Target words
                     Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(targetWords.length, (i) {
-                          bool isSelected = selectedTargetIndex == i;
-                          bool isConnected = connections.any((c) => c.targetIndex == i);
-                          return GestureDetector(
-                            onTap: isConnected ? null : () => onWordTap(false, i),
-                            child: Container(
-                              margin: EdgeInsets.symmetric(vertical: verticalPadding),
-                              padding: EdgeInsets.all(12),
-                              height: wordHeight,
-                              decoration: BoxDecoration(
-                                color: isSelected ? Colors.amber[100] : isConnected ? Colors.grey[300] : Colors.white,
-                                border: Border.all(
-                                  color: isConnected ? Colors.grey : Colors.blueGrey,
-                                  width: 2,
+                      child: Stack(
+                        children: [
+                          Row(
+                            children: [
+                              // Source words
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(sourceWords.length, (i) {
+                                    bool isSelected = selectedSourceIndex == i;
+                                    bool isConnected = connections.any((c) => c.sourceIndex == i);
+                                    return GestureDetector(
+                                      onTap: isConnected ? null : () => onWordTap(true, i),
+                                      child: Container(
+                                        margin: EdgeInsets.symmetric(vertical: verticalPadding),
+                                        padding: EdgeInsets.all(12),
+                                        height: wordHeight,
+                                        decoration: BoxDecoration(
+                                          color: isSelected ? Colors.amber[100] : isConnected ? Colors.grey[300] : Colors.white,
+                                          border: Border.all(
+                                            color: isConnected ? Colors.grey : Colors.blueGrey,
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(sourceWords[i], style: TextStyle(fontSize: 18)),
+                                      ),
+                                    );
+                                  }),
                                 ),
-                                borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(targetWords[i], style: TextStyle(fontSize: 18)),
+                              // Target words
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(targetWords.length, (i) {
+                                    bool isSelected = selectedTargetIndex == i;
+                                    bool isConnected = connections.any((c) => c.targetIndex == i);
+                                    return GestureDetector(
+                                      onTap: isConnected ? null : () => onWordTap(false, i),
+                                      child: Container(
+                                        margin: EdgeInsets.symmetric(vertical: verticalPadding),
+                                        padding: EdgeInsets.all(12),
+                                        height: wordHeight,
+                                        decoration: BoxDecoration(
+                                          color: isSelected ? Colors.amber[100] : isConnected ? Colors.grey[300] : Colors.white,
+                                          border: Border.all(
+                                            color: isConnected ? Colors.grey : Colors.blueGrey,
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(targetWords[i], style: TextStyle(fontSize: 18)),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Draw all connection lines
+                          ...connections.map((conn) => IgnorePointer(
+                            ignoring: true,
+                            child: CustomPaint(
+                              size: Size(width, height),
+                              painter: _ConnectionLinePainter(
+                                sourceIndex: conn.sourceIndex,
+                                targetIndex: conn.targetIndex,
+                                n: n,
+                                wordHeight: totalWordHeight,
+                                width: width,
+                                height: height,
+                              ),
                             ),
-                          );
-                        }),
+                          )),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                // Draw all connection lines
-                ...connections.map((conn) => IgnorePointer(
-                  ignoring: true,
-                  child: CustomPaint(
-                    size: Size(width, height),
-                    painter: _ConnectionLinePainter(
-                      sourceIndex: conn.sourceIndex,
-                      targetIndex: conn.targetIndex,
-                      n: n,
-                      wordHeight: totalWordHeight,
-                      width: width,
-                      height: height,
-                    ),
-                  ),
-                )),
               ],
             );
           },
