@@ -150,9 +150,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
                               padding: EdgeInsets.all(12),
                               height: wordHeight,
                               decoration: BoxDecoration(
-                                color: isSelected ? Colors.red : isConnected ? Colors.grey[300] : Colors.white,
+                                color: isSelected ? Colors.yellowAccent : isConnected ? Colors.grey[300] : Colors.white,
                                 border: Border.all(
-                                  color: isSelected ? Colors.red : isConnected ? Colors.grey : Colors.blueGrey,
+                                  color: isSelected ? Colors.yellowAccent : isConnected ? Colors.grey : Colors.blueGrey,
                                   width: 2,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
@@ -177,9 +177,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
                               padding: EdgeInsets.all(12),
                               height: wordHeight,
                               decoration: BoxDecoration(
-                                color: isSelected ? Colors.orange : isConnected ? Colors.grey[300] : Colors.white,
+                                color: isSelected ? Colors.yellowAccent : isConnected ? Colors.grey[300] : Colors.white,
                                 border: Border.all(
-                                  color: isSelected ? Colors.orange : isConnected ? Colors.grey : Colors.blueGrey,
+                                  color: isSelected ? Colors.yellowAccent : isConnected ? Colors.grey : Colors.blueGrey,
                                   width: 2,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
@@ -242,7 +242,7 @@ class _ConnectionLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blueAccent
+      ..color = Colors.greenAccent
       ..strokeWidth = 4.0
       ..style = PaintingStyle.stroke;
     double leftX = width * 0.25;
