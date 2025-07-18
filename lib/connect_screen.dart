@@ -150,9 +150,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
                               padding: EdgeInsets.all(12),
                               height: wordHeight,
                               decoration: BoxDecoration(
-                                color: isSelected ? Colors.yellowAccent : isConnected ? Colors.grey[300] : Colors.white,
+                                color: isSelected ? Colors.amber[100] : isConnected ? Colors.grey[300] : Colors.white,
                                 border: Border.all(
-                                  color: isSelected ? Colors.yellowAccent : isConnected ? Colors.grey : Colors.blueGrey,
+                                  color: isConnected ? Colors.grey : Colors.blueGrey,
                                   width: 2,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
@@ -177,9 +177,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
                               padding: EdgeInsets.all(12),
                               height: wordHeight,
                               decoration: BoxDecoration(
-                                color: isSelected ? Colors.yellowAccent : isConnected ? Colors.grey[300] : Colors.white,
+                                color: isSelected ? Colors.amber[100] : isConnected ? Colors.grey[300] : Colors.white,
                                 border: Border.all(
-                                  color: isSelected ? Colors.yellowAccent : isConnected ? Colors.grey : Colors.blueGrey,
+                                  color: isConnected ? Colors.grey : Colors.blueGrey,
                                   width: 2,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
