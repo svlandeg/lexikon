@@ -12,7 +12,7 @@ You can upload any custom list of word pairs, or use a pre-defined one from http
 
 * Support for languages in either reading direction: left-to-right or right-to-left
 * Support for multiple vocabulary lists, allowing you to use the app for different languages or to create distinct word lists to practice separately.
-* Various types of exercises to practice your vocabulary knowledge, including flashcards, a word search and unscrambling letters - and more to come.
+* Various types of exercises to practice your vocabulary knowledge, including a word search, flashcards, unscrambling letters and connecting the right pairs ... and more to come.
 * Supported platforms:
    * Currently only developed and tested for Windows
    * Coming up soon: support for Android
@@ -38,6 +38,14 @@ When starting this exercise, a 10x10 word search will be displayed with at most 
 
 <p align="center">
 <img src="media/wordsearch_arabic_hard.png" title="Example of grid search, hard mode" alt="Picture showing a grid search with Arabic letters, and the English translations shown as hint below" width="800">
+</p>
+
+### Connect the right pairs
+
+Five words are displayed on the left (source language) and five on the right - your job is to connect the correct translations. Upon startup, the user can select how many words to practice in total, but they will be shown 5 at a time.
+
+<p align="center">
+<img src="media/connect_arabic.png" title="Example of an exercise connecting 5 word pairs" alt="Picture showing 5 English words on the left, and the 5 Arabic translations on the right (but scrambled in order)" width="400">
 </p>
 
 ### Flashcards
