@@ -249,8 +249,9 @@ class _ConnectionLinePainter extends CustomPainter {
     double rightX = width * 0.75;
     double y1 = (height - n * wordHeight) / 2 + wordHeight * (sourceIndex + 0.5);
     double y2 = (height - n * wordHeight) / 2 + wordHeight * (targetIndex + 0.5);
-    final p1 = Offset(leftX, y1);
-    final p2 = Offset(rightX, y2);
+    const double boxWidth = 120.0; // Approximate width of the word box
+    final p1 = Offset(leftX + boxWidth / 2, y1);
+    final p2 = Offset(rightX - boxWidth / 2, y2);
     canvas.drawLine(p1, p2, paint);
   }
 
