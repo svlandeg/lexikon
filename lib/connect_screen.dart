@@ -10,6 +10,9 @@ class ConnectScreen extends StatefulWidget {
 }
 
 class _ConnectScreenState extends State<ConnectScreen> {
+  static const int batchSize = 5;
+  late List<Map<String, String>> allPairs;
+  int batchIndex = 0;
   List<String> sourceWords = [];
   List<String> targetWords = [];
   int? selectedSourceIndex;
@@ -19,12 +22,22 @@ class _ConnectScreenState extends State<ConnectScreen> {
   @override
   void initState() {
     super.initState();
-    // Shuffle and prepare lists
-    final pairs = List<Map<String, String>>.from(widget.wordPairs);
-    pairs.shuffle();
-    sourceWords = pairs.map((e) => e['source']!).toList();
-    targetWords = pairs.map((e) => e['target']!).toList();
+    allPairs = List<Map<String, String>>.from(widget.wordPairs);
+    allPairs.shuffle();
+    _loadBatch();
+  }
+
+  void _loadBatch() {
+    final start = batchIndex * batchSize;
+    final end = (start + batchSize).clamp(0, allPairs.length);
+    final batch = allPairs.sublist(start, end);
+    sourceWords = batch.map((e) => e['source']!).toList();
+    targetWords = batch.map((e) => e['target']!).toList();
     targetWords.shuffle();
+    connections = [];
+    selectedSourceIndex = null;
+    selectedTargetIndex = null;
+    setState(() {});
   }
 
   void onWordTap(bool isSource, int index) {
@@ -48,7 +61,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
     if (selectedSourceIndex != null && selectedTargetIndex != null) {
       final source = sourceWords[selectedSourceIndex!];
       final target = targetWords[selectedTargetIndex!];
-      final match = widget.wordPairs.any((pair) => pair['source'] == source && pair['target'] == target);
+      final match = allPairs.any((pair) => pair['source'] == source && pair['target'] == target);
       if (match) {
         setState(() {
           connections.add(_Connection(
@@ -58,6 +71,49 @@ class _ConnectScreenState extends State<ConnectScreen> {
           selectedSourceIndex = null;
           selectedTargetIndex = null;
         });
+        // If all connections for this batch are made, show dialog and wait for user to proceed
+        if (connections.length == sourceWords.length) {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if ((batchIndex + 1) * batchSize < allPairs.length) {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => AlertDialog(
+                  title: const Text('Solved!'),
+                  content: const Text('You solved this batch.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        setState(() {
+                          batchIndex++;
+                          _loadBatch();
+                        });
+                      },
+                      child: const Text('Next'),
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              // All done
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => AlertDialog(
+                  title: const Text('Completed!'),
+                  content: const Text('You have finished all word pairs.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+            }
+          });
+        }
       }
     }
   }
