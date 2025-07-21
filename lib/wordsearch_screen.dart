@@ -3,6 +3,14 @@ import 'dart:math';
 import 'vocabulary.dart';
 import 'package:unicode_data/unicode_data.dart';
 
+// Color definitions for WordSearchScreen
+const Color foundC = Colors.greenAccent;
+const Color selectedC = Colors.yellowAccent;
+const Color borderC = Colors.blueGrey;
+const Color defaultC = Colors.white;
+const Color hintC = Colors.grey;
+const Color hintTextC = Colors.grey;
+
 class _PlacementOption {
   final int row;
   final int col;
@@ -515,12 +523,12 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                           height: cellSize,
                           margin: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.blueGrey),
+                            border: Border.all(color: borderC),
                             color: isSelected
-                                ? Colors.yellowAccent
+                                ? selectedC
                                 : isFound
-                                    ? Colors.greenAccent
-                                    : Colors.white,
+                                    ? foundC
+                                    : defaultC,
                           ),
                           child: Center(
                             child: Text(
@@ -575,7 +583,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                                   padding: const EdgeInsets.only(top: 2.0),
                                   child: Chip(
                                     label: Text(word.target),
-                                    backgroundColor: Colors.greenAccent,
+                                    backgroundColor: foundC,
                                   ),
                                 ),
                             ],
@@ -588,13 +596,13 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                             children: [
                               Chip(
                                 label: Text(e.target),
-                                backgroundColor: found ? Colors.greenAccent : null,
+                                backgroundColor: found ? foundC : null,
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(top: 2.0),
                                 child: Text(
                                   e.source,
-                                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                                  style: TextStyle(fontSize: 12, color: hintTextC),
                                 ),
                               ),
                             ],

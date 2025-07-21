@@ -162,7 +162,7 @@ void main() {
       for (final container in cellWidgets) {
         final decoration = container.decoration;
         if (decoration is BoxDecoration &&
-            decoration.color == Colors.yellowAccent) {
+            decoration.color == selectedC) {
           highlightedCount++;
         }
       }
@@ -280,9 +280,9 @@ void main() {
         final container = updatedCellWidgets[idx];
         final decoration = container.decoration;
         expect(
-          decoration is BoxDecoration && decoration.color == Colors.greenAccent,
+          decoration is BoxDecoration && decoration.color == foundC,
           isTrue,
-          reason: 'Cell ($row, $col) should be highlighted green',
+          reason: 'Cell ( $row, $col) should be highlighted green',
         );
       }
 
@@ -298,13 +298,13 @@ void main() {
         final decoration = container.decoration;
         if (k == 1) {
           expect(
-            decoration is BoxDecoration && decoration.color == Colors.yellowAccent,
+            decoration is BoxDecoration && decoration.color == selectedC,
             isTrue,
             reason: 'Cell for 2nd letter should be yellow after tap',
           );
         } else {
           expect(
-            decoration is BoxDecoration && decoration.color == Colors.greenAccent,
+            decoration is BoxDecoration && decoration.color == foundC,
             isTrue,
             reason: 'Other cells should remain green after tapping 2nd letter',
           );
@@ -326,7 +326,7 @@ void main() {
         final container = afterSecondTapWidgets[idx];
         final decoration = container.decoration;
         expect(
-          decoration is BoxDecoration && decoration.color == Colors.greenAccent,
+          decoration is BoxDecoration && decoration.color == foundC,
           isTrue,
           reason: 'Cell $idx should be green after tapping outside ΠΟΥΛΙ',
         );
