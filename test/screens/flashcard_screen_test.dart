@@ -78,7 +78,7 @@ void main() {
       final feedbackFinder = find.textContaining('Correct!');
       expect(feedbackFinder, findsOneWidget);
       final feedbackWidget = tester.widget<Text>(feedbackFinder);
-      expect(feedbackWidget.style?.color, Colors.green);
+      expect(feedbackWidget.style?.color, correctC);
 
       // Tap 'Next' to advance
       await tester.tap(find.widgetWithText(ElevatedButton, 'Next'));
@@ -110,7 +110,7 @@ void main() {
       final feedbackFinder = find.textContaining('Incorrect.');
       expect(feedbackFinder, findsOneWidget);
       final feedbackWidget = tester.widget<Text>(feedbackFinder);
-      expect(feedbackWidget.style?.color, Colors.red);
+      expect(feedbackWidget.style?.color, incorrectC);
 
       // Tap 'Next' to advance
       await tester.tap(find.widgetWithText(ElevatedButton, 'Next'));

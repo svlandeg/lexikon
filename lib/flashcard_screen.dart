@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'vocabulary.dart';
 
+// Color definitions for FlashcardScreen
+const Color correctC = Colors.green;
+const Color incorrectC = Colors.red;
+
 class FlashcardScreen extends StatefulWidget {
   final Vocabulary vocabulary;
   final int count;
@@ -112,8 +116,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             children: [
               Text('Quiz complete!', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 16),
-              Text('Correct:  $_correct', style: const TextStyle(color: Colors.green, fontSize: 18)),
-              Text('Incorrect:  $_incorrect', style: const TextStyle(color: Colors.red, fontSize: 18)),
+              Text('Correct:  $_correct', style: const TextStyle(color: correctC, fontSize: 18)),
+              Text('Incorrect:  $_incorrect', style: const TextStyle(color: incorrectC, fontSize: 18)),
               const SizedBox(height: 8),
               Text('Total score: ${percent.toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
               const SizedBox(height: 24),
@@ -183,7 +187,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                   ] else ...[
                     Text(
                       _feedback!,
-                      style: TextStyle(fontSize: 20, color: _feedback!.startsWith('Correct!') ? Colors.green : Colors.red),
+                      style: TextStyle(fontSize: 20, color: _feedback!.startsWith('Correct!') ? correctC : incorrectC),
                       softWrap: true,
                       maxLines: null,
                     ),
