@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'practice_screen.dart';
 import 'vocabulary_screen.dart';
 
+// Color definitions for MainScreen
+const Color selectedC = Colors.blue;
+const Color unselectedC = Colors.grey;
+
 void main() {
   runApp(const LexikonApp());
 }
@@ -63,8 +67,8 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Practice',
           ),
         ],
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: selectedC,
+        unselectedItemColor: unselectedC,
       ),
     );
   }
