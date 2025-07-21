@@ -49,8 +49,8 @@ void main() {
       final targetBoxPreTap = tester.widget<Container>(find.ancestor(of: targetFinder, matching: find.byType(Container)).first);
       final BoxDecoration? sourceDecorationPreTap = sourceBoxPreTap.decoration as BoxDecoration?;
       final BoxDecoration? targetDecorationPreTap = targetBoxPreTap.decoration as BoxDecoration?;
-      expect(sourceDecorationPreTap?.color, equals(Colors.white));
-      expect(targetDecorationPreTap?.color, equals(Colors.white));
+      expect(sourceDecorationPreTap?.color, equals(boxC));
+      expect(targetDecorationPreTap?.color, equals(boxC));
 
       // Tap the source word
       await tester.tap(sourceFinder);
@@ -64,8 +64,8 @@ void main() {
       final targetBoxPostTap = tester.widget<Container>(find.ancestor(of: targetFinder, matching: find.byType(Container)).first);
       final BoxDecoration? sourceDecorationPostTap = sourceBoxPostTap.decoration as BoxDecoration?;
       final BoxDecoration? targetDecorationPostTap = targetBoxPostTap.decoration as BoxDecoration?;
-      expect(sourceDecorationPostTap?.color, equals(Colors.grey[300]));
-      expect(targetDecorationPostTap?.color, equals(Colors.grey[300]));
+      expect(sourceDecorationPostTap?.color, equals(boxConnectedC));
+      expect(targetDecorationPostTap?.color, equals(boxConnectedC));
 
       // Progress should update to 1/3
       expect(find.text('1/3'), findsOneWidget);

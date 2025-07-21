@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+// Color definitions for ConnectScreen
+const Color boxC = Colors.white;
+const Color boxConnectedC = Colors.grey;
+const Color boxSelectedC = Colors.amber;
+const Color borderConnectedC = Colors.grey;
+const Color borderDefaultC = Colors.blueGrey;
+const Color lineC = Colors.greenAccent;
+
 class ConnectScreen extends StatefulWidget {
   final List<Map<String, String>> wordPairs;
   ConnectScreen({Key? key, required this.wordPairs}) : super(key: key);
@@ -175,9 +183,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
                                         padding: EdgeInsets.all(12),
                                         height: wordHeight,
                                         decoration: BoxDecoration(
-                                          color: isSelected ? Colors.amber[100] : isConnected ? Colors.grey[300] : Colors.white,
+                                          color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
                                           border: Border.all(
-                                            color: isConnected ? Colors.grey : Colors.blueGrey,
+                                            color: isConnected ? borderConnectedC : borderDefaultC,
                                             width: 2,
                                           ),
                                           borderRadius: BorderRadius.circular(8),
@@ -202,9 +210,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
                                         padding: EdgeInsets.all(12),
                                         height: wordHeight,
                                         decoration: BoxDecoration(
-                                          color: isSelected ? Colors.amber[100] : isConnected ? Colors.grey[300] : Colors.white,
+                                          color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
                                           border: Border.all(
-                                            color: isConnected ? Colors.grey : Colors.blueGrey,
+                                            color: isConnected ? borderConnectedC : borderDefaultC,
                                             width: 2,
                                           ),
                                           borderRadius: BorderRadius.circular(8),
@@ -272,7 +280,7 @@ class _ConnectionLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.greenAccent
+      ..color = lineC
       ..strokeWidth = 4.0
       ..style = PaintingStyle.stroke;
     double leftX = width * 0.25;
