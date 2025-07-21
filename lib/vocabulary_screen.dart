@@ -7,6 +7,12 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'practice_screen.dart';
 
+// Color definitions for VocabularyScreen
+const Color iconC = Colors.grey;
+const Color textC = Colors.grey;
+const Color text600C = Colors.grey[600]
+const Color bg100C = Colors.grey[100]
+
 
 class VocabularyListScreen extends StatefulWidget {
   const VocabularyListScreen({super.key});
@@ -69,16 +75,16 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.book_outlined, size: 64, color: Colors.grey),
+                  Icon(Icons.book_outlined, size: 64, color: iconC),
                   SizedBox(height: 16),
                   Text(
                     'No vocabularies yet',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                    style: TextStyle(fontSize: 18, color: textC),
                   ),
                   SizedBox(height: 8),
                   Text(
                     'Create your first vocabulary to get started',
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: textC),
                   ),
                 ],
               ),
@@ -373,7 +379,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.grey[100],
+            color: bg100C,
             child: Row(
               children: [
                 Expanded(
@@ -386,7 +392,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                       ),
                       Text(
                         '${_vocabulary.entries.length} words',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: text600C),
                       ),
                     ],
                   ),
@@ -401,16 +407,16 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.translate_outlined, size: 64, color: Colors.grey),
+                        Icon(Icons.translate_outlined, size: 64, color: iconC),
                         SizedBox(height: 16),
                         Text(
                           'No words yet',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                          style: TextStyle(fontSize: 18, color: textC),
                         ),
                         SizedBox(height: 8),
                         Text(
                           'Add your first word to get started',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: textC),
                         ),
                       ],
                     ),
