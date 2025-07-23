@@ -10,8 +10,7 @@ import 'practice_screen.dart';
 // Color definitions for VocabularyScreen
 const Color iconC = Colors.grey;
 const Color textC = Colors.grey;
-final Color text600C = Colors.grey[600]!;
-final Color bg100C = Colors.grey[100]!;
+const Color bgC = Colors.white;
 
 
 class VocabularyListScreen extends StatefulWidget {
@@ -379,7 +378,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: bg100C,
+            color: bgC,
             child: Row(
               children: [
                 Expanded(
@@ -392,7 +391,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                       ),
                       Text(
                         '${_vocabulary.entries.length} words',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: text600C),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: textC),
                       ),
                     ],
                   ),
