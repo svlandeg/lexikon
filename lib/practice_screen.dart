@@ -12,6 +12,10 @@ import 'dart:math';
 import 'scrambledword_screen.dart';
 import 'connect_screen.dart';
 
+// Color definitions for PracticeScreen
+const Color iconC = Colors.grey;
+const Color textC = Colors.grey;
+
 const int kDefaultFlashcardCount = 20;
 
 class PracticeScreen extends StatefulWidget {
@@ -51,16 +55,16 @@ class _PracticeScreenState extends State<PracticeScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.school_outlined, size: 64, color: Colors.grey),
+              Icon(Icons.school_outlined, size: 64, color: iconC),
               SizedBox(height: 16),
               Text(
                 'No vocabularies available',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+                style: TextStyle(fontSize: 18, color: textC),
               ),
               SizedBox(height: 8),
               Text(
                 'Create a vocabulary first to start practicing',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: textC),
               ),
             ],
           ),

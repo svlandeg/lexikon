@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'vocabulary.dart';
 import 'dart:math';
 
+// Color definitions for ScrambledWordScreen
+const Color correctBgC = Colors.greenAccent;
+const Color correctTextC = Colors.green;
+
 class ScrambledWordScreen extends StatefulWidget {
   final Vocabulary vocabulary;
   final int count;
@@ -128,7 +132,7 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
                           index: i,
                           child: Chip(
                             label: Text(_userOrder[i], style: const TextStyle(fontSize: 24)),
-                            backgroundColor: _isCorrect ? Colors.greenAccent : null,
+                            backgroundColor: _isCorrect ? correctBgC : null,
                           ),
                         ),
                       ),
@@ -140,7 +144,7 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
             if (_isCorrect)
               Column(
                 children: [
-                  const Text('Correct!', style: TextStyle(color: Colors.green, fontSize: 20)),
+                  const Text('Correct!', style: TextStyle(color: correctTextC, fontSize: 20)),
                   const SizedBox(height: 8),
                   Text(
                     _quizEntries[_current].target,
