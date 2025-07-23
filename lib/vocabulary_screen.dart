@@ -10,8 +10,8 @@ import 'practice_screen.dart';
 // Color definitions for VocabularyScreen
 const Color iconC = Colors.grey;
 const Color textC = Colors.grey;
-const Color text600C = Colors.grey[600];
-const Color bg100C = Colors.grey[100];
+final Color text600C = Colors.grey[600]!;
+final Color bg100C = Colors.grey[100]!;
 
 
 class VocabularyListScreen extends StatefulWidget {
