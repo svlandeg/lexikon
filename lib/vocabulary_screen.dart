@@ -296,14 +296,14 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     final now = DateTime.now();
-                    final vocabulary = Vocabulary(
+                    final vocabulary = TextVocabulary(
                       id: widget.initialVocabulary?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
                       name: _nameController.text,
                       sourceLanguage: _sourceLanguageController.text,
                       targetLanguage: _targetLanguageController.text,
                       sourceReadingDirection: _sourceReadingDirection,
                       targetReadingDirection: _targetReadingDirection,
-                      entries: widget.initialVocabulary?.entries ?? [],
+                      entries: widget.initialVocabulary?.entries.cast<TextEntry>() ?? [],
                     );
                     Navigator.pop(context, vocabulary);
                   }

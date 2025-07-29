@@ -34,7 +34,7 @@ void main() {
     testWidgets('disables practice options for an empty vocabulary', (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          '{"id":"2","name":"EmptyVocab","sourceLanguage":"English","targetLanguage":"French","entries":[],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
+          '{"type":"text","id":"2","name":"EmptyVocab","sourceLanguage":"English","targetLanguage":"French","entries":[],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
         ],
       });
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));

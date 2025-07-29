@@ -51,7 +51,7 @@ void main() {
     });
     test('fromJson', () {
       final json = vocab.toJson();
-      final vocab2 = Vocabulary.fromJson(json);
+      final vocab2 = vocabularyFromJson(json);
       expect(vocab2.id, vocab.id);
       expect(vocab2.name, vocab.name);
       expect(vocab2.sourceLanguage, vocab.sourceLanguage);

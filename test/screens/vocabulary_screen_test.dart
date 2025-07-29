@@ -34,7 +34,7 @@ void main() {
     testWidgets('can delete a vocabulary', (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          jsonEncode(Vocabulary(
+          jsonEncode(TextVocabulary(
             id: '1',
             name: 'ToDelete',
             sourceLanguage: 'English',
@@ -57,7 +57,7 @@ void main() {
     testWidgets('can navigate to vocabulary detail', (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          jsonEncode(Vocabulary(
+          jsonEncode(TextVocabulary(
             id: '2',
             name: 'DetailTest',
             sourceLanguage: 'English',
@@ -77,7 +77,7 @@ void main() {
     testWidgets('can edit a vocabulary', (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          jsonEncode(Vocabulary(
+          jsonEncode(TextVocabulary(
             id: '3',
             name: 'EditMe',
             sourceLanguage: 'English',
