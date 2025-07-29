@@ -318,7 +318,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                           final entryCount = entries.length;
                           List<Map<String, String>> pairs = entries
                               .map((e) => {
-                                'source': e is TextEntry ? e.source : (e as ImageEntry).imagePath,
+                                'source': e.sourceValue,
                                 'target': e.target
                               })
                               .toList();
