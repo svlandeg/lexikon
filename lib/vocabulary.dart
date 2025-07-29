@@ -1,18 +1,49 @@
 import 'package:flutter/material.dart';
 
+class SourceContent {
+  final String? text;
+  final String? imagePath;
+  final bool isImage;
+
+  const SourceContent.text(String this.text) 
+    : imagePath = null, 
+      isImage = false;
+
+  const SourceContent.image(String this.imagePath) 
+    : text = null, 
+      isImage = true;
+
+  String get displayValue => isImage ? imagePath! : text!;
+
+  Map<String, dynamic> toJson() => {
+    'isImage': isImage,
+    if (isImage) 'imagePath': imagePath,
+    if (!isImage) 'text': text,
+  };
+
+  factory SourceContent.fromJson(Map<String, dynamic> json) {
+    final isImage = json['isImage'] as bool;
+    if (isImage) {
+      return SourceContent.image(json['imagePath'] as String);
+    } else {
+      return SourceContent.text(json['text'] as String);
+    }
+  }
+}
+
 class Entry {
-  final String source;
+  final SourceContent source;
   final String target;
 
   Entry({required this.source, required this.target});
 
   Map<String, dynamic> toJson() => {
-    'source': source,
+    'source': source.toJson(),
     'target': target,
   };
 
   factory Entry.fromJson(Map<String, dynamic> json) => Entry(
-    source: json['source'] as String,
+    source: SourceContent.fromJson(json['source'] as Map<String, dynamic>),
     target: json['target'] as String,
   );
 }
