@@ -34,7 +34,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     final vocabulariesJson = prefs.getStringList('vocabularies') ?? [];
     setState(() {
       _vocabularies.clear();
-      _vocabularies.addAll(vocabulariesJson.map((v) => Vocabulary.fromJson(jsonDecode(v))));
+              _vocabularies.addAll(vocabulariesJson.map((v) => vocabularyFromJson(jsonDecode(v))));
     });
   }
 
@@ -425,8 +425,8 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     itemBuilder: (context, index) {
                       final entry = _vocabulary.entries[index];
                       return ListTile(
-                        title: SourceDisplayWidget(
-                          source: entry.source,
+                        title: EntrySourceWidget(
+                          entry: entry,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         subtitle: Text(entry.target),
@@ -518,7 +518,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                 List<Entry> importedEntries = [];
                 for (var row in rows) {
                   if (row.length >= 2 && row[0] is String && row[1] is String) {
-                    importedEntries.add(Entry(source: SourceContent.text(row[0]), target: row[1]));
+                    importedEntries.add(TextEntry(source: row[0], target: row[1]));
                   }
                 }
                 if (importedEntries.isNotEmpty) {
@@ -599,7 +599,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   @override
   void initState() {
     super.initState();
-    _sourceController = TextEditingController(text: widget.initialEntry?.sourceText ?? '');
+    _sourceController = TextEditingController(text: widget.initialEntry is TextEntry ? (widget.initialEntry as TextEntry).source : '');
     _targetController = TextEditingController(text: widget.initialEntry?.target ?? '');
   }
 
@@ -644,8 +644,8 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                   if (_formKey.currentState!.validate()) {
                     Navigator.pop(
                       context,
-                      Entry(
-                        source: SourceContent.text(_sourceController.text),
+                      TextEntry(
+                        source: _sourceController.text,
                         target: _targetController.text,
                       ),
                     );

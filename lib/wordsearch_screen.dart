@@ -578,8 +578,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Chip(
-                                label: SourceDisplayWidget(
-                                  source: word.source,
+                                label: EntrySourceWidget(
+                                  entry: word,
                                   style: const TextStyle(fontSize: 12),
                                   imageWidth: 60,
                                   imageHeight: 30,
@@ -607,8 +607,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(top: 2.0),
-                                child: SourceDisplayWidget(
-                                  source: e.source,
+                                child: EntrySourceWidget(
+                                  entry: e,
                                   style: TextStyle(fontSize: 12, color: hintTextC),
                                   imageWidth: 60,
                                   imageHeight: 30,

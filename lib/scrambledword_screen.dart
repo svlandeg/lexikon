@@ -106,8 +106,8 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
           children: [
             Text('${widget.vocabulary.sourceLanguage}:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            SourceDisplayWidget(
-              source: entry.source,
+            EntrySourceWidget(
+              entry: entry,
               style: Theme.of(context).textTheme.headlineMedium,
               textDirection: widget.vocabulary.sourceReadingDirection,
               imageHeight: 200,

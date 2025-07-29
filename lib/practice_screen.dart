@@ -39,7 +39,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
     final prefs = await SharedPreferences.getInstance();
     final vocabulariesJson = prefs.getStringList('vocabularies') ?? [];
     setState(() {
-      _vocabularies = vocabulariesJson.map((v) => Vocabulary.fromJson(jsonDecode(v))).toList();
+              _vocabularies = vocabulariesJson.map((v) => vocabularyFromJson(jsonDecode(v))).toList();
       if (_vocabularies.isNotEmpty) {
         _selectedVocabulary = _vocabularies.first;
       }
@@ -317,7 +317,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
                           final entries = _selectedVocabulary!.entries;
                           final entryCount = entries.length;
                           List<Map<String, String>> pairs = entries
-                              .map((e) => {'source': e.sourceText, 'target': e.target})
+                              .map((e) => {
+                                'source': e is TextEntry ? e.source : (e as ImageEntry).imagePath,
+                                'target': e.target
+                              })
                               .toList();
                           if (entryCount < 5) {
                             // Fewer than 5: use all
