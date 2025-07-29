@@ -6,7 +6,10 @@
 
 You can upload any custom list of word pairs, or use a pre-defined one from https://github.com/svlandeg/lexivok.
 
-🚧 Note that this repo is under active development and not yet fit for external usage. There will be backwards incompatibilities in the serialization format in the near future, and the code will still undergo refactors as functionality and unit tests are added.
+🚧 Note that this repo is under active development and
+$${\color{red}not \space yet \space fit \space for \space external \space usage.}$$
+There will be backwards incompatibilities in the serialization format in the near future, and the code will still undergo refactors as functionality and unit tests are added.
+
 
 ## ✨ Features
 
