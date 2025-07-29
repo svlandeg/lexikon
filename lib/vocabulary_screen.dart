@@ -599,7 +599,11 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   @override
   void initState() {
     super.initState();
-    _sourceController = TextEditingController(text: widget.initialEntry is TextEntry ? (widget.initialEntry as TextEntry).source : '');
+    _sourceController = TextEditingController(text: widget.initialEntry is TextEntry 
+      ? (widget.initialEntry as TextEntry).source 
+      : widget.initialEntry is ImageEntry 
+        ? (widget.initialEntry as ImageEntry).imagePath 
+        : '');
     _targetController = TextEditingController(text: widget.initialEntry?.target ?? '');
   }
 
@@ -621,14 +625,25 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                controller: _sourceController,
-                decoration: InputDecoration(
-                  labelText: 'Source Language ( ${widget.vocabulary.sourceLanguage})',
-                  hintText: 'Enter a word from the source language',
+              if (widget.vocabulary is TextVocabulary) ...[
+                TextFormField(
+                  controller: _sourceController,
+                  decoration: InputDecoration(
+                    labelText: 'Source Language ( ${widget.vocabulary.sourceLanguage})',
+                    hintText: 'Enter a word from the source language',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
-              ),
+              ] else ...[
+                TextFormField(
+                  controller: _sourceController,
+                  decoration: InputDecoration(
+                    labelText: 'Image Path',
+                    hintText: 'Enter the path to the image (e.g., assets/images/cat.png)',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter an image path' : null,
+                ),
+              ],
               const SizedBox(height: 16),
               TextFormField(
                 controller: _targetController,
@@ -642,13 +657,19 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    Navigator.pop(
-                      context,
-                      TextEntry(
+                    Entry entry;
+                    if (widget.vocabulary is TextVocabulary) {
+                      entry = TextEntry(
                         source: _sourceController.text,
                         target: _targetController.text,
-                      ),
-                    );
+                      );
+                    } else {
+                      entry = ImageEntry(
+                        imagePath: _sourceController.text,
+                        target: _targetController.text,
+                      );
+                    }
+                    Navigator.pop(context, entry);
                   }
                 },
                 child: Text(isEditing ? 'Save' : 'Add'),

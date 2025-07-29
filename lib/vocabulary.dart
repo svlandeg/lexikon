@@ -12,6 +12,8 @@ abstract class Entry {
   String get sourceValue;
 }
 
+
+
 // Text entry with both source and target as text
 class TextEntry extends Entry {
   final String source;
@@ -155,12 +157,14 @@ class ImageVocabulary extends Vocabulary {
   const ImageVocabulary({
     required super.id,
     required super.name,
-    required super.sourceLanguage,
     required super.targetLanguage,
-    super.sourceReadingDirection = TextDirection.ltr,
     super.targetReadingDirection = TextDirection.ltr,
     required List<ImageEntry> entries,
-  }) : super(entries: entries);
+  }) : super(
+    sourceLanguage: 'Images',
+    sourceReadingDirection: TextDirection.ltr,
+    entries: entries,
+  );
 
   List<ImageEntry> get imageEntries => entries.cast<ImageEntry>();
 
@@ -176,7 +180,7 @@ class ImageVocabulary extends Vocabulary {
     'entries': entries.map((e) => e.toJson()).toList(),
   };
 
-  @override
+    @override
   ImageVocabulary copyWith({
     String? id,
     String? name,
@@ -189,11 +193,9 @@ class ImageVocabulary extends Vocabulary {
     return ImageVocabulary(
       id: id ?? this.id,
       name: name ?? this.name,
-      sourceLanguage: sourceLanguage ?? this.sourceLanguage,
       targetLanguage: targetLanguage ?? this.targetLanguage,
-      sourceReadingDirection: sourceReadingDirection ?? this.sourceReadingDirection,
       targetReadingDirection: targetReadingDirection ?? this.targetReadingDirection,
-              entries: entries?.cast<ImageEntry>() ?? imageEntries,
+      entries: entries?.cast<ImageEntry>() ?? imageEntries,
     );
   }
 }
@@ -201,42 +203,35 @@ class ImageVocabulary extends Vocabulary {
 // Factory method for creating vocabularies from JSON
 Vocabulary vocabularyFromJson(Map<String, dynamic> json) {
   final type = json['type'] as String;
-  final baseData = {
-    'id': json['id'] as String,
-    'name': json['name'] as String,
-    'sourceLanguage': json['sourceLanguage'] as String,
-    'targetLanguage': json['targetLanguage'] as String,
-    'sourceReadingDirection': TextDirection.values.firstWhere(
-      (e) => e.name == (json['sourceReadingDirection'] as String),
-      orElse: () => TextDirection.ltr,
-    ),
-    'targetReadingDirection': TextDirection.values.firstWhere(
-      (e) => e.name == (json['targetReadingDirection'] as String),
-      orElse: () => TextDirection.ltr,
-    ),
-    'entries': (json['entries'] as List).map((e) => entryFromJson(e)).toList(),
-  };
+  final entries = (json['entries'] as List).map((e) => entryFromJson(e)).toList();
 
   switch (type) {
     case 'text':
       return TextVocabulary(
-        id: baseData['id'] as String,
-        name: baseData['name'] as String,
-        sourceLanguage: baseData['sourceLanguage'] as String,
-        targetLanguage: baseData['targetLanguage'] as String,
-        sourceReadingDirection: baseData['sourceReadingDirection'] as TextDirection,
-        targetReadingDirection: baseData['targetReadingDirection'] as TextDirection,
-        entries: (baseData['entries'] as List<Entry>).cast<TextEntry>(),
+        id: json['id'] as String,
+        name: json['name'] as String,
+        sourceLanguage: json['sourceLanguage'] as String,
+        targetLanguage: json['targetLanguage'] as String,
+        sourceReadingDirection: TextDirection.values.firstWhere(
+          (e) => e.name == (json['sourceReadingDirection'] as String),
+          orElse: () => TextDirection.ltr,
+        ),
+        targetReadingDirection: TextDirection.values.firstWhere(
+          (e) => e.name == (json['targetReadingDirection'] as String),
+          orElse: () => TextDirection.ltr,
+        ),
+        entries: entries.cast<TextEntry>(),
       );
     case 'image':
       return ImageVocabulary(
-        id: baseData['id'] as String,
-        name: baseData['name'] as String,
-        sourceLanguage: baseData['sourceLanguage'] as String,
-        targetLanguage: baseData['targetLanguage'] as String,
-        sourceReadingDirection: baseData['sourceReadingDirection'] as TextDirection,
-        targetReadingDirection: baseData['targetReadingDirection'] as TextDirection,
-        entries: (baseData['entries'] as List<Entry>).cast<ImageEntry>(),
+        id: json['id'] as String,
+        name: json['name'] as String,
+        targetLanguage: json['targetLanguage'] as String,
+        targetReadingDirection: TextDirection.values.firstWhere(
+          (e) => e.name == (json['targetReadingDirection'] as String),
+          orElse: () => TextDirection.ltr,
+        ),
+        entries: entries.cast<ImageEntry>(),
       );
     default:
       throw ArgumentError('Unknown vocabulary type: $type');

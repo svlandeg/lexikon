@@ -34,7 +34,6 @@ void main() {
       final vocab = ImageVocabulary(
         id: '2',
         name: 'Arabic Animals Images',
-        sourceLanguage: 'Images',
         targetLanguage: 'Arabic',
         entries: entries,
       );
@@ -66,7 +65,6 @@ void main() {
       final vocab = ImageVocabulary(
         id: '1',
         name: 'Test',
-        sourceLanguage: 'Images',
         targetLanguage: 'Spanish',
         entries: [ImageEntry(imagePath: 'assets/images/cat.png', target: 'gato')],
       );
@@ -108,9 +106,7 @@ void main() {
         'type': 'image',
         'id': '1',
         'name': 'Test',
-        'sourceLanguage': 'Images',
         'targetLanguage': 'Spanish',
-        'sourceReadingDirection': 'ltr',
         'targetReadingDirection': 'ltr',
         'entries': [
           {
@@ -174,7 +170,6 @@ void main() {
       final vocab = ImageVocabulary(
         id: '1',
         name: 'Test',
-        sourceLanguage: 'Images',
         targetLanguage: 'Spanish',
         entries: [ImageEntry(imagePath: 'assets/images/cat.png', target: 'gato')],
       );
