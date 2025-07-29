@@ -317,7 +317,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                           final entries = _selectedVocabulary!.entries;
                           final entryCount = entries.length;
                           List<Map<String, String>> pairs = entries
-                              .map((e) => {'source': e.source, 'target': e.target})
+                              .map((e) => {'source': e.sourceText, 'target': e.target})
                               .toList();
                           if (entryCount < 5) {
                             // Fewer than 5: use all

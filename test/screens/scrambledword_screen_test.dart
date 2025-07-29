@@ -13,7 +13,7 @@ void main() {
         targetLanguage: 'Spanish',
         sourceReadingDirection: TextDirection.ltr,
         targetReadingDirection: TextDirection.ltr,
-        entries: [Entry(source: 'cat', target: 'gato')],
+        entries: [Entry(source: SourceContent.text('cat'), target: 'gato')],
       );
 
       await tester.pumpWidget(

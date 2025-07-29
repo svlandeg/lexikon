@@ -577,7 +577,14 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Chip(label: Text(word.source)),
+                              Chip(
+                                label: SourceDisplayWidget(
+                                  source: word.source,
+                                  style: const TextStyle(fontSize: 12),
+                                  imageWidth: 60,
+                                  imageHeight: 30,
+                                ),
+                              ),
                               if (foundIdx != -1)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 2.0),
@@ -600,9 +607,11 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(top: 2.0),
-                                child: Text(
-                                  e.source,
+                                child: SourceDisplayWidget(
+                                  source: e.source,
                                   style: TextStyle(fontSize: 12, color: hintTextC),
+                                  imageWidth: 60,
+                                  imageHeight: 30,
                                 ),
                               ),
                             ],

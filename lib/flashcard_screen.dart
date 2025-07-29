@@ -146,10 +146,11 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
           children: [
             Text('${widget.vocabulary.sourceLanguage}:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            Text(
-              entry.source,
+            SourceDisplayWidget(
+              source: entry.source,
               style: Theme.of(context).textTheme.headlineMedium,
               textDirection: widget.vocabulary.sourceReadingDirection,
+              imageHeight: 200,
             ),
             const SizedBox(height: 32),
             RawKeyboardListener(

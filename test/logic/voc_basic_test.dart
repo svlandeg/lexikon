@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 void main() {
   group('Vocabulary', () {
-    final entryList = [Entry(source: 'cat', target: 'gato'), Entry(source: 'dog', target: 'perro')];
+    final entryList = [Entry(source: SourceContent.text('cat'), target: 'gato'), Entry(source: SourceContent.text('dog'), target: 'perro')];
     final vocab = Vocabulary(
       id: '1',
       name: 'TestName',
@@ -22,9 +22,9 @@ void main() {
       expect(vocab.sourceReadingDirection, TextDirection.ltr);
       expect(vocab.targetReadingDirection, TextDirection.rtl);
       expect(vocab.entries.length, entryList.length);
-      expect(vocab.entries[0].source, 'cat');
+      expect(vocab.entries[0].sourceText, 'cat');
       expect(vocab.entries[0].target, 'gato');
-      expect(vocab.entries[1].source, 'dog');
+      expect(vocab.entries[1].sourceText, 'dog');
       expect(vocab.entries[1].target, 'perro');
     });
 

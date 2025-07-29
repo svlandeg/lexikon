@@ -10,12 +10,12 @@ void main() {
 
     // Mock Greek entries
     final greekEntries = [
-      Entry(source: 'cat', target: 'ΓΑΤΑ'),
-      Entry(source: 'dog', target: 'ΣΚΥΛΟΣ'),
-      Entry(source: 'fish', target: 'ΨΑΡΙ'),
-      Entry(source: 'bird', target: 'ΠΟΥΛΙ'),
-      Entry(source: 'horse', target: 'ΑΛΟΓΟ'),
-      Entry(source: 'mouse', target: 'ΠΟΝΤΙΚΙ'),
+      Entry(source: SourceContent.text('cat'), target: 'ΓΑΤΑ'),
+      Entry(source: SourceContent.text('dog'), target: 'ΣΚΥΛΟΣ'),
+      Entry(source: SourceContent.text('fish'), target: 'ΨΑΡΙ'),
+      Entry(source: SourceContent.text('bird'), target: 'ΠΟΥΛΙ'),
+      Entry(source: SourceContent.text('horse'), target: 'ΑΛΟΓΟ'),
+      Entry(source: SourceContent.text('mouse'), target: 'ΠΟΝΤΙΚΙ'),
     ];
 
     testWidgets('renders 10x10 grid', (WidgetTester tester) async {
@@ -76,7 +76,7 @@ void main() {
 
       // Only source words should be shown as chips
       for (final entry in greekEntries) {
-        expect(find.widgetWithText(Chip, entry.source), findsOneWidget);
+        expect(find.widgetWithText(Chip, entry.sourceText), findsOneWidget);
         expect(find.widgetWithText(Chip, entry.target), findsNothing);
       }
 
@@ -95,11 +95,11 @@ void main() {
         expect(
           find.descendant(
             of: find.widgetWithText(Chip, entry.target),
-            matching: find.text(entry.source),
+            matching: find.text(entry.sourceText),
           ),
           findsNothing, // source is not inside the chip
         );
-        expect(find.text(entry.source), findsWidgets); // source is present somewhere below
+        expect(find.text(entry.sourceText), findsWidgets); // source is present somewhere below
       }
       await tester.pumpWidget(Container());
       await tester.pumpAndSettle();

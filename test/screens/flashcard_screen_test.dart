@@ -7,9 +7,9 @@ void main() {
   group('FlashcardScreen', () {
     // Mock French vocabulary
     final frenchEntries = [
-      Entry(source: 'cat', target: 'chat'),
-      Entry(source: 'dog', target: 'chien'),
-      Entry(source: 'fish', target: 'poisson'),
+      Entry(source: SourceContent.text('cat'), target: 'chat'),
+      Entry(source: SourceContent.text('dog'), target: 'chien'),
+      Entry(source: SourceContent.text('fish'), target: 'poisson'),
     ];
     final vocabulary = Vocabulary(
       id: 'test-vocab-flash',
@@ -36,11 +36,11 @@ void main() {
       expect(find.text('English:'), findsOneWidget);
       // Should show one of the source words (order-independent)
       final shownWordFinder = find.byWidgetPredicate(
-        (w) => w is Text && frenchEntries.map((e) => e.source).contains(w.data),
+        (w) => w is Text && frenchEntries.map((e) => e.sourceText).contains(w.data),
       );
       expect(shownWordFinder, findsOneWidget);
       final shownWord = (tester.widget<Text>(shownWordFinder)).data!;
-      expect(frenchEntries.map((e) => e.source), contains(shownWord));
+      expect(frenchEntries.map((e) => e.sourceText), contains(shownWord));
       // Should show input field and submit button
       expect(find.byType(TextField), findsOneWidget);
       expect(find.widgetWithText(ElevatedButton, 'Submit'), findsOneWidget);
@@ -63,11 +63,11 @@ void main() {
 
       // Find the shown English word (order-independent)
       final shownWordFinder = find.byWidgetPredicate(
-        (w) => w is Text && frenchEntries.map((e) => e.source).contains(w.data),
+        (w) => w is Text && frenchEntries.map((e) => e.sourceText).contains(w.data),
       );
       expect(shownWordFinder, findsOneWidget);
       final shownWord = (tester.widget<Text>(shownWordFinder)).data!;
-      final correctFrench = frenchEntries.firstWhere((e) => e.source == shownWord).target;
+      final correctFrench = frenchEntries.firstWhere((e) => e.sourceText == shownWord).target;
 
       // Enter the correct French translation
       await tester.enterText(find.byType(TextField), correctFrench);

@@ -5,19 +5,25 @@ import 'package:flutter/material.dart';
 void main() {
   group('Entry', () {
     test('toJson', () {
-      final entry = Entry(source: 'hello', target: 'hola');
-      expect(entry.toJson(), {'source': 'hello', 'target': 'hola'});
+      final entry = Entry(source: SourceContent.text('hello'), target: 'hola');
+      expect(entry.toJson(), {
+        'source': {'isImage': false, 'text': 'hello'},
+        'target': 'hola'
+      });
     });
     test('fromJson', () {
-      final json = {'source': 'hello', 'target': 'hola'};
+      final json = {
+        'source': {'isImage': false, 'text': 'hello'},
+        'target': 'hola'
+      };
       final entry2 = Entry.fromJson(json);
-      expect(entry2.source, 'hello');
+      expect(entry2.sourceText, 'hello');
       expect(entry2.target, 'hola');
     });
   });
 
   group('Vocabulary', () {
-    final entryList = [Entry(source: 'cat', target: 'gato'), Entry(source: 'dog', target: 'perro')];
+    final entryList = [Entry(source: SourceContent.text('cat'), target: 'gato'), Entry(source: SourceContent.text('dog'), target: 'perro')];
     final vocab = Vocabulary(
       id: '1',
       name: 'TestName',
@@ -36,9 +42,9 @@ void main() {
       expect(json['sourceReadingDirection'], TextDirection.ltr.name);
       expect(json['targetReadingDirection'], TextDirection.rtl.name);
       expect(json['entries'], isA<List<dynamic>>());
-      expect(json['entries'][0]['source'], 'cat');
+      expect(json['entries'][0]['source']['text'], 'cat');
       expect(json['entries'][0]['target'], 'gato');
-      expect(json['entries'][1]['source'], 'dog');
+      expect(json['entries'][1]['source']['text'], 'dog');
       expect(json['entries'][1]['target'], 'perro');
     });
     test('fromJson', () {
@@ -51,9 +57,9 @@ void main() {
       expect(vocab2.sourceReadingDirection, vocab.sourceReadingDirection);
       expect(vocab2.targetReadingDirection, vocab.targetReadingDirection);
       expect(vocab2.entries.length, vocab.entries.length);
-      expect(vocab2.entries[0].source, vocab.entries[0].source);
+      expect(vocab2.entries[0].sourceText, vocab.entries[0].sourceText);
       expect(vocab2.entries[0].target, vocab.entries[0].target);
-      expect(vocab2.entries[1].source, vocab.entries[1].source);
+      expect(vocab2.entries[1].sourceText, vocab.entries[1].sourceText);
       expect(vocab2.entries[1].target, vocab.entries[1].target);
     });
   });

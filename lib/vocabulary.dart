@@ -31,11 +31,64 @@ class SourceContent {
   }
 }
 
+class SourceDisplayWidget extends StatelessWidget {
+  final SourceContent source;
+  final TextStyle? style;
+  final TextDirection? textDirection;
+  final double? imageWidth;
+  final double? imageHeight;
+  final BoxFit imageFit;
+
+  const SourceDisplayWidget({
+    super.key,
+    required this.source,
+    this.style,
+    this.textDirection,
+    this.imageWidth,
+    this.imageHeight,
+    this.imageFit = BoxFit.contain,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (source.isImage) {
+      return Image.asset(
+        source.imagePath!,
+        width: imageWidth,
+        height: imageHeight,
+        fit: imageFit,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: imageWidth,
+            height: imageHeight,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.red),
+              color: Colors.grey[200],
+            ),
+            child: const Center(
+              child: Icon(Icons.error, color: Colors.red),
+            ),
+          );
+        },
+      );
+    } else {
+      return Text(
+        source.text!,
+        style: style,
+        textDirection: textDirection,
+      );
+    }
+  }
+}
+
 class Entry {
   final SourceContent source;
   final String target;
 
   Entry({required this.source, required this.target});
+
+  // Helper method for backward compatibility
+  String get sourceText => source.isImage ? source.imagePath! : source.text!;
 
   Map<String, dynamic> toJson() => {
     'source': source.toJson(),
