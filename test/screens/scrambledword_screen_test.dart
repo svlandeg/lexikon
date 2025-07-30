@@ -6,14 +6,14 @@ import 'package:lexikon/vocabulary.dart';
 void main() {
   group('ScrambledWordScreen', () {
     testWidgets('shows source word and scrambled chips', (WidgetTester tester) async {
-      final vocab = Vocabulary(
+      final vocab = TextVocabulary(
         id: '1',
         name: 'TestVocab',
         sourceLanguage: 'English',
         targetLanguage: 'Spanish',
         sourceReadingDirection: TextDirection.ltr,
         targetReadingDirection: TextDirection.ltr,
-        entries: [Entry(source: 'cat', target: 'gato')],
+        entries: [TextEntry(source: 'cat', target: 'gato')],
       );
 
       await tester.pumpWidget(

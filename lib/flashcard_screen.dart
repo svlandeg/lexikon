@@ -88,14 +88,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     if (userInput == correctAnswer) {
       setState(() {
         _correct++;
-        _feedback = 'Correct!\nThe ${widget.vocabulary.targetLanguage} translation is: ${_quizEntries[_current].target}';
+        _feedback = 'Correct!\nThe ${widget.vocabulary.targetLanguage} word is: ${_quizEntries[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
     } else {
       setState(() {
         _incorrect++;
-        _feedback = 'Incorrect.\nThe correct ${widget.vocabulary.targetLanguage} translation is: ${_quizEntries[_current].target}';
+        _feedback = 'Incorrect.\nYour answer: ${_controller.text.trim()}\nThe correct ${widget.vocabulary.targetLanguage} word is: ${_quizEntries[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
@@ -146,10 +146,11 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
           children: [
             Text('${widget.vocabulary.sourceLanguage}:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            Text(
-              entry.source,
+            EntrySourceWidget(
+              entry: entry,
               style: Theme.of(context).textTheme.headlineMedium,
               textDirection: widget.vocabulary.sourceReadingDirection,
+              imageHeight: 200,
             ),
             const SizedBox(height: 32),
             RawKeyboardListener(
@@ -173,7 +174,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       controller: _controller,
                       focusNode: _inputFocusNode,
                       decoration: InputDecoration(
-                        labelText: '${widget.vocabulary.targetLanguage} translation',
+                        labelText: '${widget.vocabulary.targetLanguage} word',
                         border: const OutlineInputBorder(),
                       ),
                       onSubmitted: (_) => _submit(),

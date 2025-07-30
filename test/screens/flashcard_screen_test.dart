@@ -7,11 +7,11 @@ void main() {
   group('FlashcardScreen', () {
     // Mock French vocabulary
     final frenchEntries = [
-      Entry(source: 'cat', target: 'chat'),
-      Entry(source: 'dog', target: 'chien'),
-      Entry(source: 'fish', target: 'poisson'),
+      TextEntry(source: 'cat', target: 'chat'),
+      TextEntry(source: 'dog', target: 'chien'),
+      TextEntry(source: 'fish', target: 'poisson'),
     ];
-    final vocabulary = Vocabulary(
+          final vocabulary = TextVocabulary(
       id: 'test-vocab-flash',
       name: 'Test French',
       entries: frenchEntries,
@@ -69,7 +69,7 @@ void main() {
       final shownWord = (tester.widget<Text>(shownWordFinder)).data!;
       final correctFrench = frenchEntries.firstWhere((e) => e.source == shownWord).target;
 
-      // Enter the correct French translation
+      // Enter the correct French word
       await tester.enterText(find.byType(TextField), correctFrench);
       await tester.tap(find.widgetWithText(ElevatedButton, 'Submit'));
       await tester.pumpAndSettle();
@@ -101,7 +101,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Enter an incorrect French translation
+      // Enter an incorrect French word
       await tester.enterText(find.byType(TextField), 'pasunepipe');
       await tester.tap(find.widgetWithText(ElevatedButton, 'Submit'));
       await tester.pumpAndSettle();

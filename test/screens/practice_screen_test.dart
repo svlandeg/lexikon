@@ -19,7 +19,7 @@ void main() {
     testWidgets('shows vocabulary selector and practice options', (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          '{"id":"1","name":"TestVocab","sourceLanguage":"English","targetLanguage":"Spanish","entries":[{"source":"hello","target":"hola"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
+          '{"type":"text","id":"1","name":"TestVocab","sourceLanguage":"English","targetLanguage":"Spanish","entries":[{"type":"text","source":"hello","target":"hola"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
         ],
       });
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));
@@ -34,7 +34,7 @@ void main() {
     testWidgets('disables practice options for an empty vocabulary', (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          '{"id":"2","name":"EmptyVocab","sourceLanguage":"English","targetLanguage":"French","entries":[],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
+          '{"type":"text","id":"2","name":"EmptyVocab","sourceLanguage":"English","targetLanguage":"French","entries":[],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
         ],
       });
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));
@@ -49,7 +49,7 @@ void main() {
     testWidgets('navigates to FlashcardScreen with a single-entry vocabulary', (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          '{"id":"3","name":"NavVocab","sourceLanguage":"English","targetLanguage":"German","entries":[{"source":"cat","target":"Katze"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
+          '{"type":"text","id":"3","name":"NavVocab","sourceLanguage":"English","targetLanguage":"German","entries":[{"type":"text","source":"cat","target":"Katze"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
         ],
       });
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));
@@ -68,7 +68,7 @@ void main() {
     testWidgets('navigates to FlashcardScreen with a multi-entry vocabulary', (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          '{"id":"4","name":"NavVocabMulti","sourceLanguage":"English","targetLanguage":"German","entries":[{"source":"cat","target":"Katze"},{"source":"dog","target":"Hund"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
+          '{"type":"text","id":"4","name":"NavVocabMulti","sourceLanguage":"English","targetLanguage":"German","entries":[{"type":"text","source":"cat","target":"Katze"},{"type":"text","source":"dog","target":"Hund"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
         ],
       });
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));
@@ -87,7 +87,7 @@ void main() {
     testWidgets('navigates to WordSearchScreen', (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          '{"id":"4","name":"NavVocab2","sourceLanguage":"English","targetLanguage":"Italian","entries":[{"source":"dog","target":"cane"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
+          '{"type":"text","id":"4","name":"NavVocab2","sourceLanguage":"English","targetLanguage":"Italian","entries":[{"type":"text","source":"dog","target":"cane"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
         ],
       });
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));

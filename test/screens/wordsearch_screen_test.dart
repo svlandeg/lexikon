@@ -10,12 +10,12 @@ void main() {
 
     // Mock Greek entries
     final greekEntries = [
-      Entry(source: 'cat', target: 'ΓΑΤΑ'),
-      Entry(source: 'dog', target: 'ΣΚΥΛΟΣ'),
-      Entry(source: 'fish', target: 'ΨΑΡΙ'),
-      Entry(source: 'bird', target: 'ΠΟΥΛΙ'),
-      Entry(source: 'horse', target: 'ΑΛΟΓΟ'),
-      Entry(source: 'mouse', target: 'ΠΟΝΤΙΚΙ'),
+      TextEntry(source: 'cat', target: 'ΓΑΤΑ'),
+      TextEntry(source: 'dog', target: 'ΣΚΥΛΟΣ'),
+      TextEntry(source: 'fish', target: 'ΨΑΡΙ'),
+      TextEntry(source: 'bird', target: 'ΠΟΥΛΙ'),
+      TextEntry(source: 'horse', target: 'ΑΛΟΓΟ'),
+      TextEntry(source: 'mouse', target: 'ΠΟΝΤΙΚΙ'),
     ];
 
     testWidgets('renders 10x10 grid', (WidgetTester tester) async {

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 void main() {
   group('Vocabulary', () {
-    final entryList = [Entry(source: 'cat', target: 'gato'), Entry(source: 'dog', target: 'perro')];
-    final vocab = Vocabulary(
+    final entryList = [TextEntry(source: 'cat', target: 'gato'), TextEntry(source: 'dog', target: 'perro')];
+    final vocab = TextVocabulary(
       id: '1',
       name: 'TestName',
       sourceLanguage: 'English',
@@ -22,14 +22,14 @@ void main() {
       expect(vocab.sourceReadingDirection, TextDirection.ltr);
       expect(vocab.targetReadingDirection, TextDirection.rtl);
       expect(vocab.entries.length, entryList.length);
-      expect(vocab.entries[0].source, 'cat');
+      expect((vocab.entries[0] as TextEntry).source, 'cat');
       expect(vocab.entries[0].target, 'gato');
-      expect(vocab.entries[1].source, 'dog');
+      expect((vocab.entries[1] as TextEntry).source, 'dog');
       expect(vocab.entries[1].target, 'perro');
     });
 
     test('copyWith functionality', () {
-      final updated1 = vocab.copyWith(name: 'Updated', entries: []);
+      final updated1 = vocab.copyWith(name: 'Updated', entries: <TextEntry>[]);
       expect(updated1.name, 'Updated');
       expect(updated1.entries, isEmpty);
       expect(updated1.id, vocab.id);

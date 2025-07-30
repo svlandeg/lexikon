@@ -1,30 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lexikon/connect_screen.dart';
+import 'package:lexikon/vocabulary.dart';
 
 void main() {
   group('ConnectScreen', () {
-    final wordPairs = [
-      {'source': 'cat', 'target': 'chat'},
-      {'source': 'dog', 'target': 'chien'},
-      {'source': 'fish', 'target': 'poisson'},
+    final entries = [
+      TextEntry(source: 'cat', target: 'chat'),
+      TextEntry(source: 'dog', target: 'chien'),
+      TextEntry(source: 'fish', target: 'poisson'),
     ];
 
     testWidgets('renders source and target words', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: ConnectScreen(wordPairs: wordPairs),
+          home: ConnectScreen(entries: entries),
         ),
       );
       await tester.pumpAndSettle();
 
       // Should show all source words
-      for (final pair in wordPairs) {
-        expect(find.text(pair['source']!), findsOneWidget);
+      for (final entry in entries) {
+        expect(find.text(entry.source), findsOneWidget);
       }
       // Should show all target words (order may be shuffled)
-      for (final pair in wordPairs) {
-        expect(find.text(pair['target']!), findsOneWidget);
+      for (final entry in entries) {
+        expect(find.text(entry.target), findsOneWidget);
       }
       // Should show progress bar and progress text
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
@@ -34,15 +35,15 @@ void main() {
     testWidgets('can make a valid connection', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: ConnectScreen(wordPairs: wordPairs),
+          home: ConnectScreen(entries: entries),
         ),
       );
       await tester.pumpAndSettle();
 
       // Find the first source word and its correct target
-      final firstPair = wordPairs[0];
-      final sourceFinder = find.text(firstPair['source']!);
-      final targetFinder = find.text(firstPair['target']!);
+      final firstEntry = entries[0];
+      final sourceFinder = find.text(firstEntry.source);
+      final targetFinder = find.text(firstEntry.target);
 
       // Before tapping, the source and target should be enabled (not greyed out)
       final sourceBoxPreTap = tester.widget<Container>(find.ancestor(of: sourceFinder, matching: find.byType(Container)).first);

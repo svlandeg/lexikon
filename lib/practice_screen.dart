@@ -39,7 +39,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
     final prefs = await SharedPreferences.getInstance();
     final vocabulariesJson = prefs.getStringList('vocabularies') ?? [];
     setState(() {
-      _vocabularies = vocabulariesJson.map((v) => Vocabulary.fromJson(jsonDecode(v))).toList();
+      _vocabularies.clear();
+      for (final jsonString in vocabulariesJson) {
+        try {
+          final json = jsonDecode(jsonString);
+          final vocabulary = vocabularyFromJson(json);
+          _vocabularies.add(vocabulary);
+        } catch (e) {
+          // Log the error and skip corrupted vocabulary data
+          print('Error loading vocabulary from JSON: $e');
+          print('Corrupted JSON string: $jsonString');
+        }
+      }
       if (_vocabularies.isNotEmpty) {
         _selectedVocabulary = _vocabularies.first;
       }
@@ -135,7 +146,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ListTile(
                   leading: const Icon(Icons.quiz),
                   title: const Text('Flashcards'),
-                  subtitle: const Text('Type the correct translation'),
+                  subtitle: const Text('Type the correct word'),
                   onTap: () async {
                     final entryCount = _selectedVocabulary!.entries.length;
                     int? count;
@@ -228,7 +239,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ListTile(
                   leading: const Icon(Icons.shuffle),
                   title: const Text('Scrambled Word'),
-                  subtitle: const Text('Reorder scrambled letters to form the translation'),
+                  subtitle: const Text('Reorder scrambled letters to form the correct word'),
                   onTap: () async {
                     final entryCount = _selectedVocabulary!.entries.length;
                     int? count;
@@ -316,24 +327,22 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       : () async {
                           final entries = _selectedVocabulary!.entries;
                           final entryCount = entries.length;
-                          List<Map<String, String>> pairs = entries
-                              .map((e) => {'source': e.source, 'target': e.target})
-                              .toList();
+                          List<Entry> selectedEntries = List<Entry>.from(entries);
                           if (entryCount < 5) {
                             // Fewer than 5: use all
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ConnectScreen(wordPairs: pairs),
+                                builder: (context) => ConnectScreen(entries: selectedEntries),
                               ),
                             );
                           } else if (entryCount < 10) {
                             // 5-9: use 5 random
-                            pairs.shuffle();
+                            selectedEntries.shuffle();
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ConnectScreen(wordPairs: pairs.take(5).toList()),
+                                builder: (context) => ConnectScreen(entries: selectedEntries.take(5).toList()),
                               ),
                             );
                           } else {
@@ -380,11 +389,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               },
                             );
                             if (count != null && count > 0) {
-                              pairs.shuffle();
+                              selectedEntries.shuffle();
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => ConnectScreen(wordPairs: pairs.take(count).toList()),
+                                  builder: (context) => ConnectScreen(entries: selectedEntries.take(count).toList()),
                                 ),
                               );
                             }

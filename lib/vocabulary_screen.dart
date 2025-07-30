@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'vocabulary.dart';
 import 'dart:convert';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
+import 'package:image/image.dart' as img;
 import 'practice_screen.dart';
 
 // Color definitions for VocabularyScreen
@@ -22,6 +24,7 @@ class VocabularyListScreen extends StatefulWidget {
 
 class _VocabularyListScreenState extends State<VocabularyListScreen> {
   final List<Vocabulary> _vocabularies = [];
+  Vocabulary? _selectedVocabulary;
 
   @override
   void initState() {
@@ -34,8 +37,24 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     final vocabulariesJson = prefs.getStringList('vocabularies') ?? [];
     setState(() {
       _vocabularies.clear();
-      _vocabularies.addAll(vocabulariesJson.map((v) => Vocabulary.fromJson(jsonDecode(v))));
+      for (final jsonString in vocabulariesJson) {
+        try {
+          final json = jsonDecode(jsonString);
+          final vocabulary = vocabularyFromJson(json);
+          _vocabularies.add(vocabulary);
+        } catch (e) {
+          // Log the error and skip corrupted vocabulary data
+          print('Error loading vocabulary from JSON: $e');
+          print('Corrupted JSON string: $jsonString');
+        }
+      }
+      if (_vocabularies.isNotEmpty) {
+        _selectedVocabulary = _vocabularies.first;
+      }
     });
+    
+    // Save the cleaned vocabularies to remove any corrupted data
+    _saveVocabularies();
   }
 
   Future<void> _saveVocabularies() async {
@@ -51,18 +70,325 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     _saveVocabularies();
   }
 
-  void _removeVocabulary(int index) {
-    setState(() {
-      _vocabularies.removeAt(index);
-    });
-    _saveVocabularies();
+     void _removeVocabulary(int index) {
+     final vocabulary = _vocabularies[index];
+     
+     // Clean up associated image files if it's an image vocabulary
+     if (vocabulary is ImageVocabulary) {
+       _cleanupVocabularyImages(vocabulary);
+     }
+     
+     setState(() {
+       _vocabularies.removeAt(index);
+     });
+     _saveVocabularies();
+   }
+
+       void _cleanupVocabularyImages(ImageVocabulary vocabulary) {
+      try {
+        // Delete the entire vocabulary directory
+        final vocabularyDir = Directory('app_data/vocabularies/${vocabulary.id}');
+        if (vocabularyDir.existsSync()) {
+          vocabularyDir.deleteSync(recursive: true);
+        }
+      } catch (e) {
+        // Silently handle cleanup errors
+      }
+    }
+
+     void _updateVocabulary(int index, Vocabulary vocabulary) {
+     setState(() {
+       _vocabularies[index] = vocabulary;
+     });
+     _saveVocabularies();
+   }
+
+               Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension, String vocabularyId) async {
+      try {
+        // Create app data directory for images with vocabulary ID subdirectory
+        final appDataDir = Directory('app_data/vocabularies/$vocabularyId');
+        if (!appDataDir.existsSync()) {
+          appDataDir.createSync(recursive: true);
+        }
+
+        // Create a unique filename based on target word and timestamp
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final filename = '${targetWord}_$timestamp.$extension';
+        final destinationFile = File('${appDataDir.path}/$filename');
+
+        // Read and decode the source image
+        final bytes = await sourceFile.readAsBytes();
+        final image = img.decodeImage(bytes);
+        
+        if (image == null) {
+          return null; // Failed to decode image
+        }
+
+        // Resize image to standard size (300x300) while maintaining aspect ratio
+        final resizedImage = img.copyResize(
+          image,
+          width: 300,
+          height: 300,
+          interpolation: img.Interpolation.linear,
+        );
+
+                 // Encode the resized image
+         List<int> encodedBytes;
+         switch (extension.toLowerCase()) {
+           case 'jpg':
+           case 'jpeg':
+             encodedBytes = img.encodeJpg(resizedImage, quality: 85);
+             break;
+           case 'png':
+             encodedBytes = img.encodePng(resizedImage);
+             break;
+           case 'webp':
+             // WebP not supported by image package, convert to PNG
+             encodedBytes = img.encodePng(resizedImage);
+             break;
+           default:
+             // For other formats, use PNG as fallback
+             encodedBytes = img.encodePng(resizedImage);
+             break;
+         }
+
+        // Write the resized image to the destination file
+        await destinationFile.writeAsBytes(encodedBytes);
+
+        // Return the relative path for storage in vocabulary
+        return 'app_data/vocabularies/$vocabularyId/$filename';
+      } catch (e) {
+        return null;
+      }
+    }
+
+  void _showCreateVocabularyOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Create Vocabulary',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.create),
+              title: const Text('Create an empty text-to-text vocabulary'),
+              // subtitle: const Text('Start with an empty vocabulary and add word pairs manually'),
+              onTap: () {
+                Navigator.pop(context);
+                _createEmptyVocabulary();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.upload_file),
+              title: const Text('Upload a text-to-text vocabulary from a CSV File'),
+              // subtitle: const Text('Import vocabulary from a CSV file'),
+              onTap: () {
+                Navigator.pop(context);
+                _createFromCsvFile();
+              },
+            ),
+                         ListTile(
+               leading: const Icon(Icons.folder),
+               title: const Text('Upload a image-to-text vocabulary from a directory'),
+               // subtitle: const Text('Create image vocabulary from a directory'),
+               onTap: () {
+                 Navigator.pop(context);
+                 _createFromDirectory();
+               },
+             ),
+          ],
+        ),
+      ),
+    );
   }
 
-  void _updateVocabulary(int index, Vocabulary vocabulary) {
-    setState(() {
-      _vocabularies[index] = vocabulary;
-    });
-    _saveVocabularies();
+  void _createEmptyVocabulary() async {
+    final result = await Navigator.push<Vocabulary>(
+      context,
+      MaterialPageRoute(builder: (context) => const AddVocabularyScreen()),
+    );
+    if (result != null) {
+      _addVocabulary(result);
+    }
+  }
+
+  void _createFromCsvFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
+      
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final content = await file.readAsString();
+        final filename = result.files.single.name;
+        
+        try {
+          final csvData = CsvParser.parseCsvFile(filename, content);
+          
+          final vocabulary = await Navigator.push<Vocabulary>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CsvVocabularyCreationScreen(csvData: csvData),
+            ),
+          );
+          
+          if (vocabulary != null) {
+            _addVocabulary(vocabulary);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} entries!'),
+                ),
+              );
+            }
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error parsing CSV file: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error reading file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _createFromDirectory() async {
+    try {
+      String? directoryPath = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: 'Select Directory for Image Vocabulary',
+      );
+      
+      if (directoryPath != null) {
+        final directory = Directory(directoryPath);
+        final directoryName = directory.path.split(Platform.pathSeparator).last;
+        
+        // Get all image files from the directory
+        final imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
+        final files = directory.listSync().where((file) {
+          if (file is File) {
+            final extension = file.path.split('.').last.toLowerCase();
+            return imageExtensions.contains(extension);
+          }
+          return false;
+        }).toList();
+        
+        if (files.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No image files found in the selected directory'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          return;
+        }
+        
+           // Create image entries from files
+           final entries = <ImageEntry>[];
+           final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
+           
+           for (final file in files) {
+             final fileName = file.path.split(Platform.pathSeparator).last;
+             final targetWord = fileName.split('.').first; // Remove extension
+             
+              // Check if the image can be loaded and copy it to app data
+              if (file is File && file.existsSync()) {
+                try {
+                  // Try to create a FileImage and test if it can be loaded
+                  final imageProvider = FileImage(file);
+                  
+                  // Test the image by trying to resolve it
+                  final stream = imageProvider.resolve(ImageConfiguration.empty);
+                  final completer = Completer<bool>();
+                  
+                  stream.addListener(ImageStreamListener((info, _) {
+                    completer.complete(true);
+                  }, onError: (error, stackTrace) {
+                    completer.complete(false);
+                  }));
+                  
+                  final isValid = await completer.future;
+                  
+                  if (isValid) {
+                    // Generate a unique filename for the copied image
+                    final extension = file.path.split('.').last.toLowerCase();
+                    final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
+                    
+                                         if (copiedImagePath != null) {
+                        entries.add(ImageEntry(
+                          imagePath: copiedImagePath,
+                          target: targetWord,
+                        ));
+                      } else {
+                        continue;
+                      }
+                    } else {
+                      continue;
+                    }
+                  } catch (e) {
+                    // Skip this file if it can't be loaded
+                    continue;
+                  }
+                } else {
+                  // Skip if file doesn't exist or is not a file
+                }
+           }
+        
+         // Navigate to image vocabulary creation screen
+         final vocabulary = await Navigator.push<Vocabulary>(
+           context,
+           MaterialPageRoute(
+             builder: (context) => ImageVocabularyCreationScreen(
+               directoryName: directoryName,
+               entries: entries,
+               vocabularyId: vocabularyId,
+             ),
+           ),
+         );
+         
+                  if (vocabulary != null) {
+            _addVocabulary(vocabulary);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                                 SnackBar(
+                    content: Text('Image vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} entries!'),
+                  ),
+              );
+            }
+          }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error reading directory: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -164,16 +490,10 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push<Vocabulary>(
-            context,
-            MaterialPageRoute(builder: (context) => const AddVocabularyScreen()),
-          );
-          if (result != null) {
-            _addVocabulary(result);
-          }
+        onPressed: () {
+          _showCreateVocabularyOptions();
         },
-        tooltip: 'Add Vocabulary',
+        tooltip: 'Create Vocabulary',
         child: const Icon(Icons.add),
       ),
     );
@@ -296,14 +616,14 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     final now = DateTime.now();
-                    final vocabulary = Vocabulary(
+                    final vocabulary = TextVocabulary(
                       id: widget.initialVocabulary?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
                       name: _nameController.text,
                       sourceLanguage: _sourceLanguageController.text,
                       targetLanguage: _targetLanguageController.text,
                       sourceReadingDirection: _sourceReadingDirection,
                       targetReadingDirection: _targetReadingDirection,
-                      entries: widget.initialVocabulary?.entries ?? [],
+                      entries: widget.initialVocabulary?.entries.cast<TextEntry>() ?? [],
                     );
                     Navigator.pop(context, vocabulary);
                   }
@@ -351,12 +671,30 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
   }
 
   void _removeEntry(int index) {
+    final entry = _vocabulary.entries[index];
+    
+    // Clean up image file if it's an image entry
+    if (entry is ImageEntry) {
+      _cleanupImageFile(entry.imagePath);
+    }
+    
     setState(() {
       final newEntries = List<Entry>.from(_vocabulary.entries);
       newEntries.removeAt(index);
       _vocabulary = _vocabulary.copyWith(entries: newEntries);
     });
     widget.onVocabularyUpdated(_vocabulary);
+  }
+
+  void _cleanupImageFile(String imagePath) {
+    try {
+      final file = File(imagePath);
+      if (file.existsSync()) {
+        file.deleteSync();
+      }
+    } catch (e) {
+      // Silently handle cleanup errors
+    }
   }
 
   void _editEntry(int index, Entry newEntry) {
@@ -425,7 +763,10 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     itemBuilder: (context, index) {
                       final entry = _vocabulary.entries[index];
                       return ListTile(
-                        title: Text(entry.source),
+                        title: EntrySourceWidget(
+                          entry: entry,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                         subtitle: Text(entry.target),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -482,95 +823,24 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
           ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: 'addEntry',
-            onPressed: () async {
-              final result = await Navigator.push<Entry>(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddEntryScreen(
-                    vocabulary: _vocabulary,
-                  ),
-                ),
-              );
-              if (result != null) {
-                _addEntry(result);
-              }
-            },
-            tooltip: 'Add Word',
-            child: const Icon(Icons.add),
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: 'importCSV',
-            onPressed: () async {
-              FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
-              if (result != null && result.files.single.path != null) {
-                final file = File(result.files.single.path!);
-                final content = await file.readAsString();
-                final rows = const CsvToListConverter().convert(content, eol: '\n');
-                List<Entry> importedEntries = [];
-                for (var row in rows) {
-                  if (row.length >= 2 && row[0] is String && row[1] is String) {
-                    importedEntries.add(Entry(source: row[0], target: row[1]));
-                  }
-                }
-                if (importedEntries.isNotEmpty) {
-                  final action = await showDialog<String>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Import Entries'),
-                      content: const Text('Do you want to add the imported entries to the existing list, or overwrite the list completely?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, 'add'),
-                          child: const Text('Add'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, 'overwrite'),
-                          child: const Text('Overwrite'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, null),
-                          child: const Text('Cancel'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (action == 'add') {
-                    setState(() {
-                      _vocabulary = _vocabulary.copyWith(
-                        entries: [..._vocabulary.entries, ...importedEntries],
-                      );
-                    });
-                    widget.onVocabularyUpdated(_vocabulary);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entries added successfully.')));
-                    }
-                  } else if (action == 'overwrite') {
-                    setState(() {
-                      _vocabulary = _vocabulary.copyWith(entries: importedEntries);
-                    });
-                    widget.onVocabularyUpdated(_vocabulary);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vocabulary overwritten successfully.')));
-                    }
-                  }
-                } else {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No valid entries found in CSV.')));
-                  }
-                }
-              }
-            },
-            tooltip: 'Import CSV',
-            child: const Icon(Icons.upload_file),
-          ),
-        ],
-      ),
+             floatingActionButton: FloatingActionButton(
+         heroTag: 'addEntry',
+         onPressed: () async {
+           final result = await Navigator.push<Entry>(
+             context,
+             MaterialPageRoute(
+               builder: (context) => AddEntryScreen(
+                 vocabulary: _vocabulary,
+               ),
+             ),
+           );
+           if (result != null) {
+             _addEntry(result);
+           }
+         },
+         tooltip: 'Add Word',
+         child: const Icon(Icons.add),
+       ),
     );
   }
 }
@@ -596,7 +866,11 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   @override
   void initState() {
     super.initState();
-    _sourceController = TextEditingController(text: widget.initialEntry?.source ?? '');
+    _sourceController = TextEditingController(text: widget.initialEntry is TextEntry 
+      ? (widget.initialEntry as TextEntry).source 
+      : widget.initialEntry is ImageEntry 
+        ? (widget.initialEntry as ImageEntry).imagePath 
+        : '');
     _targetController = TextEditingController(text: widget.initialEntry?.target ?? '');
   }
 
@@ -618,14 +892,25 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                controller: _sourceController,
-                decoration: InputDecoration(
-                  labelText: 'Source Language ( ${widget.vocabulary.sourceLanguage})',
-                  hintText: 'Enter a word from the source language',
+              if (widget.vocabulary is TextVocabulary) ...[
+                TextFormField(
+                  controller: _sourceController,
+                  decoration: InputDecoration(
+                    labelText: 'Source Language ( ${widget.vocabulary.sourceLanguage})',
+                    hintText: 'Enter a word from the source language',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
-              ),
+              ] else ...[
+                TextFormField(
+                  controller: _sourceController,
+                  decoration: InputDecoration(
+                    labelText: 'Image Path',
+                    hintText: 'Enter the path to the image (e.g., assets/images/cat.png)',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter an image path' : null,
+                ),
+              ],
               const SizedBox(height: 16),
               TextFormField(
                 controller: _targetController,
@@ -639,13 +924,19 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    Navigator.pop(
-                      context,
-                      Entry(
+                    Entry entry;
+                    if (widget.vocabulary is TextVocabulary) {
+                      entry = TextEntry(
                         source: _sourceController.text,
                         target: _targetController.text,
-                      ),
-                    );
+                      );
+                    } else {
+                      entry = ImageEntry(
+                        imagePath: _sourceController.text,
+                        target: _targetController.text,
+                      );
+                    }
+                    Navigator.pop(context, entry);
                   }
                 },
                 child: Text(isEditing ? 'Save' : 'Add'),
@@ -660,4 +951,298 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 
 extension TextDirectionDisplayName on TextDirection {
   String get displayName => this == TextDirection.ltr ? 'Left to Right' : 'Right to Left';
+}
+
+class CsvVocabularyCreationScreen extends StatefulWidget {
+  final CsvVocabularyData csvData;
+  
+  const CsvVocabularyCreationScreen({
+    super.key,
+    required this.csvData,
+  });
+
+  @override
+  State<CsvVocabularyCreationScreen> createState() => _CsvVocabularyCreationScreenState();
+}
+
+class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _sourceLanguageController;
+  late final TextEditingController _targetLanguageController;
+  late TextDirection _sourceReadingDirection;
+  late TextDirection _targetReadingDirection;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.csvData.name);
+    _sourceLanguageController = TextEditingController(text: widget.csvData.sourceLanguage);
+    _targetLanguageController = TextEditingController(text: widget.csvData.targetLanguage);
+    _sourceReadingDirection = widget.csvData.sourceReadingDirection;
+    _targetReadingDirection = widget.csvData.targetReadingDirection;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _sourceLanguageController.dispose();
+    _targetLanguageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create Vocabulary from CSV')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                 // Vocabulary details form
+                Text(
+                  'Vocabulary Details',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 16),
+                
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Vocabulary Name',
+                    hintText: 'e.g., Spanish Basics, French Travel',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter a vocabulary name' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _sourceLanguageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Source Language',
+                    hintText: 'e.g., English, Spanish',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter source language' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _targetLanguageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Language',
+                    hintText: 'e.g., Spanish, French',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<TextDirection>(
+                  value: _sourceReadingDirection,
+                  decoration: const InputDecoration(
+                    labelText: 'Source Language Reading Direction',
+                  ),
+                  items: TextDirection.values.map((direction) {
+                    return DropdownMenuItem<TextDirection>(
+                      value: direction,
+                      child: Text(direction.displayName),
+                    );
+                  }).toList(),
+                  onChanged: (TextDirection? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _sourceReadingDirection = newValue;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<TextDirection>(
+                  value: _targetReadingDirection,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Language Reading Direction',
+                  ),
+                  items: TextDirection.values.map((direction) {
+                    return DropdownMenuItem<TextDirection>(
+                      value: direction,
+                      child: Text(direction.displayName),
+                    );
+                  }).toList(),
+                  onChanged: (TextDirection? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _targetReadingDirection = newValue;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 24),
+                
+                // Create button
+                Center(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        final vocabulary = TextVocabulary(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          name: _nameController.text,
+                          sourceLanguage: _sourceLanguageController.text,
+                          targetLanguage: _targetLanguageController.text,
+                          sourceReadingDirection: _sourceReadingDirection,
+                          targetReadingDirection: _targetReadingDirection,
+                          entries: widget.csvData.entries,
+                        );
+                        Navigator.pop(context, vocabulary);
+                      }
+                    },
+                    child: const Text('Create Vocabulary'),
+                  ),
+                ),
+                const SizedBox(height: 16), // Extra padding at bottom for safety
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ImageVocabularyCreationScreen extends StatefulWidget {
+  final String directoryName;
+  final List<ImageEntry> entries;
+  final String vocabularyId;
+  
+  const ImageVocabularyCreationScreen({
+    super.key,
+    required this.directoryName,
+    required this.entries,
+    required this.vocabularyId,
+  });
+
+  @override
+  State<ImageVocabularyCreationScreen> createState() => _ImageVocabularyCreationScreenState();
+}
+
+class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _targetLanguageController;
+  late TextDirection _targetReadingDirection;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.directoryName);
+    _targetLanguageController = TextEditingController(text: widget.directoryName);
+    _targetReadingDirection = TextDirection.ltr;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _targetLanguageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create Image Vocabulary')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Vocabulary details form
+                Text(
+                  'Vocabulary Details',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 16),
+                
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Vocabulary Name',
+                    hintText: 'e.g., Animals, Objects, Colors',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter a vocabulary name' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _targetLanguageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Language',
+                    hintText: 'e.g., English, Spanish, French',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<TextDirection>(
+                  value: _targetReadingDirection,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Language Reading Direction',
+                  ),
+                  items: TextDirection.values.map((direction) {
+                    return DropdownMenuItem<TextDirection>(
+                      value: direction,
+                      child: Text(direction.displayName),
+                    );
+                  }).toList(),
+                  onChanged: (TextDirection? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _targetReadingDirection = newValue;
+                      });
+                    }
+                  },
+                ),
+                                 const SizedBox(height: 24),
+                
+                // Create button
+                Center(
+                  child: Focus(
+                    autofocus: true,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          final vocabulary = ImageVocabulary(
+                            id: widget.vocabularyId,
+                            name: _nameController.text,
+                            targetLanguage: _targetLanguageController.text,
+                            targetReadingDirection: _targetReadingDirection,
+                            entries: widget.entries,
+                          );
+                          
+                          Navigator.pop(context, vocabulary);
+                        }
+                      },
+                      child: const Text('Create Image Vocabulary'),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16), // Extra padding at bottom for safety
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
