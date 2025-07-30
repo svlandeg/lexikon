@@ -4,6 +4,8 @@ import 'package:lexikon/vocabulary_screen.dart';
 import 'package:lexikon/vocabulary.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:path/path.dart' as path;
 
 void main() {
   group('VocabularyListScreen', () {
@@ -231,6 +233,7 @@ Hello,سلام''';
       final screen = ImageVocabularyCreationScreen(
         directoryName: 'Animals',
         entries: entries,
+        vocabularyId: 'test_id',
       );
       
       expect(screen.directoryName, 'Animals');
@@ -239,4 +242,6 @@ Hello,سلام''';
       expect(screen.entries[0].imagePath, '/path/to/cat.png');
     });
   });
+
+
 } 

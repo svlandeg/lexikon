@@ -666,12 +666,30 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
   }
 
   void _removeEntry(int index) {
+    final entry = _vocabulary.entries[index];
+    
+    // Clean up image file if it's an image entry
+    if (entry is ImageEntry) {
+      _cleanupImageFile(entry.imagePath);
+    }
+    
     setState(() {
       final newEntries = List<Entry>.from(_vocabulary.entries);
       newEntries.removeAt(index);
       _vocabulary = _vocabulary.copyWith(entries: newEntries);
     });
     widget.onVocabularyUpdated(_vocabulary);
+  }
+
+  void _cleanupImageFile(String imagePath) {
+    try {
+      final file = File(imagePath);
+      if (file.existsSync()) {
+        file.deleteSync();
+      }
+    } catch (e) {
+      // Silently handle cleanup errors
+    }
   }
 
   void _editEntry(int index, Entry newEntry) {
