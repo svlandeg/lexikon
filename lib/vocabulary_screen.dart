@@ -852,54 +852,8 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Preview section
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'CSV Preview',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text('${widget.csvData.entries.length} entries found'),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Sample entries:',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 4),
-                        ...widget.csvData.entries.take(3).map((entry) => 
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: Text(
-                              '${entry.source} → ${entry.target}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (widget.csvData.entries.length > 3)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: Text(
-                              '... and ${widget.csvData.entries.length - 3} more',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Vocabulary details form
+                             children: [
+                 // Vocabulary details form
                 Text(
                   'Vocabulary Details',
                   style: Theme.of(context).textTheme.titleMedium,
@@ -975,9 +929,14 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
                 const SizedBox(height: 24),
                 
                 // Create button
-                SizedBox(
-                  width: double.infinity,
+                Center(
                   child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         final vocabulary = TextVocabulary(
