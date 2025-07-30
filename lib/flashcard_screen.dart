@@ -88,14 +88,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     if (userInput == correctAnswer) {
       setState(() {
         _correct++;
-        _feedback = 'Correct!\nThe ${widget.vocabulary.targetLanguage} translation is: ${_quizEntries[_current].target}';
+        _feedback = 'Correct!\nThe ${widget.vocabulary.targetLanguage} word is: ${_quizEntries[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
     } else {
       setState(() {
         _incorrect++;
-        _feedback = 'Incorrect.\nThe correct ${widget.vocabulary.targetLanguage} translation is: ${_quizEntries[_current].target}';
+        _feedback = 'Incorrect.\nYour answer: ${_controller.text.trim()}\nThe correct ${widget.vocabulary.targetLanguage} word is: ${_quizEntries[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
