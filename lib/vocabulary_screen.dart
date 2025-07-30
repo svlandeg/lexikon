@@ -77,20 +77,17 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
      _saveVocabularies();
    }
 
-   void _cleanupVocabularyImages(ImageVocabulary vocabulary) {
-     try {
-              for (final entry in vocabulary.entries) {
-         if (entry is ImageEntry && entry.imagePath.startsWith('app_data/vocabularies/')) {
-           final file = File(entry.imagePath);
-           if (file.existsSync()) {
-             file.deleteSync();
-           }
-         }
-       }
-            } catch (e) {
-         // Silently handle cleanup errors
-       }
-   }
+       void _cleanupVocabularyImages(ImageVocabulary vocabulary) {
+      try {
+        // Delete the entire vocabulary directory
+        final vocabularyDir = Directory('app_data/vocabularies/${vocabulary.id}');
+        if (vocabularyDir.existsSync()) {
+          vocabularyDir.deleteSync(recursive: true);
+        }
+      } catch (e) {
+        // Silently handle cleanup errors
+      }
+    }
 
      void _updateVocabulary(int index, Vocabulary vocabulary) {
      setState(() {
@@ -99,10 +96,10 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
      _saveVocabularies();
    }
 
-       Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension) async {
+               Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension, String vocabularyId) async {
       try {
-        // Create app data directory for images
-        final appDataDir = Directory('app_data/vocabularies');
+        // Create app data directory for images with vocabulary ID subdirectory
+        final appDataDir = Directory('app_data/vocabularies/$vocabularyId');
         if (!appDataDir.existsSync()) {
           appDataDir.createSync(recursive: true);
         }
@@ -152,7 +149,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         await destinationFile.writeAsBytes(encodedBytes);
 
         // Return the relative path for storage in vocabulary
-        return 'app_data/vocabularies/$filename';
+        return 'app_data/vocabularies/$vocabularyId/$filename';
       } catch (e) {
         return null;
       }
@@ -301,78 +298,81 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           return;
         }
         
-                          // Create image entries from files
-          final entries = <ImageEntry>[];
-          for (final file in files) {
-            final fileName = file.path.split(Platform.pathSeparator).last;
-            final targetWord = fileName.split('.').first; // Remove extension
-            
-            
-            
-                         // Check if the image can be loaded and copy it to app data
-             if (file is File && file.existsSync()) {
-               try {
-                 // Try to create a FileImage and test if it can be loaded
-                 final imageProvider = FileImage(file);
-                 
-                 // Test the image by trying to resolve it
-                 final stream = imageProvider.resolve(ImageConfiguration.empty);
-                 final completer = Completer<bool>();
-                 
-                 stream.addListener(ImageStreamListener((info, _) {
-                   completer.complete(true);
-                 }, onError: (error, stackTrace) {
-                   completer.complete(false);
-                 }));
-                 
-                 final isValid = await completer.future;
-                 
-                 if (isValid) {
-                   // Generate a unique filename for the copied image
-                   final extension = file.path.split('.').last.toLowerCase();
-                   final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension);
-                   
-                                        if (copiedImagePath != null) {
-                       entries.add(ImageEntry(
-                         imagePath: copiedImagePath,
-                         target: targetWord,
-                       ));
-                     } else {
-                       continue;
-                     }
-                   } else {
-                     continue;
-                   }
-                 } catch (e) {
-                   // Skip this file if it can't be loaded
-                   continue;
-                 }
-               } else {
-                 // Skip if file doesn't exist or is not a file
-               }
-          }
-        
-        // Navigate to image vocabulary creation screen
-        final vocabulary = await Navigator.push<Vocabulary>(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ImageVocabularyCreationScreen(
-              directoryName: directoryName,
-              entries: entries,
-            ),
-          ),
-        );
-        
-                 if (vocabulary != null) {
-           _addVocabulary(vocabulary);
-           if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                   content: Text('Image vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} copied entries!'),
-                 ),
-             );
+                                            // Create image entries from files
+           final entries = <ImageEntry>[];
+           final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
+           
+           for (final file in files) {
+             final fileName = file.path.split(Platform.pathSeparator).last;
+             final targetWord = fileName.split('.').first; // Remove extension
+             
+             
+             
+                          // Check if the image can be loaded and copy it to app data
+              if (file is File && file.existsSync()) {
+                try {
+                  // Try to create a FileImage and test if it can be loaded
+                  final imageProvider = FileImage(file);
+                  
+                  // Test the image by trying to resolve it
+                  final stream = imageProvider.resolve(ImageConfiguration.empty);
+                  final completer = Completer<bool>();
+                  
+                  stream.addListener(ImageStreamListener((info, _) {
+                    completer.complete(true);
+                  }, onError: (error, stackTrace) {
+                    completer.complete(false);
+                  }));
+                  
+                  final isValid = await completer.future;
+                  
+                  if (isValid) {
+                    // Generate a unique filename for the copied image
+                    final extension = file.path.split('.').last.toLowerCase();
+                    final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
+                    
+                                         if (copiedImagePath != null) {
+                        entries.add(ImageEntry(
+                          imagePath: copiedImagePath,
+                          target: targetWord,
+                        ));
+                      } else {
+                        continue;
+                      }
+                    } else {
+                      continue;
+                    }
+                  } catch (e) {
+                    // Skip this file if it can't be loaded
+                    continue;
+                  }
+                } else {
+                  // Skip if file doesn't exist or is not a file
+                }
            }
-         }
+        
+         // Navigate to image vocabulary creation screen
+         final vocabulary = await Navigator.push<Vocabulary>(
+           context,
+           MaterialPageRoute(
+             builder: (context) => ImageVocabularyCreationScreen(
+               directoryName: directoryName,
+               entries: entries,
+               vocabularyId: vocabularyId,
+             ),
+           ),
+         );
+         
+                  if (vocabulary != null) {
+            _addVocabulary(vocabulary);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                                 SnackBar(
+                    content: Text('Image vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} copied entries!'),
+                  ),
+              );
+            }
+          }
       }
     } catch (e) {
       if (mounted) {
@@ -1094,11 +1094,13 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
 class ImageVocabularyCreationScreen extends StatefulWidget {
   final String directoryName;
   final List<ImageEntry> entries;
+  final String vocabularyId;
   
   const ImageVocabularyCreationScreen({
     super.key,
     required this.directoryName,
     required this.entries,
+    required this.vocabularyId,
   });
 
   @override
@@ -1193,18 +1195,19 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                       textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        final vocabulary = ImageVocabulary(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
-                          name: _nameController.text,
-                          targetLanguage: _targetLanguageController.text,
-                          targetReadingDirection: _targetReadingDirection,
-                          entries: widget.entries,
-                        );
-                        Navigator.pop(context, vocabulary);
-                      }
-                    },
+                                                              onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          final vocabulary = ImageVocabulary(
+                            id: widget.vocabularyId,
+                            name: _nameController.text,
+                            targetLanguage: _targetLanguageController.text,
+                            targetReadingDirection: _targetReadingDirection,
+                            entries: widget.entries,
+                          );
+                          
+                          Navigator.pop(context, vocabulary);
+                        }
+                      },
                     child: const Text('Create Image Vocabulary'),
                   ),
                 ),
