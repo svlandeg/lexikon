@@ -75,6 +75,119 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     _saveVocabularies();
   }
 
+  void _showCreateVocabularyOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Create Vocabulary',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.create),
+              title: const Text('Create Empty Vocabulary'),
+              subtitle: const Text('Start with an empty vocabulary and add words manually'),
+              onTap: () {
+                Navigator.pop(context);
+                _createEmptyVocabulary();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.upload_file),
+              title: const Text('Create from CSV File'),
+              subtitle: const Text('Import vocabulary from a CSV file'),
+              onTap: () {
+                Navigator.pop(context);
+                _createFromCsvFile();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.folder),
+              title: const Text('Create from Directory'),
+              subtitle: const Text('Create image vocabulary from a directory (Coming Soon)'),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Image vocabulary creation coming soon!')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _createEmptyVocabulary() async {
+    final result = await Navigator.push<Vocabulary>(
+      context,
+      MaterialPageRoute(builder: (context) => const AddVocabularyScreen()),
+    );
+    if (result != null) {
+      _addVocabulary(result);
+    }
+  }
+
+  void _createFromCsvFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
+      
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final content = await file.readAsString();
+        final filename = result.files.single.name;
+        
+        try {
+          final csvData = CsvParser.parseCsvFile(filename, content);
+          
+          final vocabulary = await Navigator.push<Vocabulary>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CsvVocabularyCreationScreen(csvData: csvData),
+            ),
+          );
+          
+          if (vocabulary != null) {
+            _addVocabulary(vocabulary);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} entries!'),
+                ),
+              );
+            }
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error parsing CSV file: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error reading file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -174,16 +287,10 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push<Vocabulary>(
-            context,
-            MaterialPageRoute(builder: (context) => const AddVocabularyScreen()),
-          );
-          if (result != null) {
-            _addVocabulary(result);
-          }
+        onPressed: () {
+          _showCreateVocabularyOptions();
         },
-        tooltip: 'Add Vocabulary',
+        tooltip: 'Create Vocabulary',
         child: const Icon(Icons.add),
       ),
     );
@@ -694,4 +801,206 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 
 extension TextDirectionDisplayName on TextDirection {
   String get displayName => this == TextDirection.ltr ? 'Left to Right' : 'Right to Left';
+}
+
+class CsvVocabularyCreationScreen extends StatefulWidget {
+  final CsvVocabularyData csvData;
+  
+  const CsvVocabularyCreationScreen({
+    super.key,
+    required this.csvData,
+  });
+
+  @override
+  State<CsvVocabularyCreationScreen> createState() => _CsvVocabularyCreationScreenState();
+}
+
+class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _sourceLanguageController;
+  late final TextEditingController _targetLanguageController;
+  late TextDirection _sourceReadingDirection;
+  late TextDirection _targetReadingDirection;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.csvData.name);
+    _sourceLanguageController = TextEditingController(text: widget.csvData.sourceLanguage);
+    _targetLanguageController = TextEditingController(text: widget.csvData.targetLanguage);
+    _sourceReadingDirection = TextDirection.ltr;
+    _targetReadingDirection = TextDirection.ltr;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _sourceLanguageController.dispose();
+    _targetLanguageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create Vocabulary from CSV')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Preview section
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CSV Preview',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text('${widget.csvData.entries.length} entries found'),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Sample entries:',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 4),
+                        ...widget.csvData.entries.take(3).map((entry) => 
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text(
+                              '${entry.source} → ${entry.target}',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (widget.csvData.entries.length > 3)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text(
+                              '... and ${widget.csvData.entries.length - 3} more',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Vocabulary details form
+                Text(
+                  'Vocabulary Details',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 16),
+                
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Vocabulary Name',
+                    hintText: 'e.g., Spanish Basics, French Travel',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter a vocabulary name' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _sourceLanguageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Source Language',
+                    hintText: 'e.g., English, Spanish',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter source language' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _targetLanguageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Language',
+                    hintText: 'e.g., Spanish, French',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<TextDirection>(
+                  value: _sourceReadingDirection,
+                  decoration: const InputDecoration(
+                    labelText: 'Source Language Reading Direction',
+                  ),
+                  items: TextDirection.values.map((direction) {
+                    return DropdownMenuItem<TextDirection>(
+                      value: direction,
+                      child: Text(direction.displayName),
+                    );
+                  }).toList(),
+                  onChanged: (TextDirection? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _sourceReadingDirection = newValue;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<TextDirection>(
+                  value: _targetReadingDirection,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Language Reading Direction',
+                  ),
+                  items: TextDirection.values.map((direction) {
+                    return DropdownMenuItem<TextDirection>(
+                      value: direction,
+                      child: Text(direction.displayName),
+                    );
+                  }).toList(),
+                  onChanged: (TextDirection? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _targetReadingDirection = newValue;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 24),
+                
+                // Create button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        final vocabulary = TextVocabulary(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          name: _nameController.text,
+                          sourceLanguage: _sourceLanguageController.text,
+                          targetLanguage: _targetLanguageController.text,
+                          sourceReadingDirection: _sourceReadingDirection,
+                          targetReadingDirection: _targetReadingDirection,
+                          entries: widget.csvData.entries,
+                        );
+                        Navigator.pop(context, vocabulary);
+                      }
+                    },
+                    child: const Text('Create Vocabulary'),
+                  ),
+                ),
+                const SizedBox(height: 16), // Extra padding at bottom for safety
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

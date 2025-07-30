@@ -328,4 +328,81 @@ class EntrySourceWidget extends StatelessWidget {
       throw ArgumentError('Unknown entry type: ${entry.runtimeType}');
     }
   }
+}
+
+// CSV parsing utilities for vocabulary creation
+class CsvVocabularyData {
+  final String name;
+  final String sourceLanguage;
+  final String targetLanguage;
+  final List<TextEntry> entries;
+
+  const CsvVocabularyData({
+    required this.name,
+    required this.sourceLanguage,
+    required this.targetLanguage,
+    required this.entries,
+  });
+}
+
+class CsvParser {
+  /// Parses a CSV file and extracts vocabulary data
+  /// 
+  /// Expected format:
+  /// - First line: "SourceLanguage,TargetLanguage" (e.g., "English,Arabic")
+  /// - Subsequent lines: "source,target" pairs (e.g., "Hello,مرحبا")
+  /// 
+  /// Returns CsvVocabularyData with:
+  /// - name: filename without extension
+  /// - sourceLanguage: from first line, first column
+  /// - targetLanguage: from first line, second column
+  /// - entries: all subsequent lines as TextEntry objects
+  static CsvVocabularyData parseCsvFile(String filename, String csvContent) {
+    final lines = csvContent.trim().split('\n');
+    
+    if (lines.isEmpty) {
+      throw ArgumentError('CSV file is empty');
+    }
+    
+    // Parse first line for languages
+    final languageLine = lines[0].trim();
+    final languageParts = languageLine.split(',');
+    
+    if (languageParts.length < 2) {
+      throw ArgumentError('First line must contain source and target languages separated by comma');
+    }
+    
+    final sourceLanguage = languageParts[0].trim();
+    final targetLanguage = languageParts[1].trim();
+    
+    if (sourceLanguage.isEmpty || targetLanguage.isEmpty) {
+      throw ArgumentError('Source and target languages cannot be empty');
+    }
+    
+    // Parse vocabulary entries from remaining lines
+    final entries = <TextEntry>[];
+    for (int i = 1; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isNotEmpty) {
+        final parts = line.split(',');
+        if (parts.length >= 2) {
+          final source = parts[0].trim();
+          final target = parts[1].trim();
+          if (source.isNotEmpty && target.isNotEmpty) {
+            entries.add(TextEntry(source: source, target: target));
+          }
+        }
+      }
+    }
+    
+    // Extract name from filename (remove extension)
+    final name = filename.replaceAll(RegExp(r'\.csv$'), '');
+    
+    return CsvVocabularyData(
+      name: name,
+      sourceLanguage: sourceLanguage,
+      targetLanguage: targetLanguage,
+      entries: entries,
+    );
+  }
 } 
