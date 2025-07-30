@@ -53,9 +53,7 @@ When starting this exercise, a 10x10 word search will be displayed with at most 
 Five source words (or images) are displayed on the left and five target words on the right - your job is to connect the correct pairs. Upon startup, the user can select how many words to practice in total, but they will be shown 5 at a time.
 
 <p align="center">
-<img src="media/connect_arabic.png" title="Example of an exercise connecting 5 word pairs" alt="Picture showing 5 English words on the left, and the 5 Arabic translations on the right (but scrambled in order)" width="400">
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="media/connect_images.png" title="Example of an exercise connecting 5 word pairs" alt="Picture showing 5 English words on the left, and the 5 Arabic translations on the right (but scrambled in order)" width="400">
+<img src="media/connect_images.png" title="Example of an exercise connecting 5 word pairs" alt="Picture showing 5 English words on the left, and the 5 Arabic translations on the right (but scrambled in order)" width="400">
 </p>
 
 ### Flashcards
