@@ -169,5 +169,53 @@ valid,entry''';
       expect(result.entries[2].source, 'valid');
       expect(result.entries[2].target, 'entry');
     });
+
+    test('detects reading directions correctly', () {
+      // Test LTR languages
+      const ltrCsv = '''English,Spanish
+Hello,Hola
+Good morning,Buenos días''';
+      
+      final ltrResult = CsvParser.parseCsvFile('ltr_test.csv', ltrCsv);
+      expect(ltrResult.sourceReadingDirection, TextDirection.ltr);
+      expect(ltrResult.targetReadingDirection, TextDirection.ltr);
+      
+      // Test RTL languages
+      const rtlCsv = '''English,Arabic
+Hello,مرحبا
+Good morning,صباح الخير''';
+      
+      final rtlResult = CsvParser.parseCsvFile('rtl_test.csv', rtlCsv);
+      expect(rtlResult.sourceReadingDirection, TextDirection.ltr);
+      expect(rtlResult.targetReadingDirection, TextDirection.rtl);
+      
+      // Test both RTL
+      const bothRtlCsv = '''Arabic,Hebrew
+مرحبا,שלום
+صباح الخير,בוקר טוב''';
+      
+      final bothRtlResult = CsvParser.parseCsvFile('both_rtl_test.csv', bothRtlCsv);
+      expect(bothRtlResult.sourceReadingDirection, TextDirection.rtl);
+      expect(bothRtlResult.targetReadingDirection, TextDirection.rtl);
+      
+      // Test various language name formats
+      const arabicVariantsCsv = '''English,Arabic (Egypt)
+Hello,مرحبا''';
+      
+      final arabicVariantsResult = CsvParser.parseCsvFile('arabic_variants_test.csv', arabicVariantsCsv);
+      expect(arabicVariantsResult.targetReadingDirection, TextDirection.rtl);
+      
+      const persianVariantsCsv = '''English,Persian (Iran)
+Hello,سلام''';
+      
+      final persianVariantsResult = CsvParser.parseCsvFile('persian_variants_test.csv', persianVariantsCsv);
+      expect(persianVariantsResult.targetReadingDirection, TextDirection.rtl);
+      
+      const farsiVariantsCsv = '''English,Farsi
+Hello,سلام''';
+      
+      final farsiVariantsResult = CsvParser.parseCsvFile('farsi_variants_test.csv', farsiVariantsCsv);
+      expect(farsiVariantsResult.targetReadingDirection, TextDirection.rtl);
+    });
   });
 } 

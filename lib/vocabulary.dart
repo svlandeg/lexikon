@@ -336,16 +336,41 @@ class CsvVocabularyData {
   final String sourceLanguage;
   final String targetLanguage;
   final List<TextEntry> entries;
+  final TextDirection sourceReadingDirection;
+  final TextDirection targetReadingDirection;
 
   const CsvVocabularyData({
     required this.name,
     required this.sourceLanguage,
     required this.targetLanguage,
     required this.entries,
+    required this.sourceReadingDirection,
+    required this.targetReadingDirection,
   });
 }
 
 class CsvParser {
+  // RTL languages list - atomic names that indicate RTL languages
+  static const List<String> _rtlLanguages = [
+    'arabic',
+    'balochi',
+    'farsi',
+    'hebrew',
+    'kurdish',
+    'pashto',
+    'persian',
+    'sindhi',
+    'urdu',
+    'uyghur',
+  ];
+
+  /// Determines if a language is RTL based on the language name
+  /// Checks if the normalized language name contains any of the RTL language keywords
+  static bool _isRtlLanguage(String language) {
+    final normalizedLanguage = language.toLowerCase().trim();
+    return _rtlLanguages.any((rtlLang) => normalizedLanguage.contains(rtlLang));
+  }
+
   /// Parses a CSV file and extracts vocabulary data
   /// 
   /// Expected format:
@@ -357,6 +382,8 @@ class CsvParser {
   /// - sourceLanguage: from first line, first column
   /// - targetLanguage: from first line, second column
   /// - entries: all subsequent lines as TextEntry objects
+  /// - sourceReadingDirection: automatically determined from source language
+  /// - targetReadingDirection: automatically determined from target language
   static CsvVocabularyData parseCsvFile(String filename, String csvContent) {
     final lines = csvContent.trim().split('\n');
     
@@ -378,6 +405,14 @@ class CsvParser {
     if (sourceLanguage.isEmpty || targetLanguage.isEmpty) {
       throw ArgumentError('Source and target languages cannot be empty');
     }
+    
+    // Determine reading directions based on languages
+    final sourceReadingDirection = _isRtlLanguage(sourceLanguage) 
+        ? TextDirection.rtl 
+        : TextDirection.ltr;
+    final targetReadingDirection = _isRtlLanguage(targetLanguage) 
+        ? TextDirection.rtl 
+        : TextDirection.ltr;
     
     // Parse vocabulary entries from remaining lines
     final entries = <TextEntry>[];
@@ -403,6 +438,8 @@ class CsvParser {
       sourceLanguage: sourceLanguage,
       targetLanguage: targetLanguage,
       entries: entries,
+      sourceReadingDirection: sourceReadingDirection,
+      targetReadingDirection: targetReadingDirection,
     );
   }
 } 

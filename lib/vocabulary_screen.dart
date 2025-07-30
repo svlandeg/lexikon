@@ -602,95 +602,24 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
           ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: 'addEntry',
-            onPressed: () async {
-              final result = await Navigator.push<Entry>(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddEntryScreen(
-                    vocabulary: _vocabulary,
-                  ),
-                ),
-              );
-              if (result != null) {
-                _addEntry(result);
-              }
-            },
-            tooltip: 'Add Word',
-            child: const Icon(Icons.add),
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: 'importCSV',
-            onPressed: () async {
-              FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
-              if (result != null && result.files.single.path != null) {
-                final file = File(result.files.single.path!);
-                final content = await file.readAsString();
-                final rows = const CsvToListConverter().convert(content, eol: '\n');
-                List<Entry> importedEntries = [];
-                for (var row in rows) {
-                  if (row.length >= 2 && row[0] is String && row[1] is String) {
-                    importedEntries.add(TextEntry(source: row[0], target: row[1]));
-                  }
-                }
-                if (importedEntries.isNotEmpty) {
-                  final action = await showDialog<String>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Import Entries'),
-                      content: const Text('Do you want to add the imported entries to the existing list, or overwrite the list completely?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, 'add'),
-                          child: const Text('Add'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, 'overwrite'),
-                          child: const Text('Overwrite'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, null),
-                          child: const Text('Cancel'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (action == 'add') {
-                    setState(() {
-                      _vocabulary = _vocabulary.copyWith(
-                        entries: [..._vocabulary.entries, ...importedEntries],
-                      );
-                    });
-                    widget.onVocabularyUpdated(_vocabulary);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entries added successfully.')));
-                    }
-                  } else if (action == 'overwrite') {
-                    setState(() {
-                      _vocabulary = _vocabulary.copyWith(entries: importedEntries);
-                    });
-                    widget.onVocabularyUpdated(_vocabulary);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vocabulary overwritten successfully.')));
-                    }
-                  }
-                } else {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No valid entries found in CSV.')));
-                  }
-                }
-              }
-            },
-            tooltip: 'Import CSV',
-            child: const Icon(Icons.upload_file),
-          ),
-        ],
-      ),
+             floatingActionButton: FloatingActionButton(
+         heroTag: 'addEntry',
+         onPressed: () async {
+           final result = await Navigator.push<Entry>(
+             context,
+             MaterialPageRoute(
+               builder: (context) => AddEntryScreen(
+                 vocabulary: _vocabulary,
+               ),
+             ),
+           );
+           if (result != null) {
+             _addEntry(result);
+           }
+         },
+         tooltip: 'Add Word',
+         child: const Icon(Icons.add),
+       ),
     );
   }
 }
@@ -829,8 +758,8 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
     _nameController = TextEditingController(text: widget.csvData.name);
     _sourceLanguageController = TextEditingController(text: widget.csvData.sourceLanguage);
     _targetLanguageController = TextEditingController(text: widget.csvData.targetLanguage);
-    _sourceReadingDirection = TextDirection.ltr;
-    _targetReadingDirection = TextDirection.ltr;
+    _sourceReadingDirection = widget.csvData.sourceReadingDirection;
+    _targetReadingDirection = widget.csvData.targetReadingDirection;
   }
 
   @override
