@@ -366,7 +366,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                                  SnackBar(
-                    content: Text('Image vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} copied entries!'),
+                    content: Text('Image vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} entries!'),
                   ),
               );
             }
@@ -1204,14 +1204,16 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
                 
                 // Create button
                 Center(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                                                              onPressed: () async {
+                  child: Focus(
+                    autofocus: true,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
                           final vocabulary = ImageVocabulary(
                             id: widget.vocabularyId,
@@ -1224,7 +1226,8 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
                           Navigator.pop(context, vocabulary);
                         }
                       },
-                    child: const Text('Create Image Vocabulary'),
+                      child: const Text('Create Image Vocabulary'),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16), // Extra padding at bottom for safety
