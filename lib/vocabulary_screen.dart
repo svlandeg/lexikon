@@ -62,19 +62,65 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     _saveVocabularies();
   }
 
-  void _removeVocabulary(int index) {
-    setState(() {
-      _vocabularies.removeAt(index);
-    });
-    _saveVocabularies();
-  }
+     void _removeVocabulary(int index) {
+     final vocabulary = _vocabularies[index];
+     
+     // Clean up associated image files if it's an image vocabulary
+     if (vocabulary is ImageVocabulary) {
+       _cleanupVocabularyImages(vocabulary);
+     }
+     
+     setState(() {
+       _vocabularies.removeAt(index);
+     });
+     _saveVocabularies();
+   }
 
-  void _updateVocabulary(int index, Vocabulary vocabulary) {
-    setState(() {
-      _vocabularies[index] = vocabulary;
-    });
-    _saveVocabularies();
-  }
+   void _cleanupVocabularyImages(ImageVocabulary vocabulary) {
+     try {
+              for (final entry in vocabulary.entries) {
+         if (entry is ImageEntry && entry.imagePath.startsWith('app_data/vocabularies/')) {
+           final file = File(entry.imagePath);
+           if (file.existsSync()) {
+             file.deleteSync();
+           }
+         }
+       }
+            } catch (e) {
+         // Silently handle cleanup errors
+       }
+   }
+
+     void _updateVocabulary(int index, Vocabulary vocabulary) {
+     setState(() {
+       _vocabularies[index] = vocabulary;
+     });
+     _saveVocabularies();
+   }
+
+   Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension) async {
+     try {
+       // Create app data directory for images
+       final appDataDir = Directory('app_data/vocabularies');
+       if (!appDataDir.existsSync()) {
+         appDataDir.createSync(recursive: true);
+       }
+
+       // Create a unique filename based on target word and timestamp
+       final timestamp = DateTime.now().millisecondsSinceEpoch;
+       final filename = '${targetWord}_$timestamp.$extension';
+       final destinationFile = File('${appDataDir.path}/$filename');
+
+       // Copy the file (for now, just copy without resizing)
+       // TODO: Add image resizing functionality
+       await sourceFile.copy(destinationFile.path);
+
+       // Return the relative path for storage in vocabulary
+       return 'app_data/vocabularies/$filename';
+            } catch (e) {
+         return null;
+       }
+   }
 
   void _showCreateVocabularyOptions() {
     showModalBottomSheet(
@@ -225,15 +271,9 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             final fileName = file.path.split(Platform.pathSeparator).last;
             final targetWord = fileName.split('.').first; // Remove extension
             
-            // Debug: Print file information
-            print('Found image file: ${file.path}');
-            print('  - File exists: ${file.existsSync()}');
-            if (file is File) {
-              print('  - File size: ${(file as File).lengthSync()} bytes');
-            }
-            print('  - Target word: $targetWord');
             
-                         // Check if the image can be loaded
+            
+                         // Check if the image can be loaded and copy it to app data
              if (file is File && file.existsSync()) {
                try {
                  // Try to create a FileImage and test if it can be loaded
@@ -252,23 +292,28 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                  final isValid = await completer.future;
                  
                  if (isValid) {
-                   entries.add(ImageEntry(
-                     imagePath: file.path,
-                     target: targetWord,
-                   ));
-                   print('  - Image loaded successfully');
-                 } else {
-                   print('  - Failed to load image: Invalid image data');
+                   // Generate a unique filename for the copied image
+                   final extension = file.path.split('.').last.toLowerCase();
+                   final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension);
+                   
+                                        if (copiedImagePath != null) {
+                       entries.add(ImageEntry(
+                         imagePath: copiedImagePath,
+                         target: targetWord,
+                       ));
+                     } else {
+                       continue;
+                     }
+                   } else {
+                     continue;
+                   }
+                 } catch (e) {
+                   // Skip this file if it can't be loaded
                    continue;
                  }
-               } catch (e) {
-                 print('  - Failed to load image: $e');
-                 // Skip this file if it can't be loaded
-                 continue;
+               } else {
+                 // Skip if file doesn't exist or is not a file
                }
-             } else {
-               print('  - File does not exist or is not a file, skipping');
-             }
           }
         
         // Navigate to image vocabulary creation screen
@@ -286,9 +331,9 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
            _addVocabulary(vocabulary);
            if (mounted) {
              ScaffoldMessenger.of(context).showSnackBar(
-               SnackBar(
-                 content: Text('Image vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} valid entries!'),
-               ),
+                                SnackBar(
+                   content: Text('Image vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} copied entries!'),
+                 ),
              );
            }
          }
