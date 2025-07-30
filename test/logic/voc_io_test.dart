@@ -24,6 +24,48 @@ void main() {
     });
   });
 
+  group('Entry Error Handling', () {
+    test('entryFromJson throws error when type is null', () {
+      final json = {
+        'source': 'hello',
+        'target': 'hola'
+      };
+      expect(() => entryFromJson(json), throwsArgumentError);
+    });
+
+    test('entryFromJson throws error when target is null', () {
+      final json = {
+        'type': 'text',
+        'source': 'hello'
+      };
+      expect(() => entryFromJson(json), throwsArgumentError);
+    });
+
+    test('entryFromJson throws error when source is null for text entry', () {
+      final json = {
+        'type': 'text',
+        'target': 'hola'
+      };
+      expect(() => entryFromJson(json), throwsArgumentError);
+    });
+
+    test('entryFromJson throws error when imagePath is null for image entry', () {
+      final json = {
+        'type': 'image',
+        'target': 'gato'
+      };
+      expect(() => entryFromJson(json), throwsArgumentError);
+    });
+
+    test('entryFromJson throws error for unknown entry type', () {
+      final json = {
+        'type': 'unknown',
+        'target': 'test'
+      };
+      expect(() => entryFromJson(json), throwsArgumentError);
+    });
+  });
+
   group('Vocabulary', () {
     final entryList = [TextEntry(source: 'cat', target: 'gato'), TextEntry(source: 'dog', target: 'perro')];
     final vocab = TextVocabulary(
@@ -63,6 +105,100 @@ void main() {
       expect(vocab2.entries[0].target, vocab.entries[0].target);
       expect((vocab2.entries[1] as TextEntry).source, (vocab.entries[1] as TextEntry).source);
       expect(vocab2.entries[1].target, vocab.entries[1].target);
+    });
+  });
+
+  group('Vocabulary Error Handling', () {
+    test('vocabularyFromJson throws error when type is null', () {
+      final json = {
+        'id': '1',
+        'name': 'Test',
+        'entries': []
+      };
+      expect(() => vocabularyFromJson(json), throwsArgumentError);
+    });
+
+    test('vocabularyFromJson throws error when id is null', () {
+      final json = {
+        'type': 'text',
+        'name': 'Test',
+        'entries': []
+      };
+      expect(() => vocabularyFromJson(json), throwsArgumentError);
+    });
+
+    test('vocabularyFromJson throws error when name is null', () {
+      final json = {
+        'type': 'text',
+        'id': '1',
+        'entries': []
+      };
+      expect(() => vocabularyFromJson(json), throwsArgumentError);
+    });
+
+    test('vocabularyFromJson throws error when entries is null', () {
+      final json = {
+        'type': 'text',
+        'id': '1',
+        'name': 'Test'
+      };
+      expect(() => vocabularyFromJson(json), throwsArgumentError);
+    });
+
+    test('vocabularyFromJson throws error when sourceLanguage is null for text vocabulary', () {
+      final json = {
+        'type': 'text',
+        'id': '1',
+        'name': 'Test',
+        'targetLanguage': 'Spanish',
+        'entries': []
+      };
+      expect(() => vocabularyFromJson(json), throwsArgumentError);
+    });
+
+    test('vocabularyFromJson throws error when targetLanguage is null for text vocabulary', () {
+      final json = {
+        'type': 'text',
+        'id': '1',
+        'name': 'Test',
+        'sourceLanguage': 'English',
+        'entries': []
+      };
+      expect(() => vocabularyFromJson(json), throwsArgumentError);
+    });
+
+    test('vocabularyFromJson throws error when targetLanguage is null for image vocabulary', () {
+      final json = {
+        'type': 'image',
+        'id': '1',
+        'name': 'Test',
+        'entries': []
+      };
+      expect(() => vocabularyFromJson(json), throwsArgumentError);
+    });
+
+    test('vocabularyFromJson throws error for unknown vocabulary type', () {
+      final json = {
+        'type': 'unknown',
+        'id': '1',
+        'name': 'Test',
+        'entries': []
+      };
+      expect(() => vocabularyFromJson(json), throwsArgumentError);
+    });
+
+    test('vocabularyFromJson handles missing reading direction fields gracefully', () {
+      final json = {
+        'type': 'text',
+        'id': '1',
+        'name': 'Test',
+        'sourceLanguage': 'English',
+        'targetLanguage': 'Spanish',
+        'entries': []
+      };
+      final vocab = vocabularyFromJson(json);
+      expect(vocab.sourceReadingDirection, TextDirection.ltr);
+      expect(vocab.targetReadingDirection, TextDirection.ltr);
     });
   });
 } 

@@ -60,11 +60,25 @@ class ImageEntry extends Entry {
 
 // Factory method for creating entries from JSON
 Entry entryFromJson(Map<String, dynamic> json) {
+  // Validate required fields
+  if (json['type'] == null) {
+    throw ArgumentError('Entry JSON is missing required field: type');
+  }
+  if (json['target'] == null) {
+    throw ArgumentError('Entry JSON is missing required field: target');
+  }
+
   final type = json['type'] as String;
   switch (type) {
     case 'text':
+      if (json['source'] == null) {
+        throw ArgumentError('TextEntry JSON is missing required field: source');
+      }
       return TextEntry.fromJson(json);
     case 'image':
+      if (json['imagePath'] == null) {
+        throw ArgumentError('ImageEntry JSON is missing required field: imagePath');
+      }
       return ImageEntry.fromJson(json);
     default:
       throw ArgumentError('Unknown entry type: $type');
@@ -202,33 +216,56 @@ class ImageVocabulary extends Vocabulary {
 
 // Factory method for creating vocabularies from JSON
 Vocabulary vocabularyFromJson(Map<String, dynamic> json) {
+  // Validate required fields
+  if (json['type'] == null) {
+    throw ArgumentError('Vocabulary JSON is missing required field: type');
+  }
+  if (json['id'] == null) {
+    throw ArgumentError('Vocabulary JSON is missing required field: id');
+  }
+  if (json['name'] == null) {
+    throw ArgumentError('Vocabulary JSON is missing required field: name');
+  }
+  if (json['entries'] == null) {
+    throw ArgumentError('Vocabulary JSON is missing required field: entries');
+  }
+
   final type = json['type'] as String;
   final entries = (json['entries'] as List).map((e) => entryFromJson(e)).toList();
 
   switch (type) {
     case 'text':
+      if (json['sourceLanguage'] == null) {
+        throw ArgumentError('TextVocabulary JSON is missing required field: sourceLanguage');
+      }
+      if (json['targetLanguage'] == null) {
+        throw ArgumentError('TextVocabulary JSON is missing required field: targetLanguage');
+      }
       return TextVocabulary(
         id: json['id'] as String,
         name: json['name'] as String,
         sourceLanguage: json['sourceLanguage'] as String,
         targetLanguage: json['targetLanguage'] as String,
         sourceReadingDirection: TextDirection.values.firstWhere(
-          (e) => e.name == (json['sourceReadingDirection'] as String),
+          (e) => e.name == (json['sourceReadingDirection'] as String? ?? 'ltr'),
           orElse: () => TextDirection.ltr,
         ),
         targetReadingDirection: TextDirection.values.firstWhere(
-          (e) => e.name == (json['targetReadingDirection'] as String),
+          (e) => e.name == (json['targetReadingDirection'] as String? ?? 'ltr'),
           orElse: () => TextDirection.ltr,
         ),
         entries: entries.cast<TextEntry>(),
       );
     case 'image':
+      if (json['targetLanguage'] == null) {
+        throw ArgumentError('ImageVocabulary JSON is missing required field: targetLanguage');
+      }
       return ImageVocabulary(
         id: json['id'] as String,
         name: json['name'] as String,
         targetLanguage: json['targetLanguage'] as String,
         targetReadingDirection: TextDirection.values.firstWhere(
-          (e) => e.name == (json['targetReadingDirection'] as String),
+          (e) => e.name == (json['targetReadingDirection'] as String? ?? 'ltr'),
           orElse: () => TextDirection.ltr,
         ),
         entries: entries.cast<ImageEntry>(),

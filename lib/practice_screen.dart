@@ -39,7 +39,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
     final prefs = await SharedPreferences.getInstance();
     final vocabulariesJson = prefs.getStringList('vocabularies') ?? [];
     setState(() {
-              _vocabularies = vocabulariesJson.map((v) => vocabularyFromJson(jsonDecode(v))).toList();
+      _vocabularies.clear();
+      for (final jsonString in vocabulariesJson) {
+        try {
+          final json = jsonDecode(jsonString);
+          final vocabulary = vocabularyFromJson(json);
+          _vocabularies.add(vocabulary);
+        } catch (e) {
+          // Log the error and skip corrupted vocabulary data
+          print('Error loading vocabulary from JSON: $e');
+          print('Corrupted JSON string: $jsonString');
+        }
+      }
       if (_vocabularies.isNotEmpty) {
         _selectedVocabulary = _vocabularies.first;
       }
