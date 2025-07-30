@@ -170,8 +170,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.create),
-              title: const Text('Create Empty Vocabulary'),
-              subtitle: const Text('Start with an empty vocabulary and add words manually'),
+              title: const Text('Create an empty text-to-text vocabulary'),
+              // subtitle: const Text('Start with an empty vocabulary and add word pairs manually'),
               onTap: () {
                 Navigator.pop(context);
                 _createEmptyVocabulary();
@@ -179,8 +179,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.upload_file),
-              title: const Text('Create from CSV File'),
-              subtitle: const Text('Import vocabulary from a CSV file'),
+              title: const Text('Upload a text-to-text vocabulary from a CSV File'),
+              // subtitle: const Text('Import vocabulary from a CSV file'),
               onTap: () {
                 Navigator.pop(context);
                 _createFromCsvFile();
@@ -188,8 +188,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             ),
                          ListTile(
                leading: const Icon(Icons.folder),
-               title: const Text('Create from Directory'),
-               subtitle: const Text('Create image vocabulary from a directory'),
+               title: const Text('Upload a image-to-text vocabulary from a directory'),
+               // subtitle: const Text('Create image vocabulary from a directory'),
                onTap: () {
                  Navigator.pop(context);
                  _createFromDirectory();
@@ -298,7 +298,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           return;
         }
         
-                                            // Create image entries from files
+           // Create image entries from files
            final entries = <ImageEntry>[];
            final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
            
@@ -306,9 +306,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
              final fileName = file.path.split(Platform.pathSeparator).last;
              final targetWord = fileName.split('.').first; // Remove extension
              
-             
-             
-                          // Check if the image can be loaded and copy it to app data
+              // Check if the image can be loaded and copy it to app data
               if (file is File && file.existsSync()) {
                 try {
                   // Try to create a FileImage and test if it can be loaded
@@ -1135,7 +1133,7 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.directoryName);
-    _targetLanguageController = TextEditingController();
+    _targetLanguageController = TextEditingController(text: widget.directoryName);
     _targetReadingDirection = TextDirection.ltr;
   }
 
