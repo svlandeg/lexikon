@@ -138,7 +138,7 @@ void main() {
       await tester.tap(cellA);
       await tester.pumpAndSettle();
 
-      // Tap cell (4,6)
+      // Tap cell (4,4)
       final cellB = find.descendant(
         of: gridFinder,
         matching: find.byWidgetPredicate(
@@ -149,7 +149,7 @@ void main() {
             ((widget.child as Center).child as Text).data != null &&
             ((widget.child as Center).child as Text).data!.length == 1,
         ),
-      ).at(cellIndex(4, 6));
+      ).at(cellIndex(4, 4));
       await tester.tap(cellB);
       await tester.pumpAndSettle();
 
@@ -166,7 +166,7 @@ void main() {
           highlightedCount++;
         }
       }
-      expect(highlightedCount, 5);
+      expect(highlightedCount, 3);
       await tester.pumpWidget(Container());
       await tester.pumpAndSettle();
     });
