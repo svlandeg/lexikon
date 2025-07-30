@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
+import 'package:image/image.dart' as img;
 import 'practice_screen.dart';
 
 // Color definitions for VocabularyScreen
@@ -98,29 +99,64 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
      _saveVocabularies();
    }
 
-   Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension) async {
-     try {
-       // Create app data directory for images
-       final appDataDir = Directory('app_data/vocabularies');
-       if (!appDataDir.existsSync()) {
-         appDataDir.createSync(recursive: true);
-       }
+       Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension) async {
+      try {
+        // Create app data directory for images
+        final appDataDir = Directory('app_data/vocabularies');
+        if (!appDataDir.existsSync()) {
+          appDataDir.createSync(recursive: true);
+        }
 
-       // Create a unique filename based on target word and timestamp
-       final timestamp = DateTime.now().millisecondsSinceEpoch;
-       final filename = '${targetWord}_$timestamp.$extension';
-       final destinationFile = File('${appDataDir.path}/$filename');
+        // Create a unique filename based on target word and timestamp
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final filename = '${targetWord}_$timestamp.$extension';
+        final destinationFile = File('${appDataDir.path}/$filename');
 
-       // Copy the file (for now, just copy without resizing)
-       // TODO: Add image resizing functionality
-       await sourceFile.copy(destinationFile.path);
+        // Read and decode the source image
+        final bytes = await sourceFile.readAsBytes();
+        final image = img.decodeImage(bytes);
+        
+        if (image == null) {
+          return null; // Failed to decode image
+        }
 
-       // Return the relative path for storage in vocabulary
-       return 'app_data/vocabularies/$filename';
-            } catch (e) {
-         return null;
-       }
-   }
+        // Resize image to standard size (300x300) while maintaining aspect ratio
+        final resizedImage = img.copyResize(
+          image,
+          width: 300,
+          height: 300,
+          interpolation: img.Interpolation.linear,
+        );
+
+                 // Encode the resized image
+         List<int> encodedBytes;
+         switch (extension.toLowerCase()) {
+           case 'jpg':
+           case 'jpeg':
+             encodedBytes = img.encodeJpg(resizedImage, quality: 85);
+             break;
+           case 'png':
+             encodedBytes = img.encodePng(resizedImage);
+             break;
+           case 'webp':
+             // WebP not supported by image package, convert to PNG
+             encodedBytes = img.encodePng(resizedImage);
+             break;
+           default:
+             // For other formats, use PNG as fallback
+             encodedBytes = img.encodePng(resizedImage);
+             break;
+         }
+
+        // Write the resized image to the destination file
+        await destinationFile.writeAsBytes(encodedBytes);
+
+        // Return the relative path for storage in vocabulary
+        return 'app_data/vocabularies/$filename';
+      } catch (e) {
+        return null;
+      }
+    }
 
   void _showCreateVocabularyOptions() {
     showModalBottomSheet(
