@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'vocabulary.dart';
 import 'dart:convert';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
@@ -106,17 +107,15 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                 _createFromCsvFile();
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.folder),
-              title: const Text('Create from Directory'),
-              subtitle: const Text('Create image vocabulary from a directory (Coming Soon)'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Image vocabulary creation coming soon!')),
-                );
-              },
-            ),
+                         ListTile(
+               leading: const Icon(Icons.folder),
+               title: const Text('Create from Directory'),
+               subtitle: const Text('Create image vocabulary from a directory'),
+               onTap: () {
+                 Navigator.pop(context);
+                 _createFromDirectory();
+               },
+             ),
           ],
         ),
       ),
@@ -181,6 +180,124 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error reading file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _createFromDirectory() async {
+    try {
+      String? directoryPath = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: 'Select Directory for Image Vocabulary',
+      );
+      
+      if (directoryPath != null) {
+        final directory = Directory(directoryPath);
+        final directoryName = directory.path.split(Platform.pathSeparator).last;
+        
+        // Get all image files from the directory
+        final imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
+        final files = directory.listSync().where((file) {
+          if (file is File) {
+            final extension = file.path.split('.').last.toLowerCase();
+            return imageExtensions.contains(extension);
+          }
+          return false;
+        }).toList();
+        
+        if (files.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No image files found in the selected directory'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          return;
+        }
+        
+                          // Create image entries from files
+          final entries = <ImageEntry>[];
+          for (final file in files) {
+            final fileName = file.path.split(Platform.pathSeparator).last;
+            final targetWord = fileName.split('.').first; // Remove extension
+            
+            // Debug: Print file information
+            print('Found image file: ${file.path}');
+            print('  - File exists: ${file.existsSync()}');
+            if (file is File) {
+              print('  - File size: ${(file as File).lengthSync()} bytes');
+            }
+            print('  - Target word: $targetWord');
+            
+                         // Check if the image can be loaded
+             if (file is File && file.existsSync()) {
+               try {
+                 // Try to create a FileImage and test if it can be loaded
+                 final imageProvider = FileImage(file);
+                 
+                 // Test the image by trying to resolve it
+                 final stream = imageProvider.resolve(ImageConfiguration.empty);
+                 final completer = Completer<bool>();
+                 
+                 stream.addListener(ImageStreamListener((info, _) {
+                   completer.complete(true);
+                 }, onError: (error, stackTrace) {
+                   completer.complete(false);
+                 }));
+                 
+                 final isValid = await completer.future;
+                 
+                 if (isValid) {
+                   entries.add(ImageEntry(
+                     imagePath: file.path,
+                     target: targetWord,
+                   ));
+                   print('  - Image loaded successfully');
+                 } else {
+                   print('  - Failed to load image: Invalid image data');
+                   continue;
+                 }
+               } catch (e) {
+                 print('  - Failed to load image: $e');
+                 // Skip this file if it can't be loaded
+                 continue;
+               }
+             } else {
+               print('  - File does not exist or is not a file, skipping');
+             }
+          }
+        
+        // Navigate to image vocabulary creation screen
+        final vocabulary = await Navigator.push<Vocabulary>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ImageVocabularyCreationScreen(
+              directoryName: directoryName,
+              entries: entries,
+            ),
+          ),
+        );
+        
+                 if (vocabulary != null) {
+           _addVocabulary(vocabulary);
+           if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(
+                 content: Text('Image vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} valid entries!'),
+               ),
+             );
+           }
+         }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error reading directory: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -881,6 +998,133 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
                       }
                     },
                     child: const Text('Create Vocabulary'),
+                  ),
+                ),
+                const SizedBox(height: 16), // Extra padding at bottom for safety
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ImageVocabularyCreationScreen extends StatefulWidget {
+  final String directoryName;
+  final List<ImageEntry> entries;
+  
+  const ImageVocabularyCreationScreen({
+    super.key,
+    required this.directoryName,
+    required this.entries,
+  });
+
+  @override
+  State<ImageVocabularyCreationScreen> createState() => _ImageVocabularyCreationScreenState();
+}
+
+class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _targetLanguageController;
+  late TextDirection _targetReadingDirection;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.directoryName);
+    _targetLanguageController = TextEditingController();
+    _targetReadingDirection = TextDirection.ltr;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _targetLanguageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create Image Vocabulary')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Vocabulary details form
+                Text(
+                  'Vocabulary Details',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 16),
+                
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Vocabulary Name',
+                    hintText: 'e.g., Animals, Objects, Colors',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter a vocabulary name' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _targetLanguageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Language',
+                    hintText: 'e.g., English, Spanish, French',
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<TextDirection>(
+                  value: _targetReadingDirection,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Language Reading Direction',
+                  ),
+                  items: TextDirection.values.map((direction) {
+                    return DropdownMenuItem<TextDirection>(
+                      value: direction,
+                      child: Text(direction.displayName),
+                    );
+                  }).toList(),
+                  onChanged: (TextDirection? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _targetReadingDirection = newValue;
+                      });
+                    }
+                  },
+                ),
+                                 const SizedBox(height: 24),
+                
+                // Create button
+                Center(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        final vocabulary = ImageVocabulary(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          name: _nameController.text,
+                          targetLanguage: _targetLanguageController.text,
+                          targetReadingDirection: _targetReadingDirection,
+                          entries: widget.entries,
+                        );
+                        Navigator.pop(context, vocabulary);
+                      }
+                    },
+                    child: const Text('Create Image Vocabulary'),
                   ),
                 ),
                 const SizedBox(height: 16), // Extra padding at bottom for safety

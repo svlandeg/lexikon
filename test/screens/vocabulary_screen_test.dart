@@ -217,5 +217,26 @@ Hello,سلام''';
       final farsiVariantsResult = CsvParser.parseCsvFile('farsi_variants_test.csv', farsiVariantsCsv);
       expect(farsiVariantsResult.targetReadingDirection, TextDirection.rtl);
     });
+
+    test('creates image vocabulary from directory', () async {
+      // This test would require actual file system access
+      // For now, we'll test the UI components
+      final entries = [
+        ImageEntry(imagePath: '/path/to/cat.png', target: 'cat'),
+        ImageEntry(imagePath: '/path/to/dog.png', target: 'dog'),
+        ImageEntry(imagePath: '/path/to/bird.png', target: 'bird'),
+      ];
+      
+      // Test that ImageVocabularyCreationScreen can be created
+      final screen = ImageVocabularyCreationScreen(
+        directoryName: 'Animals',
+        entries: entries,
+      );
+      
+      expect(screen.directoryName, 'Animals');
+      expect(screen.entries.length, 3);
+      expect(screen.entries[0].target, 'cat');
+      expect(screen.entries[0].imagePath, '/path/to/cat.png');
+    });
   });
 } 

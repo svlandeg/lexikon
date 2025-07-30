@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 // Base abstract class for all entries
 abstract class Entry {
@@ -175,7 +176,7 @@ class ImageVocabulary extends Vocabulary {
     super.targetReadingDirection = TextDirection.ltr,
     required List<ImageEntry> entries,
   }) : super(
-    sourceLanguage: 'Images',
+    sourceLanguage: 'Image',
     sourceReadingDirection: TextDirection.ltr,
     entries: entries,
   );
@@ -305,25 +306,110 @@ class EntrySourceWidget extends StatelessWidget {
       );
     } else if (entry is ImageEntry) {
       final imageEntry = entry as ImageEntry;
-      return Image.asset(
-        imageEntry.imagePath,
-        width: imageWidth,
-        height: imageHeight,
-        fit: imageFit,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: imageWidth,
-            height: imageHeight,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.red),
-              color: Colors.grey[200],
-            ),
-            child: const Center(
-              child: Icon(Icons.error, color: Colors.red),
-            ),
-          );
-        },
-      );
+      
+             // Check if the path is a local file path (contains directory separators)
+       if (imageEntry.imagePath.contains('/') || imageEntry.imagePath.contains('\\')) {
+         // Local file path - use Image.file
+         final file = File(imageEntry.imagePath);
+         
+         // Check if file exists before trying to load it
+         if (!file.existsSync()) {
+           return Container(
+             width: imageWidth,
+             height: imageHeight,
+             decoration: BoxDecoration(
+               border: Border.all(color: Colors.red),
+               color: Colors.grey[200],
+             ),
+             child: Center(
+               child: Column(
+                 mainAxisAlignment: MainAxisAlignment.center,
+                 children: [
+                   const Icon(Icons.error, color: Colors.red),
+                   const SizedBox(height: 4),
+                   Text(
+                     'File not found',
+                     style: TextStyle(
+                       fontSize: 10,
+                       color: Colors.red[700],
+                     ),
+                   ),
+                   Text(
+                     imageEntry.imagePath.split('/').last,
+                     style: TextStyle(
+                       fontSize: 8,
+                       color: Colors.grey[600],
+                     ),
+                   ),
+                 ],
+               ),
+             ),
+           );
+         }
+         
+         return Image.file(
+           file,
+           width: imageWidth,
+           height: imageHeight,
+           fit: imageFit,
+           errorBuilder: (context, error, stackTrace) {
+             print('Error loading image: ${imageEntry.imagePath}');
+             print('Error: $error');
+             return Container(
+               width: imageWidth,
+               height: imageHeight,
+               decoration: BoxDecoration(
+                 border: Border.all(color: Colors.red),
+                 color: Colors.grey[200],
+               ),
+               child: Center(
+                 child: Column(
+                   mainAxisAlignment: MainAxisAlignment.center,
+                   children: [
+                     const Icon(Icons.error, color: Colors.red),
+                     const SizedBox(height: 4),
+                     Text(
+                       'Load failed',
+                       style: TextStyle(
+                         fontSize: 10,
+                         color: Colors.red[700],
+                       ),
+                     ),
+                     Text(
+                       imageEntry.imagePath.split('/').last,
+                       style: TextStyle(
+                         fontSize: 8,
+                         color: Colors.grey[600],
+                       ),
+                     ),
+                   ],
+                 ),
+               ),
+             );
+           },
+         );
+      } else {
+        // Asset path - use Image.asset
+        return Image.asset(
+          imageEntry.imagePath,
+          width: imageWidth,
+          height: imageHeight,
+          fit: imageFit,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              width: imageWidth,
+              height: imageHeight,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.red),
+                color: Colors.grey[200],
+              ),
+              child: const Center(
+                child: Icon(Icons.error, color: Colors.red),
+              ),
+            );
+          },
+        );
+      }
     } else {
       throw ArgumentError('Unknown entry type: ${entry.runtimeType}');
     }
