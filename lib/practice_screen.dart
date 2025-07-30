@@ -146,7 +146,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ListTile(
                   leading: const Icon(Icons.quiz),
                   title: const Text('Flashcards'),
-                  subtitle: const Text('Type the correct translation'),
+                  subtitle: const Text('Type the correct word'),
                   onTap: () async {
                     final entryCount = _selectedVocabulary!.entries.length;
                     int? count;
@@ -239,7 +239,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ListTile(
                   leading: const Icon(Icons.shuffle),
                   title: const Text('Scrambled Word'),
-                  subtitle: const Text('Reorder scrambled letters to form the translation'),
+                  subtitle: const Text('Reorder scrambled letters to form the correct word'),
                   onTap: () async {
                     final entryCount = _selectedVocabulary!.entries.length;
                     int? count;

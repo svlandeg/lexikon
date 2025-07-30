@@ -174,7 +174,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       controller: _controller,
                       focusNode: _inputFocusNode,
                       decoration: InputDecoration(
-                        labelText: '${widget.vocabulary.targetLanguage} translation',
+                        labelText: '${widget.vocabulary.targetLanguage} word',
                         border: const OutlineInputBorder(),
                       ),
                       onSubmitted: (_) => _submit(),
