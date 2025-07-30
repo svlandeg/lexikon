@@ -327,27 +327,22 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       : () async {
                           final entries = _selectedVocabulary!.entries;
                           final entryCount = entries.length;
-                          List<Map<String, String>> pairs = entries
-                              .map((e) => {
-                                'source': e.sourceValue,
-                                'target': e.target
-                              })
-                              .toList();
+                          List<Entry> selectedEntries = List<Entry>.from(entries);
                           if (entryCount < 5) {
                             // Fewer than 5: use all
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ConnectScreen(wordPairs: pairs),
+                                builder: (context) => ConnectScreen(entries: selectedEntries),
                               ),
                             );
                           } else if (entryCount < 10) {
                             // 5-9: use 5 random
-                            pairs.shuffle();
+                            selectedEntries.shuffle();
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ConnectScreen(wordPairs: pairs.take(5).toList()),
+                                builder: (context) => ConnectScreen(entries: selectedEntries.take(5).toList()),
                               ),
                             );
                           } else {
@@ -394,11 +389,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               },
                             );
                             if (count != null && count > 0) {
-                              pairs.shuffle();
+                              selectedEntries.shuffle();
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => ConnectScreen(wordPairs: pairs.take(count).toList()),
+                                  builder: (context) => ConnectScreen(entries: selectedEntries.take(count).toList()),
                                 ),
                               );
                             }

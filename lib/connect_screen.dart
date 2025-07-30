@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:io';
+import 'vocabulary.dart';
 
 // Color definitions for ConnectScreen
 const Color boxC = Colors.white;
@@ -10,8 +12,8 @@ const Color borderDefaultC = Colors.blueGrey;
 const Color lineC = Colors.greenAccent;
 
 class ConnectScreen extends StatefulWidget {
-  final List<Map<String, String>> wordPairs;
-  ConnectScreen({Key? key, required this.wordPairs}) : super(key: key);
+  final List<Entry> entries;
+  ConnectScreen({Key? key, required this.entries}) : super(key: key);
 
   @override
   _ConnectScreenState createState() => _ConnectScreenState();
@@ -19,9 +21,9 @@ class ConnectScreen extends StatefulWidget {
 
 class _ConnectScreenState extends State<ConnectScreen> {
   static const int batchSize = 5;
-  late List<Map<String, String>> allPairs;
+  late List<Entry> allEntries;
   int batchIndex = 0;
-  List<String> sourceWords = [];
+  List<Entry> sourceEntries = [];
   List<String> targetWords = [];
   int? selectedSourceIndex;
   int? selectedTargetIndex;
@@ -30,17 +32,17 @@ class _ConnectScreenState extends State<ConnectScreen> {
   @override
   void initState() {
     super.initState();
-    allPairs = List<Map<String, String>>.from(widget.wordPairs);
-    allPairs.shuffle();
+    allEntries = List<Entry>.from(widget.entries);
+    allEntries.shuffle();
     _loadBatch();
   }
 
   void _loadBatch() {
     final start = batchIndex * batchSize;
-    final end = (start + batchSize).clamp(0, allPairs.length);
-    final batch = allPairs.sublist(start, end);
-    sourceWords = batch.map((e) => e['source']!).toList();
-    targetWords = batch.map((e) => e['target']!).toList();
+    final end = (start + batchSize).clamp(0, allEntries.length);
+    final batch = allEntries.sublist(start, end);
+    sourceEntries = batch;
+    targetWords = batch.map((e) => e.target).toList();
     targetWords.shuffle();
     connections = [];
     selectedSourceIndex = null;
@@ -67,9 +69,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
 
     // If both are selected and they match, add connection and clear selection
     if (selectedSourceIndex != null && selectedTargetIndex != null) {
-      final source = sourceWords[selectedSourceIndex!];
+      final sourceEntry = sourceEntries[selectedSourceIndex!];
       final target = targetWords[selectedTargetIndex!];
-      final match = allPairs.any((pair) => pair['source'] == source && pair['target'] == target);
+      final match = sourceEntry.target == target;
       if (match) {
         setState(() {
           connections.add(_Connection(
@@ -80,9 +82,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
           selectedTargetIndex = null;
         });
         // If all connections for this batch are made, show dialog and wait for user to proceed
-        if (connections.length == sourceWords.length) {
+        if (connections.length == sourceEntries.length) {
           Future.delayed(const Duration(milliseconds: 300), () {
-            if ((batchIndex + 1) * batchSize < allPairs.length) {
+            if ((batchIndex + 1) * batchSize < allEntries.length) {
               showDialog(
                 context: context,
                 barrierDismissible: false,
@@ -126,9 +128,127 @@ class _ConnectScreenState extends State<ConnectScreen> {
     }
   }
 
+  Widget _buildSourceWidget(Entry entry, bool isSelected, bool isConnected) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.all(12),
+      height: 60.0,
+      decoration: BoxDecoration(
+        color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
+        border: Border.all(
+          color: isConnected ? borderConnectedC : borderDefaultC,
+          width: 2,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: entry is ImageEntry 
+        ? _buildImageWidget(entry as ImageEntry)
+        : Text(
+            (entry as TextEntry).source,
+            style: const TextStyle(fontSize: 18),
+          ),
+    );
+  }
+
+  Widget _buildImageWidget(ImageEntry imageEntry) {
+    // Check if the path is a local file path (contains directory separators)
+    if (imageEntry.imagePath.contains('/') || imageEntry.imagePath.contains('\\')) {
+      // Local file path - use Image.file
+      final file = File(imageEntry.imagePath);
+      
+      // Check if file exists before trying to load it
+      if (!file.existsSync()) {
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.red),
+            color: Colors.grey[200],
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error, color: Colors.red),
+                const SizedBox(height: 4),
+                Text(
+                  'File not found',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.red[700],
+                  ),
+                ),
+                Text(
+                  imageEntry.imagePath.split('/').last,
+                  style: TextStyle(
+                    fontSize: 8,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      
+      return Image.file(
+        file,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading image: ${imageEntry.imagePath}');
+          print('Error: $error');
+          return Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.red),
+              color: Colors.grey[200],
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error, color: Colors.red),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Load failed',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.red[700],
+                    ),
+                  ),
+                  Text(
+                    imageEntry.imagePath.split('/').last,
+                    style: TextStyle(
+                      fontSize: 8,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    } else {
+      // Asset path - use Image.asset
+      return Image.asset(
+        imageEntry.imagePath,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.red),
+              color: Colors.grey[200],
+            ),
+            child: const Center(
+              child: Icon(Icons.error, color: Colors.red),
+            ),
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    int total = allPairs.length;
+    int total = allEntries.length;
     int solved = (batchIndex * batchSize) + connections.length;
     int currentBatchStart = batchIndex * batchSize;
     int currentBatchEnd = ((batchIndex + 1) * batchSize).clamp(0, total);
@@ -143,7 +263,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
             double wordHeight = 60.0;
             double verticalPadding = 8.0;
             double totalWordHeight = wordHeight + 2 * verticalPadding;
-            int n = sourceWords.length;
+            int n = sourceEntries.length;
             return Stack(
               children: [
                 Column(
@@ -169,29 +289,16 @@ class _ConnectScreenState extends State<ConnectScreen> {
                         children: [
                           Row(
                             children: [
-                              // Source words
+                              // Source entries
                               Expanded(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: List.generate(sourceWords.length, (i) {
+                                  children: List.generate(sourceEntries.length, (i) {
                                     bool isSelected = selectedSourceIndex == i;
                                     bool isConnected = connections.any((c) => c.sourceIndex == i);
                                     return GestureDetector(
                                       onTap: isConnected ? null : () => onWordTap(true, i),
-                                      child: Container(
-                                        margin: EdgeInsets.symmetric(vertical: verticalPadding),
-                                        padding: EdgeInsets.all(12),
-                                        height: wordHeight,
-                                        decoration: BoxDecoration(
-                                          color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
-                                          border: Border.all(
-                                            color: isConnected ? borderConnectedC : borderDefaultC,
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(sourceWords[i], style: TextStyle(fontSize: 18)),
-                                      ),
+                                      child: _buildSourceWidget(sourceEntries[i], isSelected, isConnected),
                                     );
                                   }),
                                 ),

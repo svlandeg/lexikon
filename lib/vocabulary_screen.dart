@@ -24,6 +24,7 @@ class VocabularyListScreen extends StatefulWidget {
 
 class _VocabularyListScreenState extends State<VocabularyListScreen> {
   final List<Vocabulary> _vocabularies = [];
+  Vocabulary? _selectedVocabulary;
 
   @override
   void initState() {
@@ -47,7 +48,13 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           print('Corrupted JSON string: $jsonString');
         }
       }
+      if (_vocabularies.isNotEmpty) {
+        _selectedVocabulary = _vocabularies.first;
+      }
     });
+    
+    // Save the cleaned vocabularies to remove any corrupted data
+    _saveVocabularies();
   }
 
   Future<void> _saveVocabularies() async {
