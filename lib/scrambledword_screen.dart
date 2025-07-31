@@ -58,10 +58,10 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     
     do {
       _scrambledLetters.shuffle(Random());
+      _userOrder = List<String>.from(_scrambledLetters);
       attempts++;
-    } while (_scrambledLetters.join() == target && attempts < maxAttempts);
+    } while (_isCorrect && attempts < maxAttempts);
     
-    _userOrder = List<String>.from(_scrambledLetters);
     _isCorrect = false;
   }
 
