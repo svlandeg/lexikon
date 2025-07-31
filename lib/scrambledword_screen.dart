@@ -53,9 +53,13 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     _scrambledLetters = target.split('');
     
     // Ensure the scrambled result is different from the original
+    int attempts = 0;
+    const maxAttempts = 100; // Safety limit to prevent infinite loops
+    
     do {
       _scrambledLetters.shuffle(Random());
-    } while (_scrambledLetters.join() == target);
+      attempts++;
+    } while (_scrambledLetters.join() == target && attempts < maxAttempts);
     
     _userOrder = List<String>.from(_scrambledLetters);
     _isCorrect = false;
