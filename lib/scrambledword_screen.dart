@@ -26,10 +26,21 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
   late List<String> _userOrder;
   bool _isCorrect = false;
 
+  /// Checks if a word can be meaningfully scrambled
+  bool _canBeScrambled(String word) {
+    if (word.length <= 1) return false;
+    if (word.split('').toSet().length == 1) return false; // all identical characters
+    return true;
+  }
+
   @override
   void initState() {
     super.initState();
-    _quizEntries = List<Entry>.from(widget.vocabulary.entries);
+    // Filter out words that can't be meaningfully scrambled
+    _quizEntries = widget.vocabulary.entries
+        .where((entry) => _canBeScrambled(entry.target.trim()))
+        .toList();
+    
     _quizEntries.shuffle();
     if (_quizEntries.length > widget.count) {
       _quizEntries = _quizEntries.sublist(0, widget.count);
@@ -40,8 +51,17 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
   void _setupCurrentWord() {
     final target = _quizEntries[_current].target.trim();
     _scrambledLetters = target.split('');
-    _scrambledLetters.shuffle(Random());
-    _userOrder = List<String>.from(_scrambledLetters);
+    
+    // Ensure the scrambled result is different from the original
+    int attempts = 0;
+    const maxAttempts = 100; // Safety limit to prevent infinite loops
+    
+    do {
+      _scrambledLetters.shuffle(Random());
+      _userOrder = List<String>.from(_scrambledLetters);
+      attempts++;
+    } while (_isCorrect && attempts < maxAttempts);
+    
     _isCorrect = false;
   }
 
@@ -78,6 +98,32 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Handle case where no valid words are available
+    if (_quizEntries.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Scrambled Word')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('No words available for scrambling'),
+              const SizedBox(height: 8),
+              const Text(
+                'All words in this vocabulary are too short or contain only identical characters.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Back to practice'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
     if (_current >= _quizEntries.length) {
       return Scaffold(
         appBar: AppBar(title: const Text('Scrambled Word')),
