@@ -8,9 +8,6 @@ abstract class Entry {
   const Entry({required this.target});
 
   Map<String, dynamic> toJson();
-  
-  // Helper method to get the source value (text or image path)
-  String get sourceValue;
 }
 
 
@@ -32,9 +29,6 @@ class TextEntry extends Entry {
     source: json['source'] as String,
     target: json['target'] as String,
   );
-  
-  @override
-  String get sourceValue => source;
 }
 
 // Image entry with image source and text target
@@ -54,9 +48,6 @@ class ImageEntry extends Entry {
     imagePath: json['imagePath'] as String,
     target: json['target'] as String,
   );
-  
-  @override
-  String get sourceValue => imagePath;
 }
 
 // Factory method for creating entries from JSON
