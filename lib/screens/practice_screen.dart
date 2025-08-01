@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'vocabulary.dart';
-import 'wordsearch_screen.dart';
-import 'flashcard_screen.dart';
+import 'package:lexikon/vocabulary.dart';
+import 'practice/wordsearch_screen.dart';
+import 'practice/flashcard_screen.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
@@ -9,8 +9,8 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'dart:math';
-import 'scrambledword_screen.dart';
-import 'connect_screen.dart';
+import 'practice/scrambledword_screen.dart';
+import 'practice/connect_screen.dart';
 
 // Color definitions for PracticeScreen
 const Color iconC = Colors.grey;

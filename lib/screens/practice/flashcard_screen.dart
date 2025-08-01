@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'vocabulary.dart';
+import 'package:lexikon/vocabulary.dart';
 
 // Color definitions for FlashcardScreen
 const Color correctC = Colors.green;

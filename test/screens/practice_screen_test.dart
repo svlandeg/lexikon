@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lexikon/practice_screen.dart';
+import 'package:lexikon/screens/practice_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

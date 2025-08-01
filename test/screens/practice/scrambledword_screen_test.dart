@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lexikon/scrambledword_screen.dart';
+import 'package:lexikon/screens/practice/scrambledword_screen.dart';
 import 'package:lexikon/vocabulary.dart';
 
 void main() {

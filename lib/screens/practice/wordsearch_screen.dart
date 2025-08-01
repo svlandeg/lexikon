@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'vocabulary.dart';
+import 'package:lexikon/vocabulary.dart';
 import 'package:unicode_data/unicode_data.dart';
 
 // Color definitions for WordSearchScreen

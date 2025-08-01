@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'vocabulary.dart';
+import 'package:lexikon/vocabulary.dart';
 import 'dart:math';
 
 // Color definitions for ScrambledWordScreen

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'practice_screen.dart';
-import 'vocabulary_screen.dart';
+import 'screens/practice_screen.dart';
+import 'screens/vocabulary_screen.dart';
 
 // Color definitions for MainScreen
 const Color selectedC = Colors.blue;
