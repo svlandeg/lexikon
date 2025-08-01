@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lexikon/vocabulary.dart';
+import 'package:lexikon/voc/vocabulary.dart';
 import 'package:flutter/material.dart';
 
 void main() {

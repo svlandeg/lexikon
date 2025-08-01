@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lexikon/vocabulary.dart';
+import 'package:lexikon/voc/vocabulary.dart';
+import 'package:lexikon/voc/entry.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';

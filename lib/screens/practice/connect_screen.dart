@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:io';
-import 'package:lexikon/vocabulary.dart';
+import 'package:lexikon/voc/vocabulary.dart';
+import 'package:lexikon/voc/entry.dart';
 
 // Color definitions for ConnectScreen
 const Color boxC = Colors.white;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lexikon/vocabulary.dart';
+import 'package:lexikon/voc/vocabulary.dart';
+import 'package:lexikon/voc/entry.dart';
 import 'practice/wordsearch_screen.dart';
 import 'practice/flashcard_screen.dart';
 import 'dart:convert';
