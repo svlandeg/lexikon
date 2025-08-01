@@ -767,6 +767,8 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                         title: EntrySourceWidget(
                           entry: entry,
                           style: Theme.of(context).textTheme.titleMedium,
+                          vocabulary: _vocabulary,
+                          imageSize: ImageSize.small, 
                         ),
                         subtitle: Text(entry.target),
                         trailing: Row(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lexikon/voc/vocabulary.dart';
 import 'package:lexikon/voc/entry.dart';
+import 'package:lexikon/screens/utils/entry_source_widget.dart';
 import 'dart:math';
 
 // Color definitions for ScrambledWordScreen
@@ -156,8 +157,8 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
             EntrySourceWidget(
               entry: entry,
               style: Theme.of(context).textTheme.headlineMedium,
-              textDirection: widget.vocabulary.sourceReadingDirection,
-              imageHeight: 200,
+              vocabulary: widget.vocabulary,
+              imageSize: ImageSize.large,
             ),
             const SizedBox(height: 32),
             Text('${widget.vocabulary.targetLanguage}:', style: Theme.of(context).textTheme.titleLarge),

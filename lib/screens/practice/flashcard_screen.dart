@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lexikon/voc/vocabulary.dart';
 import 'package:lexikon/voc/entry.dart';
+import 'package:lexikon/screens/utils/entry_source_widget.dart';
 
 // Color definitions for FlashcardScreen
 const Color correctC = Colors.green;
@@ -150,8 +151,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             EntrySourceWidget(
               entry: entry,
               style: Theme.of(context).textTheme.headlineMedium,
-              textDirection: widget.vocabulary.sourceReadingDirection,
-              imageHeight: 200,
+              vocabulary: widget.vocabulary,
+              imageSize: ImageSize.large,
             ),
             const SizedBox(height: 32),
             RawKeyboardListener(

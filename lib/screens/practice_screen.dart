@@ -232,7 +232,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => WordSearchScreen(entries: _selectedVocabulary!.entries, readingDirection: _selectedVocabulary!.targetReadingDirection),
+                        builder: (context) => WordSearchScreen(entries: _selectedVocabulary!.entries, vocabulary: _selectedVocabulary!),
                       ),
                     );
                   },
