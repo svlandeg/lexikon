@@ -423,7 +423,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: ListTile(
                     title: Text(vocabulary.name),
-                    subtitle: Text('${vocabulary.sourceLanguage} → ${vocabulary.targetLanguage} (${vocabulary.entries.length} entries)'),
+                    subtitle: Text('${vocabulary.inputSource} → ${vocabulary.targetLanguage} (${vocabulary.entries.length} entries)'),
                     leading: const Icon(Icons.book),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -664,9 +664,9 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
 
   void _addEntry(Entry entry) {
     setState(() {
-      _vocabulary = _vocabulary.copyWith(
-        entries: [..._vocabulary.entries, entry],
-      );
+      final newEntries = List<Entry>.from(_vocabulary.entries);   
+      newEntries.add(entry);
+      _vocabulary.setEntries(newEntries);
     });
     widget.onVocabularyUpdated(_vocabulary);
   }
@@ -682,7 +682,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
     setState(() {
       final newEntries = List<Entry>.from(_vocabulary.entries);
       newEntries.removeAt(index);
-      _vocabulary = _vocabulary.copyWith(entries: newEntries);
+      _vocabulary.setEntries(newEntries);
     });
     widget.onVocabularyUpdated(_vocabulary);
   }
@@ -702,7 +702,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
     setState(() {
       final newEntries = List<Entry>.from(_vocabulary.entries);
       newEntries[index] = newEntry;
-      _vocabulary = _vocabulary.copyWith(entries: newEntries);
+      _vocabulary.setEntries(newEntries);
     });
     widget.onVocabularyUpdated(_vocabulary);
   }
@@ -725,7 +725,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${_vocabulary.sourceLanguage} (${_vocabulary.sourceReadingDirection.name}) → ${_vocabulary.targetLanguage} (${_vocabulary.targetReadingDirection.name})',
+                        '${_vocabulary.inputSource}  → ${_vocabulary.targetLanguage} (${_vocabulary.targetReadingDirection.name})',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(

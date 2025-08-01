@@ -7,48 +7,49 @@ import 'entry.dart';
 abstract class Vocabulary {
   final String id;
   final String name;
-  final String sourceLanguage;
+  final String inputSource;
   final String targetLanguage;
-  final TextDirection sourceReadingDirection;
   final TextDirection targetReadingDirection;
   final List<Entry> entries;
 
   const Vocabulary({
     required this.id,
     required this.name,
-    required this.sourceLanguage,
     required this.targetLanguage,
-    this.sourceReadingDirection = TextDirection.ltr,
     this.targetReadingDirection = TextDirection.ltr,
     required this.entries,
+    required this.inputSource
   });
 
   Map<String, dynamic> toJson();
 
-  Vocabulary copyWith({
-    String? id,
-    String? name,
-    String? sourceLanguage,
-    String? targetLanguage,
-    TextDirection? sourceReadingDirection,
-    TextDirection? targetReadingDirection,
-    List<Entry>? entries,
-  });
+  setEntries(List<Entry> entries);
+
+  String get inputSourceDetail => inputSource;
 }
 
 // Text vocabulary with text entries
 class TextVocabulary extends Vocabulary {
+
+  final String sourceLanguage;
+  final TextDirection sourceReadingDirection;
+
   const TextVocabulary({
     required super.id,
     required super.name,
-    required super.sourceLanguage,
     required super.targetLanguage,
-    super.sourceReadingDirection = TextDirection.ltr,
     super.targetReadingDirection = TextDirection.ltr,
     required List<TextEntry> entries,
-  }) : super(entries: entries);
+    required this.sourceLanguage,
+    this.sourceReadingDirection = TextDirection.ltr,
+  }) : super(
+    entries: entries,
+    inputSource: sourceLanguage,
+    );
 
   List<TextEntry> get textEntries => entries.cast<TextEntry>();
+
+  String get inputSourceDetail => '$inputSource ($sourceReadingDirection.name)';
 
   @override
   List<Entry> get entries {
@@ -74,19 +75,10 @@ class TextVocabulary extends Vocabulary {
   };
 
   @override
-  TextVocabulary copyWith({
-    String? id,
-    String? name,
-    String? sourceLanguage,
-    String? targetLanguage,
-    TextDirection? sourceReadingDirection,
-    TextDirection? targetReadingDirection,
-    List<Entry>? entries,
-  }) {
+  setEntries(List<Entry> entries) {
     // Ensure all entries are TextEntry
-    List<TextEntry> textEntries;
+    List<TextEntry> textEntries = <TextEntry>[];
     if (entries != null) {
-      textEntries = <TextEntry>[];
       for (final entry in entries) {
         if (entry is TextEntry) {
           textEntries.add(entry);
@@ -94,124 +86,20 @@ class TextVocabulary extends Vocabulary {
           throw ArgumentError('TextVocabulary can only contain TextEntry objects, found: ${entry.runtimeType}');
         }
       }
-    } else {
-      textEntries = this.textEntries;
-    }
-
-    return TextVocabulary(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      sourceLanguage: sourceLanguage ?? this.sourceLanguage,
-      targetLanguage: targetLanguage ?? this.targetLanguage,
-      sourceReadingDirection: sourceReadingDirection ?? this.sourceReadingDirection,
-      targetReadingDirection: targetReadingDirection ?? this.targetReadingDirection,
-      entries: textEntries,
-    );
+    } 
+    entries = textEntries;
   }
-}
 
-// Image vocabulary with image entries
-class ImageVocabulary extends Vocabulary {
-  const ImageVocabulary({
-    required super.id,
-    required super.name,
-    required super.targetLanguage,
-    super.targetReadingDirection = TextDirection.ltr,
-    required List<ImageEntry> entries,
-  }) : super(
-    sourceLanguage: 'Image',
-    sourceReadingDirection: TextDirection.ltr,
-    entries: entries,
-  );
-
-  List<ImageEntry> get imageEntries => entries.cast<ImageEntry>();
-
-  @override
-  List<Entry> get entries {
-    // Ensure all entries are ImageEntry
-    for (final entry in super.entries) {
-      if (entry is! ImageEntry) {
-        throw ArgumentError('ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}');
+  factory TextVocabulary.fromJson(Map<String, dynamic> json) {
+    const requiredFields = ['id', 'name', 'sourceLanguage', 'targetLanguage', 'entries', 'sourceReadingDirection', 'targetReadingDirection'];
+    for (final field in requiredFields) {
+      if (json[field] == null) {
+        throw ArgumentError('TextVocabulary JSON is missing required field: $field');
       }
     }
-    return super.entries;
-  }
 
-  @override
-  Map<String, dynamic> toJson() => {
-    'type': 'image',
-    'id': id,
-    'name': name,
-    'sourceLanguage': sourceLanguage,
-    'targetLanguage': targetLanguage,
-    'sourceReadingDirection': sourceReadingDirection.name,
-    'targetReadingDirection': targetReadingDirection.name,
-    'entries': entries.map((e) => e.toJson()).toList(),
-  };
+    final entries = (json['entries'] as List).map((e) => entryFromJson(e)).toList();
 
-    @override
-  ImageVocabulary copyWith({
-    String? id,
-    String? name,
-    String? sourceLanguage,
-    String? targetLanguage,
-    TextDirection? sourceReadingDirection,
-    TextDirection? targetReadingDirection,
-    List<Entry>? entries,
-  }) {
-    // Ensure all entries are ImageEntry
-    List<ImageEntry> imageEntries;
-    if (entries != null) {
-      imageEntries = <ImageEntry>[];
-      for (final entry in entries) {
-        if (entry is ImageEntry) {
-          imageEntries.add(entry);
-        } else {
-          throw ArgumentError('ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}');
-        }
-      }
-    } else {
-      imageEntries = this.imageEntries;
-    }
-
-    return ImageVocabulary(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      targetLanguage: targetLanguage ?? this.targetLanguage,
-      targetReadingDirection: targetReadingDirection ?? this.targetReadingDirection,
-      entries: imageEntries,
-    );
-  }
-}
-
-// Factory method for creating vocabularies from JSON
-Vocabulary vocabularyFromJson(Map<String, dynamic> json) {
-  // Validate required fields
-  if (json['type'] == null) {
-    throw ArgumentError('Vocabulary JSON is missing required field: type');
-  }
-  if (json['id'] == null) {
-    throw ArgumentError('Vocabulary JSON is missing required field: id');
-  }
-  if (json['name'] == null) {
-    throw ArgumentError('Vocabulary JSON is missing required field: name');
-  }
-  if (json['entries'] == null) {
-    throw ArgumentError('Vocabulary JSON is missing required field: entries');
-  }
-
-  final type = json['type'] as String;
-  final entries = (json['entries'] as List).map((e) => entryFromJson(e)).toList();
-
-  switch (type) {
-    case 'text':
-      if (json['sourceLanguage'] == null) {
-        throw ArgumentError('TextVocabulary JSON is missing required field: sourceLanguage');
-      }
-      if (json['targetLanguage'] == null) {
-        throw ArgumentError('TextVocabulary JSON is missing required field: targetLanguage');
-      }
-      
       // Validate that all entries are TextEntry
       final textEntries = <TextEntry>[];
       for (final entry in entries) {
@@ -237,10 +125,69 @@ Vocabulary vocabularyFromJson(Map<String, dynamic> json) {
         ),
         entries: textEntries,
       );
-    case 'image':
-      if (json['targetLanguage'] == null) {
-        throw ArgumentError('ImageVocabulary JSON is missing required field: targetLanguage');
+  }
+}
+
+// Image vocabulary with image entries
+class ImageVocabulary extends Vocabulary {
+  const ImageVocabulary({
+    required super.id,
+    required super.name,
+    required super.targetLanguage,
+    super.targetReadingDirection = TextDirection.ltr,
+    required List<ImageEntry> entries,
+  }) : super(
+    entries: entries, inputSource: "Image"
+    );
+
+  List<ImageEntry> get imageEntries => entries.cast<ImageEntry>();
+
+  @override
+  List<Entry> get entries {
+    // Ensure all entries are ImageEntry
+    for (final entry in super.entries) {
+      if (entry is! ImageEntry) {
+        throw ArgumentError('ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}');
       }
+    }
+    return super.entries;
+  }
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'type': 'image',
+    'id': id,
+    'name': name,
+    'targetLanguage': targetLanguage,
+    'targetReadingDirection': targetReadingDirection.name,
+    'entries': entries.map((e) => e.toJson()).toList(),
+  };
+
+  @override
+  setEntries(List<Entry> entries) {
+    // Ensure all entries are ImageEntry
+    List<ImageEntry> imageEntries = <ImageEntry>[];
+    if (entries != null) {
+      for (final entry in entries) {
+        if (entry is ImageEntry) {
+          imageEntries.add(entry);
+        } else {
+          throw ArgumentError('ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}');
+        }
+      }
+    }
+    entries = imageEntries;
+  }
+
+  factory ImageVocabulary.fromJson(Map<String, dynamic> json) {
+    const requiredFields = ['id', 'name', 'targetLanguage', 'entries', 'targetReadingDirection'];
+    for (final field in requiredFields) {
+      if (json[field] == null) {
+        throw ArgumentError('ImageVocabulary JSON is missing required field: $field');
+      }
+    }
+
+    final entries = (json['entries'] as List).map((e) => entryFromJson(e)).toList();
       
       // Validate that all entries are ImageEntry
       final imageEntries = <ImageEntry>[];
@@ -262,9 +209,26 @@ Vocabulary vocabularyFromJson(Map<String, dynamic> json) {
         ),
         entries: imageEntries,
       );
+  }
+}
+
+// Factory method for creating vocabularies from JSON
+Vocabulary vocabularyFromJson(Map<String, dynamic> json) {
+  // Validate required fields
+  if (json['type'] == null) {
+    throw ArgumentError('Vocabulary JSON is missing required field: type');
+  }
+
+  final type = json['type'] as String;
+  switch (type) {
+    case 'text':
+      return TextVocabulary.fromJson(json);
+    case 'image':
+      return ImageVocabulary.fromJson(json);
     default:
       throw ArgumentError('Unknown vocabulary type: $type');
   }
+
 }
 
 // Widget for displaying entry sources (text or image)
