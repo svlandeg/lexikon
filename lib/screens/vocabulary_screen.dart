@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:image/image.dart' as img;
 import 'practice_screen.dart';
+import 'package:lexikon/voc/csv_parser.dart';
 
 // Color definitions for VocabularyScreen
 const Color iconC = Colors.grey;
