@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lexikon/voc/vocabulary.dart';
 import 'package:lexikon/voc/entry.dart';
+import 'package:lexikon/screens/utils/entry_source_widget.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -432,14 +433,33 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                           icon: const Icon(Icons.edit),
                           tooltip: 'Edit Vocabulary',
                           onPressed: () async {
-                            final result = await Navigator.push<Vocabulary>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AddVocabularyScreen(
-                                  initialVocabulary: vocabulary,
+                            Vocabulary? result;
+                            
+                            if (vocabulary is TextVocabulary) {
+                              // Edit text vocabulary using AddVocabularyScreen
+                              result = await Navigator.push<Vocabulary>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AddVocabularyScreen(
+                                    initialVocabulary: vocabulary,
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            } else if (vocabulary is ImageVocabulary) {
+                              // Edit image vocabulary using ImageVocabularyCreationScreen
+                              result = await Navigator.push<Vocabulary>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ImageVocabularyCreationScreen(
+                                    directoryName: vocabulary.name,
+                                    entries: vocabulary.imageEntries,
+                                    vocabularyId: vocabulary.id,
+                                    initialVocabulary: vocabulary,
+                                  ),
+                                ),
+                              );
+                            }
+                            
                             if (result != null) {
                               _updateVocabulary(index, result);
                             }
@@ -502,7 +522,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
 }
 
 class AddVocabularyScreen extends StatefulWidget {
-  final Vocabulary? initialVocabulary;
+  final TextVocabulary? initialVocabulary;
   const AddVocabularyScreen({super.key, this.initialVocabulary});
 
   @override
@@ -899,7 +919,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                 TextFormField(
                   controller: _sourceController,
                   decoration: InputDecoration(
-                    labelText: 'Source Language ( ${widget.vocabulary.sourceLanguage})',
+                    labelText: 'Source Language ( ${(widget.vocabulary as TextVocabulary).sourceLanguage})',
                     hintText: 'Enter a word from the source language',
                   ),
                   validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
@@ -1121,12 +1141,14 @@ class ImageVocabularyCreationScreen extends StatefulWidget {
   final String directoryName;
   final List<ImageEntry> entries;
   final String vocabularyId;
+  final ImageVocabulary? initialVocabulary; // Add support for editing existing vocabulary
   
   const ImageVocabularyCreationScreen({
     super.key,
     required this.directoryName,
     required this.entries,
     required this.vocabularyId,
+    this.initialVocabulary, // Optional parameter for editing
   });
 
   @override
@@ -1142,9 +1164,17 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.directoryName);
-    _targetLanguageController = TextEditingController(text: widget.directoryName);
-    _targetReadingDirection = TextDirection.ltr;
+    // If editing existing vocabulary, use its properties; otherwise use directory name
+    final isEditing = widget.initialVocabulary != null;
+    _nameController = TextEditingController(
+      text: isEditing ? widget.initialVocabulary!.name : widget.directoryName
+    );
+    _targetLanguageController = TextEditingController(
+      text: isEditing ? widget.initialVocabulary!.targetLanguage : widget.directoryName
+    );
+    _targetReadingDirection = isEditing 
+      ? widget.initialVocabulary!.targetReadingDirection 
+      : TextDirection.ltr;
   }
 
   @override
@@ -1156,8 +1186,9 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.initialVocabulary != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Image Vocabulary')),
+      appBar: AppBar(title: Text(isEditing ? 'Edit Image Vocabulary' : 'Create Image Vocabulary')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -1236,7 +1267,7 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
                           Navigator.pop(context, vocabulary);
                         }
                       },
-                      child: const Text('Create Image Vocabulary'),
+                      child: Text(isEditing ? 'Save Changes' : 'Create Image Vocabulary'),
                     ),
                   ),
                 ),
