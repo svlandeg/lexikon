@@ -25,10 +25,18 @@ class TextEntry extends Entry {
     'target': target,
   };
 
-  factory TextEntry.fromJson(Map<String, dynamic> json) => TextEntry(
-    source: json['source'] as String,
-    target: json['target'] as String,
-  );
+  factory TextEntry.fromJson(Map<String, dynamic> json) {
+    if (json['source'] == null) {
+        throw ArgumentError('TextEntry JSON is missing required field: source');
+      }
+    if (json['target'] == null) {
+      throw ArgumentError('TextEntry JSON is missing required field: target');
+    }
+    return TextEntry(
+      source: json['source'] as String,
+      target: json['target'] as String,
+      );
+  }
 }
 
 // Image entry with image source and text target
@@ -44,33 +52,30 @@ class ImageEntry extends Entry {
     'target': target,
   };
 
-  factory ImageEntry.fromJson(Map<String, dynamic> json) => ImageEntry(
-    imagePath: json['imagePath'] as String,
-    target: json['target'] as String,
-  );
+  factory ImageEntry.fromJson(Map<String, dynamic> json) {
+    if (json['imagePath'] == null) {
+        throw ArgumentError('ImageEntry JSON is missing required field: imagePath');
+      } 
+    if (json['target'] == null) {
+      throw ArgumentError('ImageEntry JSON is missing required field: target');
+    }
+    return ImageEntry(
+      imagePath: json['imagePath'] as String,
+      target: json['target'] as String,
+    );
+  }
 }
 
 // Factory method for creating entries from JSON
 Entry entryFromJson(Map<String, dynamic> json) {
-  // Validate required fields
   if (json['type'] == null) {
     throw ArgumentError('Entry JSON is missing required field: type');
   }
-  if (json['target'] == null) {
-    throw ArgumentError('Entry JSON is missing required field: target');
-  }
-
   final type = json['type'] as String;
   switch (type) {
     case 'text':
-      if (json['source'] == null) {
-        throw ArgumentError('TextEntry JSON is missing required field: source');
-      }
       return TextEntry.fromJson(json);
     case 'image':
-      if (json['imagePath'] == null) {
-        throw ArgumentError('ImageEntry JSON is missing required field: imagePath');
-      }
       return ImageEntry.fromJson(json);
     default:
       throw ArgumentError('Unknown entry type: $type');
