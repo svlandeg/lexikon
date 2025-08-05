@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'vocabulary.dart';
+import 'package:lexikon/voc/vocabulary.dart';
+import 'package:lexikon/voc/entry.dart';
+import 'package:lexikon/screens/utils/entry_source_widget.dart';
 import 'package:unicode_data/unicode_data.dart';
 
 // Color definitions for WordSearchScreen
@@ -21,13 +23,16 @@ class _PlacementOption {
 
 class WordSearchScreen extends StatefulWidget {
   final List<Entry> entries;
-  final TextDirection readingDirection;
+  final Vocabulary vocabulary;
   static const int gridDimension = 10;
-  const WordSearchScreen({super.key, required this.entries, required this.readingDirection});
+  const WordSearchScreen({super.key, required this.entries, required this.vocabulary});
 
   @override
   State<WordSearchScreen> createState() => _WordSearchScreenState();
+
+  TextDirection get readingDirection => vocabulary.targetReadingDirection;
 }
+
 
 class _WordSearchScreenState extends State<WordSearchScreen> {
   static const int _numPairs = 12;
@@ -581,8 +586,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                                 label: EntrySourceWidget(
                                   entry: word,
                                   style: const TextStyle(fontSize: 12),
-                                  imageWidth: 60,
-                                  imageHeight: 30,
+                                  vocabulary: widget.vocabulary,
+                                  imageSize: ImageSize.medium,
                                 ),
                               ),
                               if (foundIdx != -1)
@@ -610,8 +615,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                                 child: EntrySourceWidget(
                                   entry: e,
                                   style: TextStyle(fontSize: 12, color: hintTextC),
-                                  imageWidth: 60,
-                                  imageHeight: 30,
+                                  vocabulary: widget.vocabulary,
+                                  imageSize: ImageSize.small,
                                 ),
                               ),
                             ],

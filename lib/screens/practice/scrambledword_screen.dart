@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'vocabulary.dart';
+import 'package:lexikon/voc/vocabulary.dart';
+import 'package:lexikon/voc/entry.dart';
+import 'package:lexikon/screens/utils/entry_source_widget.dart';
 import 'dart:math';
 
 // Color definitions for ScrambledWordScreen
@@ -150,13 +152,13 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${widget.vocabulary.sourceLanguage}:', style: Theme.of(context).textTheme.titleLarge),
+            Text('${widget.vocabulary.inputSource}:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             EntrySourceWidget(
               entry: entry,
               style: Theme.of(context).textTheme.headlineMedium,
-              textDirection: widget.vocabulary.sourceReadingDirection,
-              imageHeight: 200,
+              vocabulary: widget.vocabulary,
+              imageSize: ImageSize.large,
             ),
             const SizedBox(height: 32),
             Text('${widget.vocabulary.targetLanguage}:', style: Theme.of(context).textTheme.titleLarge),

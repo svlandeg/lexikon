@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lexikon/vocabulary.dart';
+import 'package:lexikon/voc/vocabulary.dart';
+import 'package:lexikon/voc/entry.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -148,37 +149,6 @@ void main() {
       expect(entry, isA<ImageEntry>());
       expect(entry.target, 'gato');
       expect((entry as ImageEntry).imagePath, 'assets/images/cat.png');
-    });
-
-    test('TextVocabulary copyWith returns TextVocabulary', () {
-      final vocab = TextVocabulary(
-        id: '1',
-        name: 'Test',
-        sourceLanguage: 'English',
-        targetLanguage: 'Spanish',
-        entries: [TextEntry(source: 'hello', target: 'hola')],
-      );
-      
-      final updated = vocab.copyWith(name: 'Updated');
-      expect(updated, isA<TextVocabulary>());
-      expect(updated.name, 'Updated');
-      expect(updated.entries.length, 1);
-      expect(updated.entries[0], isA<TextEntry>());
-    });
-
-    test('ImageVocabulary copyWith returns ImageVocabulary', () {
-      final vocab = ImageVocabulary(
-        id: '1',
-        name: 'Test',
-        targetLanguage: 'Spanish',
-        entries: [ImageEntry(imagePath: 'assets/images/cat.png', target: 'gato')],
-      );
-      
-      final updated = vocab.copyWith(name: 'Updated');
-      expect(updated, isA<ImageVocabulary>());
-      expect(updated.name, 'Updated');
-      expect(updated.entries.length, 1);
-      expect(updated.entries[0], isA<ImageEntry>());
     });
   });
 } 

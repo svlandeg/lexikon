@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lexikon/vocabulary.dart';
+import 'package:lexikon/voc/vocabulary.dart';
+import 'package:lexikon/voc/entry.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -28,22 +29,9 @@ void main() {
       expect(vocab.entries[1].target, 'perro');
     });
 
-    test('copyWith functionality', () {
-      final updated1 = vocab.copyWith(name: 'Updated', entries: <TextEntry>[]);
-      expect(updated1.name, 'Updated');
-      expect(updated1.entries, isEmpty);
-      expect(updated1.id, vocab.id);
-
-      final updated2 = vocab.copyWith(sourceLanguage: 'French', targetLanguage: 'German');
-      expect(updated2.sourceLanguage, 'French');
-      expect(updated2.targetLanguage, 'German');
-
-      final updated3 = vocab.copyWith(
-        sourceReadingDirection: TextDirection.rtl,
-        targetReadingDirection: TextDirection.ltr,
-      );
-      expect(updated3.sourceReadingDirection, TextDirection.rtl);
-      expect(updated3.targetReadingDirection, TextDirection.ltr);
+    test('setEntries functionality', () {
+      vocab.setEntries(<TextEntry>[]);
+      expect(vocab.entries, isEmpty);
     });
   });
 } 
