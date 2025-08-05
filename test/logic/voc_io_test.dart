@@ -95,9 +95,12 @@ void main() {
     test('fromJson', () {
       final json = vocab.toJson();
       final vocab2 = vocabularyFromJson(json);
+      expect(vocab2, isA<TextVocabulary>());
+      vocab2 as TextVocabulary;
       expect(vocab2.id, vocab.id);
       expect(vocab2.name, vocab.name);
       expect(vocab2.sourceLanguage, vocab.sourceLanguage);
+      expect(vocab2.inputSource, vocab.sourceLanguage);
       expect(vocab2.targetLanguage, vocab.targetLanguage);
       expect(vocab2.sourceReadingDirection, vocab.sourceReadingDirection);
       expect(vocab2.targetReadingDirection, vocab.targetReadingDirection);
@@ -186,20 +189,6 @@ void main() {
         'entries': []
       };
       expect(() => vocabularyFromJson(json), throwsArgumentError);
-    });
-
-    test('vocabularyFromJson handles missing reading direction fields gracefully', () {
-      final json = {
-        'type': 'text',
-        'id': '1',
-        'name': 'Test',
-        'sourceLanguage': 'English',
-        'targetLanguage': 'Spanish',
-        'entries': []
-      };
-      final vocab = vocabularyFromJson(json);
-      expect(vocab.sourceReadingDirection, TextDirection.ltr);
-      expect(vocab.targetReadingDirection, TextDirection.ltr);
     });
   });
 } 

@@ -46,7 +46,7 @@ class TextVocabulary extends Vocabulary {
 
   List<TextEntry> get textEntries => entries.cast<TextEntry>();
 
-  String get inputSource => '$sourceLanguage ($sourceReadingDirection.name)';
+  String get inputSource => this.sourceLanguage;
   String get inputSourceDetail => '$sourceLanguage ($sourceReadingDirection.name)';
 
   @override
