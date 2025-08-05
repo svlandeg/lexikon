@@ -25,7 +25,6 @@ abstract class Vocabulary {
   setEntries(List<Entry> entries);
 
   String get inputSource;
-  String get inputSourceDetail => inputSource;
 }
 
 // Text vocabulary with text entries
@@ -47,7 +46,6 @@ class TextVocabulary extends Vocabulary {
   List<TextEntry> get textEntries => entries.cast<TextEntry>();
 
   String get inputSource => this.sourceLanguage;
-  String get inputSourceDetail => '$sourceLanguage ($sourceReadingDirection.name)';
 
   @override
   List<Entry> get entries {
@@ -139,7 +137,6 @@ class ImageVocabulary extends Vocabulary {
   List<ImageEntry> get imageEntries => entries.cast<ImageEntry>();
 
   String get inputSource => "Image";
-  String get inputSourceDetail => "Image";
 
   @override
   List<Entry> get entries {

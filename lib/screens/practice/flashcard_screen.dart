@@ -146,7 +146,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${widget.vocabulary.inputSourceDetail}:', style: Theme.of(context).textTheme.titleLarge),
+            Text('${widget.vocabulary.inputSource}:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             EntrySourceWidget(
               entry: entry,
