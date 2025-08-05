@@ -746,7 +746,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${_vocabulary.inputSource}  → ${_vocabulary.targetLanguage} (${_vocabulary.targetReadingDirection.name})',
+                        '${_vocabulary.sourceLanguage} (${_vocabulary.sourceReadingDirection.name}) → ${_vocabulary.targetLanguage} (${_vocabulary.targetReadingDirection.name})',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(
