@@ -7,35 +7,34 @@ import 'csv_parser.dart';
 // Base abstract class for all vocabularies
 abstract class Vocabulary {
   final String id;
-  final String name;
-  final String inputSource;
-  final String targetLanguage;
-  final TextDirection targetReadingDirection;
-  final List<Entry> entries;
+  String name;
+  String targetLanguage;
+  TextDirection targetReadingDirection;
+  List<Entry> entries;
 
-  const Vocabulary({
+  Vocabulary({
     required this.id,
     required this.name,
     required this.targetLanguage,
     this.targetReadingDirection = TextDirection.ltr,
-    required this.entries,
-    required this.inputSource
+    required this.entries
   });
 
   Map<String, dynamic> toJson();
 
   setEntries(List<Entry> entries);
 
+  String get inputSource;
   String get inputSourceDetail => inputSource;
 }
 
 // Text vocabulary with text entries
 class TextVocabulary extends Vocabulary {
 
-  final String sourceLanguage;
-  final TextDirection sourceReadingDirection;
+  String sourceLanguage;
+  TextDirection sourceReadingDirection;
 
-  const TextVocabulary({
+  TextVocabulary({
     required super.id,
     required super.name,
     required super.targetLanguage,
@@ -43,14 +42,12 @@ class TextVocabulary extends Vocabulary {
     required List<TextEntry> entries,
     required this.sourceLanguage,
     this.sourceReadingDirection = TextDirection.ltr,
-  }) : super(
-    entries: entries,
-    inputSource: sourceLanguage,
-    );
+  }) : super(entries: entries);
 
   List<TextEntry> get textEntries => entries.cast<TextEntry>();
 
-  String get inputSourceDetail => '$inputSource ($sourceReadingDirection.name)';
+  String get inputSource => '$sourceLanguage ($sourceReadingDirection.name)';
+  String get inputSourceDetail => '$sourceLanguage ($sourceReadingDirection.name)';
 
   @override
   List<Entry> get entries {
@@ -88,7 +85,7 @@ class TextVocabulary extends Vocabulary {
         }
       }
     } 
-    entries = textEntries;
+    this.entries = textEntries;
   }
 
   factory TextVocabulary.fromJson(Map<String, dynamic> json) {
@@ -131,17 +128,18 @@ class TextVocabulary extends Vocabulary {
 
 // Image vocabulary with image entries
 class ImageVocabulary extends Vocabulary {
-  const ImageVocabulary({
+  ImageVocabulary({
     required super.id,
     required super.name,
     required super.targetLanguage,
     super.targetReadingDirection = TextDirection.ltr,
     required List<ImageEntry> entries,
-  }) : super(
-    entries: entries, inputSource: "Image"
-    );
+  }) : super(entries: entries);
 
   List<ImageEntry> get imageEntries => entries.cast<ImageEntry>();
+
+  String get inputSource => "Image";
+  String get inputSourceDetail => "Image";
 
   @override
   List<Entry> get entries {
@@ -177,7 +175,7 @@ class ImageVocabulary extends Vocabulary {
         }
       }
     }
-    entries = imageEntries;
+    this.entries = imageEntries;
   }
 
   factory ImageVocabulary.fromJson(Map<String, dynamic> json) {
