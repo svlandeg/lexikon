@@ -18,13 +18,22 @@ void main() {
       TextEntry(source: 'horse', target: 'ΑΛΟΓΟ'),
       TextEntry(source: 'mouse', target: 'ΠΟΝΤΙΚΙ'),
     ];
+    final vocab = TextVocabulary(
+      id: '1',
+      name: 'Greek',
+      sourceLanguage: 'English',
+      sourceReadingDirection: TextDirection.ltr,  
+      targetLanguage: 'Greek',
+      targetReadingDirection: TextDirection.ltr,
+      entries: greekEntries,
+    );
 
     testWidgets('renders 10x10 grid', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: WordSearchScreen(
             entries: greekEntries,
-            readingDirection: TextDirection.ltr,
+            vocabulary: vocab,
           ),
         ),
       );
@@ -65,7 +74,7 @@ void main() {
         MaterialApp(
           home: WordSearchScreen(
             entries: greekEntries,
-            readingDirection: TextDirection.ltr,
+            vocabulary: vocab,
           ),
         ),
       );
@@ -111,7 +120,7 @@ void main() {
         MaterialApp(
           home: WordSearchScreen(
             entries: greekEntries,
-            readingDirection: TextDirection.ltr,
+            vocabulary: vocab,
           ),
         ),
       );
@@ -177,7 +186,7 @@ void main() {
         MaterialApp(
           home: WordSearchScreen(
             entries: greekEntries,
-            readingDirection: TextDirection.ltr,
+            vocabulary: vocab,
           ),
         ),
       );
