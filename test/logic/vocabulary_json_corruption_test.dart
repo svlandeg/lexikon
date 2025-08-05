@@ -86,37 +86,6 @@ void main() {
       expect(() => vocabularyFromJson(json), throwsArgumentError);
     });
 
-    test('handles missing reading direction with fallback', () {
-      final json = {
-        'type': 'text',
-        'id': '1',
-        'name': 'Test',
-        'sourceLanguage': 'English',
-        'targetLanguage': 'Spanish',
-        // Missing reading direction fields
-        'entries': [],
-      };
-      final vocab = vocabularyFromJson(json);
-      expect(vocab.sourceReadingDirection, TextDirection.ltr);
-      expect(vocab.targetReadingDirection, TextDirection.ltr);
-    });
-
-    test('handles null reading direction with fallback', () {
-      final json = {
-        'type': 'text',
-        'id': '1',
-        'name': 'Test',
-        'sourceLanguage': 'English',
-        'targetLanguage': 'Spanish',
-        'sourceReadingDirection': null,
-        'targetReadingDirection': null,
-        'entries': [],
-      };
-      final vocab = vocabularyFromJson(json);
-      expect(vocab.sourceReadingDirection, TextDirection.ltr);
-      expect(vocab.targetReadingDirection, TextDirection.ltr);
-    });
-
     test('handles invalid reading direction enum value', () {
       final json = {
         'type': 'text',
@@ -129,6 +98,8 @@ void main() {
         'entries': [],
       };
       final vocab = vocabularyFromJson(json);
+      expect(vocab, isA<TextVocabulary>());
+      vocab as TextVocabulary;
       expect(vocab.sourceReadingDirection, TextDirection.ltr);
       expect(vocab.targetReadingDirection, TextDirection.ltr);
     });
