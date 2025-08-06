@@ -27,7 +27,13 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
   late List<String> _scrambledLetters;
   late List<String> _userOrder;
   bool _isCorrect = false;
+  bool _showHint = false;
   late ScrollController _scrollController;
+  
+  // Statistics tracking
+  int _correctWithoutHint = 0;
+  int _correctWithHint = 0;
+  List<bool> _hintUsed = [];
 
   /// Checks if a word can be meaningfully scrambled
   bool _canBeScrambled(String word) {
@@ -49,6 +55,7 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     if (_quizEntries.length > widget.count) {
       _quizEntries = _quizEntries.sublist(0, widget.count);
     }
+    _hintUsed = List.filled(_quizEntries.length, false);
     _setupCurrentWord();
   }
 
@@ -68,6 +75,7 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     } while (_isCorrect && attempts < maxAttempts);
     
     _isCorrect = false;
+    _showHint = false;
   }
 
   void _onReorder(int oldIndex, int newIndex) {
@@ -92,8 +100,25 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     }
   }
 
+  void _onHintChanged(bool value) {
+    setState(() {
+      _showHint = value;
+      if (value) {
+        _hintUsed[_current] = true;
+      }
+    });
+  }
+
   void _nextWord() {
     setState(() {
+      // Update statistics for the current word
+      if (_isCorrect) {
+        if (_hintUsed[_current]) {
+          _correctWithHint++;
+        } else {
+          _correctWithoutHint++;
+        }
+      }
       _current++;
       if (_current < _quizEntries.length) {
         _setupCurrentWord();
@@ -136,13 +161,21 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     }
     
     if (_current >= _quizEntries.length) {
+      int totalCorrect = _correctWithoutHint + _correctWithHint;
+      double percent = totalCorrect > 0 ? (_correctWithoutHint / totalCorrect) * 100 : 0;
+      
       return Scaffold(
         appBar: AppBar(title: const Text('Scrambled Word')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('Exercise complete'),
+              Text('Exercise complete', style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 16),
+              Text('Correct without hint: $_correctWithoutHint', style: const TextStyle(color: correctTextC, fontSize: 18)),
+              Text('Correct with hint: $_correctWithHint', style: const TextStyle(color: Colors.blue, fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Score: ${percent.toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
@@ -158,20 +191,29 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
       appBar: AppBar(title: const Text('Scrambled Word')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${widget.vocabulary.inputSource}:', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            EntrySourceWidget(
-              entry: entry,
-              style: Theme.of(context).textTheme.headlineMedium,
-              vocabulary: widget.vocabulary,
-              imageSize: ImageSize.large,
-            ),
-            const SizedBox(height: 32),
-            Text('${widget.vocabulary.targetLanguage}:', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+                         Center(
+               child: Column(
+                 children: [
+                   if (entry is TextEntry)
+                     Text('${widget.vocabulary.inputSource}:', style: Theme.of(context).textTheme.titleLarge),
+                   if (entry is TextEntry) const SizedBox(height: 8),
+                   EntrySourceWidget(
+                     entry: entry,
+                     style: Theme.of(context).textTheme.headlineMedium,
+                     vocabulary: widget.vocabulary,
+                     imageSize: ImageSize.large,
+                   ),
+                 ],
+               ),
+             ),
+                         const SizedBox(height: 32),
+             Center(
+               child: Text('${widget.vocabulary.targetLanguage}:', style: Theme.of(context).textTheme.titleLarge),
+             ),
+             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey.shade300),
@@ -240,28 +282,54 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
                      ),
                   ),
                ),
-            ),
-            const SizedBox(height: 24),
-            if (_isCorrect)
-              Column(
-                children: [
-                  const Text('Correct!', style: TextStyle(color: correctTextC, fontSize: 20)),
-                  const SizedBox(height: 8),
-                  Text(
-                    _quizEntries[_current].target,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _nextWord,
-                    child: const Text('Next'),
-                  ),
-                ],
-              ),
-            Text('Progress: ${_current + 1} / ${_quizEntries.length}'),
-          ],
-        ),
-      ),
-    );
+                         ),
+                           if (!_isCorrect) ...[
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Show hint'),
+                    const SizedBox(width: 8),
+                    Switch(
+                      value: _showHint,
+                      onChanged: _onHintChanged,
+                    ),
+                  ],
+                ),
+              ],
+                           const SizedBox(height: 24),
+              if (_isCorrect || _showHint)
+               Center(
+                 child: Column(
+                   children: [
+                     if (_isCorrect)
+                       const Text('Correct!', style: TextStyle(color: correctTextC, fontSize: 20)),
+                     if (_isCorrect) const SizedBox(height: 8),
+                     Text(
+                       _quizEntries[_current].target,
+                       style: TextStyle(
+                         fontSize: _isCorrect ? 24 : 18,
+                         fontWeight: FontWeight.bold,
+                         color: _isCorrect ? null : Colors.blue,
+                       ),
+                     ),
+                     if (_isCorrect) ...[
+                       const SizedBox(height: 16),
+                       ElevatedButton(
+                         onPressed: _nextWord,
+                         child: const Text('Next'),
+                       ),
+                     ],
+                   ],
+                 ),
+               ),
+             Center(
+               child: Text('Progress: ${_current + 1} / ${_quizEntries.length}'),
+             ),
+           ],
+         ),
+       ),
+       ),
+     );
   }
 } 
