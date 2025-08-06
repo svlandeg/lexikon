@@ -161,15 +161,6 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     }
     
     if (_current >= _quizEntries.length) {
-      // Update statistics for the last word if it was correct
-      if (_isCorrect) {
-        if (_hintUsed[_current - 1]) {
-          _correctWithHint++;
-        } else {
-          _correctWithoutHint++;
-        }
-      }
-      
       int totalCorrect = _correctWithoutHint + _correctWithHint;
       double percent = totalCorrect > 0 ? (_correctWithoutHint / totalCorrect) * 100 : 0;
       
