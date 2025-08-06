@@ -162,19 +162,26 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
         padding: const EdgeInsets.all(24.0),
         child: SingleChildScrollView(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-            Text('${widget.vocabulary.inputSource}:', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            EntrySourceWidget(
-              entry: entry,
-              style: Theme.of(context).textTheme.headlineMedium,
-              vocabulary: widget.vocabulary,
-              imageSize: ImageSize.large,
-            ),
-            const SizedBox(height: 32),
-            Text('${widget.vocabulary.targetLanguage}:', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
+                         Center(
+               child: Column(
+                 children: [
+                   Text('${widget.vocabulary.inputSource}:', style: Theme.of(context).textTheme.titleLarge),
+                   const SizedBox(height: 8),
+                   EntrySourceWidget(
+                     entry: entry,
+                     style: Theme.of(context).textTheme.headlineMedium,
+                     vocabulary: widget.vocabulary,
+                     imageSize: ImageSize.large,
+                   ),
+                 ],
+               ),
+             ),
+                         const SizedBox(height: 32),
+             Center(
+               child: Text('${widget.vocabulary.targetLanguage}:', style: Theme.of(context).textTheme.titleLarge),
+             ),
+             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey.shade300),
@@ -244,47 +251,53 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
                   ),
                ),
                          ),
-             const SizedBox(height: 16),
-             Row(
-               mainAxisAlignment: MainAxisAlignment.center,
-               children: [
-                 const Text('Show hint'),
-                 const SizedBox(width: 8),
-                 Switch(
-                   value: _showHint,
-                   onChanged: (value) {
-                     setState(() {
-                       _showHint = value;
-                     });
-                   },
-                 ),
-               ],
-             ),
+                           if (!_isCorrect) ...[
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Show hint'),
+                    const SizedBox(width: 8),
+                    Switch(
+                      value: _showHint,
+                      onChanged: (value) {
+                        setState(() {
+                          _showHint = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ],
                            const SizedBox(height: 24),
               if (_isCorrect || _showHint)
-               Column(
-                 children: [
-                   if (_isCorrect)
-                     const Text('Correct!', style: TextStyle(color: correctTextC, fontSize: 20)),
-                   if (_isCorrect) const SizedBox(height: 8),
-                   Text(
-                     _quizEntries[_current].target,
-                     style: TextStyle(
-                       fontSize: _isCorrect ? 24 : 18,
-                       fontWeight: FontWeight.bold,
-                       color: _isCorrect ? null : Colors.blue,
+               Center(
+                 child: Column(
+                   children: [
+                     if (_isCorrect)
+                       const Text('Correct!', style: TextStyle(color: correctTextC, fontSize: 20)),
+                     if (_isCorrect) const SizedBox(height: 8),
+                     Text(
+                       _quizEntries[_current].target,
+                       style: TextStyle(
+                         fontSize: _isCorrect ? 24 : 18,
+                         fontWeight: FontWeight.bold,
+                         color: _isCorrect ? null : Colors.blue,
+                       ),
                      ),
-                   ),
-                   if (_isCorrect) ...[
-                     const SizedBox(height: 16),
-                     ElevatedButton(
-                       onPressed: _nextWord,
-                       child: const Text('Next'),
-                     ),
+                     if (_isCorrect) ...[
+                       const SizedBox(height: 16),
+                       ElevatedButton(
+                         onPressed: _nextWord,
+                         child: const Text('Next'),
+                       ),
+                     ],
                    ],
-                 ],
+                 ),
                ),
-                         Text('Progress: ${_current + 1} / ${_quizEntries.length}'),
+             Center(
+               child: Text('Progress: ${_current + 1} / ${_quizEntries.length}'),
+             ),
            ],
          ),
        ),
