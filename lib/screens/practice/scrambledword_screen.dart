@@ -199,7 +199,7 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
                               ),
                               childWhenDragging: Material(
                                 child: Chip(
-                                  label: Text('', style: const TextStyle(fontSize: 24)),
+                                  label: Text(_userOrder[i], style: const TextStyle(fontSize: 24)),
                                   backgroundColor: Colors.grey[300],
                                 ),
                               ),
