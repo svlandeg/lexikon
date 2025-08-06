@@ -180,8 +180,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.create),
-              title: const Text('Create an empty text-to-text vocabulary'),
-              // subtitle: const Text('Start with an empty vocabulary and add word pairs manually'),
+              title: const Text('Create an empty Text-to-Text vocabulary'),
               onTap: () {
                 Navigator.pop(context);
                 _createEmptyVocabulary();
@@ -189,8 +188,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.upload_file),
-              title: const Text('Upload a text-to-text vocabulary from a CSV File'),
-              // subtitle: const Text('Import vocabulary from a CSV file'),
+              title: const Text('Upload a Text-to-Text vocabulary from a CSV File'),
               onTap: () {
                 Navigator.pop(context);
                 _createFromCsvFile();
@@ -198,9 +196,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             ),
                          ListTile(
                leading: const Icon(Icons.folder),
-               title: const Text('Upload a image-to-text vocabulary from a directory'),
-               // subtitle: const Text('Create image vocabulary from a directory'),
-               onTap: () {
+               title: const Text('Upload an Image-to-Text vocabulary from a directory'),
                  Navigator.pop(context);
                  _createFromDirectory();
                },
