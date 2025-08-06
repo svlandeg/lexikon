@@ -39,8 +39,8 @@ void main() {
     });
 
     testWidgets('scrambled word is never accidentally correct', (WidgetTester tester) async {
-      final target_word = 'من';
-      final target_length = target_word.length;
+      final targetWord = 'من';
+      final targetLength = targetWord.length;
       
       final vocab = TextVocabulary(
         id: '1',
@@ -49,7 +49,7 @@ void main() {
         targetLanguage: 'Arabic',
         sourceReadingDirection: TextDirection.ltr,
         targetReadingDirection: TextDirection.rtl,
-        entries: [TextEntry(source: 'who', target: target_word)],
+        entries: [TextEntry(source: 'who', target: targetWord)],
       );
 
       await tester.pumpWidget(
@@ -66,23 +66,22 @@ void main() {
 
       // Get all the letter chips
       final letterChips = find.byType(Chip);
-      expect(letterChips, findsNWidgets(target_length)); 
+      expect(letterChips, findsNWidgets(targetLength)); 
 
       // Extract the text from each chip
       final List<String> displayedLetters = [];
-      for (int i = 0; i < target_length; i++) {
+      for (int i = 0; i < targetLength; i++) {
         final chip = tester.widget<Chip>(letterChips.at(i));
         final text = (chip.label as Text).data!;
         displayedLetters.add(text);
       }
       
       // Verify all letters from the target word are present
-      final targetLetters = target_word.split('')..sort();
+      final targetLetters = targetWord.split('')..sort();
       final displayedLettersSorted = displayedLetters..sort();
       expect(displayedLettersSorted, equals(targetLetters),
           reason: 'All letters from target word should be present');
 
-            
       // For RTL text, the visual order is reversed from the logical order
       // So we need to reverse the displayed letters to get the actual word
       final actualWord = vocab.targetReadingDirection == TextDirection.rtl 
@@ -90,7 +89,7 @@ void main() {
           : displayedLetters.join();
 
       // Verify the displayed letters don't spell the correct word
-      expect(actualWord, isNot(target_word), 
+      expect(actualWord, isNot(targetWord), 
           reason: 'Scrambled word should not be correct');
     });
   });
