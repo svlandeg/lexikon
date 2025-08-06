@@ -962,7 +962,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                  TextFormField(
                    controller: _sourceController,
                    decoration: InputDecoration(
-                     labelText: 'Source Language ( ${(widget.vocabulary as TextVocabulary).sourceLanguage})',
+                     labelText: '${(widget.vocabulary as TextVocabulary).sourceLanguage}',
                      hintText: 'Enter a word from the source language',
                    ),
                    validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
@@ -982,7 +982,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               TextFormField(
                 controller: _targetController,
                 decoration: InputDecoration(
-                  labelText: 'Target Language ( ${widget.vocabulary.targetLanguage})',
+                  labelText: '${widget.vocabulary.targetLanguage}',
                   hintText: 'Enter a word from the target language',
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'Enter a target language entry' : null,
@@ -1099,7 +1099,7 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
                   controller: _targetLanguageController,
                   decoration: const InputDecoration(
                     labelText: 'Target Language',
-                    hintText: 'e.g., Spanish, French',
+                    hintText: 'e.g., Arabic, French',
                   ),
                   validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
                 ),
