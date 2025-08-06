@@ -82,7 +82,6 @@ void main() {
       expect(displayedLettersSorted, equals(targetLetters),
           reason: 'All letters from target word should be present');
 
-            
       // For RTL text, the visual order is reversed from the logical order
       // So we need to reverse the displayed letters to get the actual word
       final actualWord = vocab.targetReadingDirection == TextDirection.rtl 
