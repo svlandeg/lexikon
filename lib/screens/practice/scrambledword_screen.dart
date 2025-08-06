@@ -29,6 +29,11 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
   bool _isCorrect = false;
   bool _showHint = false;
   late ScrollController _scrollController;
+  
+  // Statistics tracking
+  int _correctWithoutHint = 0;
+  int _correctWithHint = 0;
+  List<bool> _hintUsed = [];
 
   /// Checks if a word can be meaningfully scrambled
   bool _canBeScrambled(String word) {
@@ -50,6 +55,7 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     if (_quizEntries.length > widget.count) {
       _quizEntries = _quizEntries.sublist(0, widget.count);
     }
+    _hintUsed = List.filled(_quizEntries.length, false);
     _setupCurrentWord();
   }
 
@@ -94,8 +100,25 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     }
   }
 
+  void _onHintChanged(bool value) {
+    setState(() {
+      _showHint = value;
+      if (value) {
+        _hintUsed[_current] = true;
+      }
+    });
+  }
+
   void _nextWord() {
     setState(() {
+      // Update statistics for the current word
+      if (_isCorrect) {
+        if (_hintUsed[_current]) {
+          _correctWithHint++;
+        } else {
+          _correctWithoutHint++;
+        }
+      }
       _current++;
       if (_current < _quizEntries.length) {
         _setupCurrentWord();
@@ -138,13 +161,30 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     }
     
     if (_current >= _quizEntries.length) {
+      // Update statistics for the last word if it was correct
+      if (_isCorrect) {
+        if (_hintUsed[_current - 1]) {
+          _correctWithHint++;
+        } else {
+          _correctWithoutHint++;
+        }
+      }
+      
+      int totalCorrect = _correctWithoutHint + _correctWithHint;
+      double percent = totalCorrect > 0 ? (_correctWithoutHint / totalCorrect) * 100 : 0;
+      
       return Scaffold(
         appBar: AppBar(title: const Text('Scrambled Word')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('Exercise complete'),
+              Text('Exercise complete', style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 16),
+              Text('Correct without hint: $_correctWithoutHint', style: const TextStyle(color: correctTextC, fontSize: 18)),
+              Text('Correct with hint: $_correctWithHint', style: const TextStyle(color: Colors.blue, fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Score: ${percent.toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
@@ -261,11 +301,7 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
                     const SizedBox(width: 8),
                     Switch(
                       value: _showHint,
-                      onChanged: (value) {
-                        setState(() {
-                          _showHint = value;
-                        });
-                      },
+                      onChanged: _onHintChanged,
                     ),
                   ],
                 ),
