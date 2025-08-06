@@ -172,64 +172,74 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
             const SizedBox(height: 32),
             Text('${widget.vocabulary.targetLanguage}:', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            SizedBox(
-              height: 64,
-              child: Directionality(
-                textDirection: widget.vocabulary.targetReadingDirection,
-                child: Scrollbar(
-                  controller: _scrollController,
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        for (int i = 0; i < _userOrder.length; i++)
-                          Container(
-                            key: ValueKey('letter_$i'),
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Draggable<String>(
-                              data: _userOrder[i],
-                              feedback: Material(
-                                child: Chip(
-                                  label: Text(_userOrder[i], style: const TextStyle(fontSize: 24)),
-                                  backgroundColor: _isCorrect ? correctBgC : null,
-                                ),
-                              ),
-                              childWhenDragging: Material(
-                                child: Chip(
-                                  label: Text(_userOrder[i], style: const TextStyle(fontSize: 24)),
-                                  backgroundColor: Colors.grey[300],
-                                ),
-                              ),
-                              child: DragTarget<String>(
-                                onWillAccept: (data) => data != null,
-                                onAccept: (data) {
-                                  setState(() {
-                                    final oldIndex = _userOrder.indexOf(data);
-                                    final newIndex = i;
-                                    if (oldIndex != -1 && oldIndex != newIndex) {
-                                      _userOrder.removeAt(oldIndex);
-                                      _userOrder.insert(newIndex, data);
-                                      _checkCorrect();
-                                    }
-                                  });
-                                },
-                                builder: (context, candidateData, rejectedData) {
-                                  return Chip(
-                                    label: Text(_userOrder[i], style: const TextStyle(fontSize: 24)),
-                                    backgroundColor: _isCorrect ? correctBgC : null,
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
               ),
+                             child: Directionality(
+                 textDirection: widget.vocabulary.targetReadingDirection,
+                                   child: Container(
+                    height: 120,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                                              child: Scrollbar(
+                       controller: _scrollController,
+                       thumbVisibility: MediaQuery.of(context).size.width > 600,
+                       trackVisibility: MediaQuery.of(context).size.width > 600,
+                       thickness: 8,
+                       radius: const Radius.circular(4),
+                       child: SingleChildScrollView(
+                         controller: _scrollController,
+                         scrollDirection: Axis.horizontal,
+                         child: Row(
+                           mainAxisAlignment: MainAxisAlignment.center,
+                           children: [
+                             for (int i = 0; i < _userOrder.length; i++)
+                               Container(
+                                 key: ValueKey('letter_$i'),
+                                 margin: const EdgeInsets.symmetric(horizontal: 8),
+                                 child: Draggable<String>(
+                                   data: _userOrder[i],
+                                   feedback: Material(
+                                     child: Chip(
+                                       label: Text(_userOrder[i], style: const TextStyle(fontSize: 24)),
+                                       backgroundColor: _isCorrect ? correctBgC : null,
+                                     ),
+                                   ),
+                                   childWhenDragging: Material(
+                                     child: Chip(
+                                       label: Text(_userOrder[i], style: const TextStyle(fontSize: 24)),
+                                       backgroundColor: Colors.grey[300],
+                                     ),
+                                   ),
+                                   child: DragTarget<String>(
+                                     onWillAccept: (data) => data != null,
+                                     onAccept: (data) {
+                                       setState(() {
+                                         final oldIndex = _userOrder.indexOf(data);
+                                         final newIndex = i;
+                                         if (oldIndex != -1 && oldIndex != newIndex) {
+                                           _userOrder.removeAt(oldIndex);
+                                           _userOrder.insert(newIndex, data);
+                                           _checkCorrect();
+                                         }
+                                       });
+                                     },
+                                     builder: (context, candidateData, rejectedData) {
+                                       return Chip(
+                                         label: Text(_userOrder[i], style: const TextStyle(fontSize: 24)),
+                                         backgroundColor: _isCorrect ? correctBgC : null,
+                                       );
+                                     },
+                                   ),
+                                 ),
+                               ),
+                           ],
+                         ),
+                       ),
+                     ),
+                  ),
+               ),
             ),
             const SizedBox(height: 24),
             if (_isCorrect)
