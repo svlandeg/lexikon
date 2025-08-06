@@ -426,73 +426,99 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                   child: ListTile(
                     title: Text(vocabulary.name),
                     subtitle: Text('${vocabulary.inputSource} → ${vocabulary.targetLanguage} (${vocabulary.entries.length} entries)'),
-                    leading: const Icon(Icons.book),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          tooltip: 'Edit Vocabulary',
-                          onPressed: () async {
-                            Vocabulary? result;
-                            
-                            if (vocabulary is TextVocabulary) {
-                              // Edit text vocabulary using AddVocabularyScreen
-                              result = await Navigator.push<Vocabulary>(
+                    leading: SizedBox(
+                      width: 120, // Fixed width to prevent overlap
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            tooltip: 'Edit Vocabulary',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                            onPressed: () async {
+                              Vocabulary? result;
+                              
+                              if (vocabulary is TextVocabulary) {
+                                // Edit text vocabulary using AddVocabularyScreen
+                                result = await Navigator.push<Vocabulary>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddVocabularyScreen(
+                                      initialVocabulary: vocabulary,
+                                    ),
+                                  ),
+                                );
+                              } else if (vocabulary is ImageVocabulary) {
+                                // Edit image vocabulary using ImageVocabularyCreationScreen
+                                result = await Navigator.push<Vocabulary>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ImageVocabularyCreationScreen(
+                                      directoryName: vocabulary.name,
+                                      entries: vocabulary.imageEntries,
+                                      vocabularyId: vocabulary.id,
+                                      initialVocabulary: vocabulary,
+                                    ),
+                                  ),
+                                );
+                              }
+                              
+                              if (result != null) {
+                                _updateVocabulary(index, result);
+                              }
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.list),
+                            tooltip: 'Edit Entries',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                            onPressed: () {
+                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => AddVocabularyScreen(
-                                    initialVocabulary: vocabulary,
-                                  ),
-                                ),
-                              );
-                            } else if (vocabulary is ImageVocabulary) {
-                              // Edit image vocabulary using ImageVocabularyCreationScreen
-                              result = await Navigator.push<Vocabulary>(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ImageVocabularyCreationScreen(
-                                    directoryName: vocabulary.name,
-                                    entries: vocabulary.imageEntries,
-                                    vocabularyId: vocabulary.id,
-                                    initialVocabulary: vocabulary,
-                                  ),
-                                ),
-                              );
-                            }
-                            
-                            if (result != null) {
-                              _updateVocabulary(index, result);
-                            }
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          tooltip: 'Delete Vocabulary',
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Delete Vocabulary'),
-                                content: Text('Are you sure you want to delete "${vocabulary.name}" and all its ${vocabulary.entries.length} words?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _removeVocabulary(index);
+                                  builder: (context) => VocabularyDetailScreen(
+                                    vocabulary: vocabulary,
+                                    onVocabularyUpdated: (updatedVocabulary) {
+                                      _updateVocabulary(index, updatedVocabulary);
                                     },
-                                    child: const Text('Delete'),
                                   ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+                                ),
+                              );
+                            },
+                          ),
+
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            tooltip: 'Delete Vocabulary',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete Vocabulary'),
+                                  content: Text('Are you sure you want to delete "${vocabulary.name}" and all its ${vocabulary.entries.length} words?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        _removeVocabulary(index);
+                                      },
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                     onTap: () {
                       Navigator.push(
@@ -511,13 +537,15 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showCreateVocabularyOptions();
-        },
-        tooltip: 'Create Vocabulary',
-        child: const Icon(Icons.add),
-      ),
+             floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+       floatingActionButton: FloatingActionButton.extended(
+         onPressed: () {
+           _showCreateVocabularyOptions();
+         },
+         tooltip: 'Create Vocabulary',
+         icon: const Icon(Icons.add),
+         label: const Text('Create new vocabulary'),
+       ),
     );
   }
 }
