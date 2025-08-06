@@ -795,6 +795,62 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     itemBuilder: (context, index) {
                       final entry = _vocabulary.entries[index];
                       return ListTile(
+                        leading: SizedBox(
+                          width: 100, // Width to accommodate 2 buttons with padding
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                tooltip: 'Edit',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                                onPressed: () async {
+                                  final result = await Navigator.push<Entry>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AddEntryScreen(
+                                        initialEntry: entry,
+                                        vocabulary: _vocabulary,
+                                      ),
+                                    ),
+                                  );
+                                  if (result != null) {
+                                    _editEntry(index, result);
+                                  }
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                tooltip: 'Delete',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Delete Entry'),
+                                      content: const Text('Are you sure you want to delete this entry?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                            _removeEntry(index);
+                                          },
+                                          child: const Text('Delete'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
                         title: EntrySourceWidget(
                           entry: entry,
                           style: Theme.of(context).textTheme.titleMedium,
@@ -802,55 +858,6 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                           imageSize: ImageSize.small, 
                         ),
                         subtitle: Text(entry.target),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              tooltip: 'Edit',
-                              onPressed: () async {
-                                final result = await Navigator.push<Entry>(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AddEntryScreen(
-                                      initialEntry: entry,
-                                      vocabulary: _vocabulary,
-                                    ),
-                                  ),
-                                );
-                                if (result != null) {
-                                  _editEntry(index, result);
-                                }
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              tooltip: 'Delete',
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Delete Entry'),
-                                    content: const Text('Are you sure you want to delete this entry?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('Cancel'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                          _removeEntry(index);
-                                        },
-                                        child: const Text('Delete'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
                       );
                     },
                   ),
