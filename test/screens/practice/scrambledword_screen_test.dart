@@ -37,5 +37,60 @@ void main() {
       // The 'Correct!' message should not be shown initially
       expect(find.text('Correct!'), findsNothing);
     });
+
+    testWidgets('scrambled word is never accidentally correct', (WidgetTester tester) async {
+      final targetWord = 'من';
+      final targetLength = targetWord.length;
+      
+      final vocab = TextVocabulary(
+        id: '1',
+        name: 'TestVocab',
+        sourceLanguage: 'English',
+        targetLanguage: 'Arabic',
+        sourceReadingDirection: TextDirection.ltr,
+        targetReadingDirection: TextDirection.rtl,
+        entries: [TextEntry(source: 'who', target: targetWord)],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ScrambledWordScreen(vocabulary: vocab, count: 1),
+        ),
+      );
+
+      // Wait for the widget to fully build
+      await tester.pumpAndSettle();
+
+      // The 'Correct!' message should not be shown initially
+      expect(find.text('Correct!'), findsNothing);
+
+      // Get all the letter chips
+      final letterChips = find.byType(Chip);
+      expect(letterChips, findsNWidgets(targetLength)); 
+
+      // Extract the text from each chip
+      final List<String> displayedLetters = [];
+      for (int i = 0; i < targetLength; i++) {
+        final chip = tester.widget<Chip>(letterChips.at(i));
+        final text = (chip.label as Text).data!;
+        displayedLetters.add(text);
+      }
+      
+      // Verify all letters from the target word are present
+      final targetLetters = targetWord.split('')..sort();
+      final displayedLettersSorted = displayedLetters..sort();
+      expect(displayedLettersSorted, equals(targetLetters),
+          reason: 'All letters from target word should be present');
+
+      // For RTL text, the visual order is reversed from the logical order
+      // So we need to reverse the displayed letters to get the actual word
+      final actualWord = vocab.targetReadingDirection == TextDirection.rtl 
+          ? displayedLetters.reversed.join()
+          : displayedLetters.join();
+
+      // Verify the displayed letters don't spell the correct word
+      expect(actualWord, isNot(targetWord), 
+          reason: 'Scrambled word should not be correct');
+    });
   });
 } 
