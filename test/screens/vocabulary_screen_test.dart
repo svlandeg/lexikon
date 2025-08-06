@@ -40,7 +40,7 @@ void main() {
       await tester.pumpAndSettle();
       
       // Select "Create an empty text-to-text vocabulary" option
-      await tester.tap(find.text('Create an empty text-to-text vocabulary'));
+      await tester.tap(find.text('Create an empty Text-to-Text vocabulary'));
       await tester.pumpAndSettle();
       
       // Fill in the form
