@@ -887,26 +887,28 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
           ),
         ],
       ),
-                          floatingActionButton: _vocabulary is ImageVocabulary 
-                ? null 
-                : FloatingActionButton(
-                    heroTag: 'addEntry',
-                    onPressed: () async {
-                      final result = await Navigator.push<Entry>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AddEntryScreen(
-                            vocabulary: _vocabulary,
-                          ),
-                        ),
-                      );
-                      if (result != null) {
-                        _addEntry(result);
-                      }
-                    },
-                    tooltip: 'Add Word',
-                    child: const Icon(Icons.add),
-                  ),
+                                                     floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+                           floatingActionButton: _vocabulary is ImageVocabulary 
+                 ? null 
+                 : FloatingActionButton.extended(
+                     heroTag: 'addEntry',
+                     onPressed: () async {
+                       final result = await Navigator.push<Entry>(
+                         context,
+                         MaterialPageRoute(
+                           builder: (context) => AddEntryScreen(
+                             vocabulary: _vocabulary,
+                           ),
+                         ),
+                       );
+                       if (result != null) {
+                         _addEntry(result);
+                       }
+                     },
+                     tooltip: 'Add Entry',
+                     icon: const Icon(Icons.add),
+                     label: const Text('Add entry'),
+                   ),
     );
   }
 }
