@@ -27,6 +27,7 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
   late List<String> _scrambledLetters;
   late List<String> _userOrder;
   bool _isCorrect = false;
+  late ScrollController _scrollController;
 
   /// Checks if a word can be meaningfully scrambled
   bool _canBeScrambled(String word) {
@@ -38,6 +39,7 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     // Filter out words that can't be meaningfully scrambled
     _quizEntries = widget.vocabulary.entries
         .where((entry) => _canBeScrambled(entry.target.trim()))
@@ -97,6 +99,12 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
         _setupCurrentWord();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -168,25 +176,58 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
               height: 64,
               child: Directionality(
                 textDirection: widget.vocabulary.targetReadingDirection,
-                child: ReorderableListView(
-                  shrinkWrap: true,
-                  scrollDirection: Axis.horizontal,
-                  buildDefaultDragHandles: false,
-                  onReorder: _onReorder,
-                  children: [
-                    for (int i = 0; i < _userOrder.length; i++)
-                      Container(
-                        key: ValueKey('letter_$i'),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        child: ReorderableDragStartListener(
-                          index: i,
-                          child: Chip(
-                            label: Text(_userOrder[i], style: const TextStyle(fontSize: 24)),
-                            backgroundColor: _isCorrect ? correctBgC : null,
+                child: Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (int i = 0; i < _userOrder.length; i++)
+                          Container(
+                            key: ValueKey('letter_$i'),
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Draggable<String>(
+                              data: _userOrder[i],
+                              feedback: Material(
+                                child: Chip(
+                                  label: Text(_userOrder[i], style: const TextStyle(fontSize: 24)),
+                                  backgroundColor: _isCorrect ? correctBgC : null,
+                                ),
+                              ),
+                              childWhenDragging: Material(
+                                child: Chip(
+                                  label: Text('', style: const TextStyle(fontSize: 24)),
+                                  backgroundColor: Colors.grey[300],
+                                ),
+                              ),
+                              child: DragTarget<String>(
+                                onWillAccept: (data) => data != null,
+                                onAccept: (data) {
+                                  setState(() {
+                                    final oldIndex = _userOrder.indexOf(data);
+                                    final newIndex = i;
+                                    if (oldIndex != -1 && oldIndex != newIndex) {
+                                      _userOrder.removeAt(oldIndex);
+                                      _userOrder.insert(newIndex, data);
+                                      _checkCorrect();
+                                    }
+                                  });
+                                },
+                                builder: (context, candidateData, rejectedData) {
+                                  return Chip(
+                                    label: Text(_userOrder[i], style: const TextStyle(fontSize: 24)),
+                                    backgroundColor: _isCorrect ? correctBgC : null,
+                                  );
+                                },
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
