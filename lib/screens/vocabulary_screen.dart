@@ -887,24 +887,26 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
           ),
         ],
       ),
-             floatingActionButton: FloatingActionButton(
-         heroTag: 'addEntry',
-         onPressed: () async {
-           final result = await Navigator.push<Entry>(
-             context,
-             MaterialPageRoute(
-               builder: (context) => AddEntryScreen(
-                 vocabulary: _vocabulary,
-               ),
-             ),
-           );
-           if (result != null) {
-             _addEntry(result);
-           }
-         },
-         tooltip: 'Add Word',
-         child: const Icon(Icons.add),
-       ),
+                          floatingActionButton: _vocabulary is ImageVocabulary 
+                ? null 
+                : FloatingActionButton(
+                    heroTag: 'addEntry',
+                    onPressed: () async {
+                      final result = await Navigator.push<Entry>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddEntryScreen(
+                            vocabulary: _vocabulary,
+                          ),
+                        ),
+                      );
+                      if (result != null) {
+                        _addEntry(result);
+                      }
+                    },
+                    tooltip: 'Add Word',
+                    child: const Icon(Icons.add),
+                  ),
     );
   }
 }
@@ -956,25 +958,26 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           key: _formKey,
           child: Column(
             children: [
-              if (widget.vocabulary is TextVocabulary) ...[
-                TextFormField(
-                  controller: _sourceController,
-                  decoration: InputDecoration(
-                    labelText: 'Source Language ( ${(widget.vocabulary as TextVocabulary).sourceLanguage})',
-                    hintText: 'Enter a word from the source language',
-                  ),
-                  validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
-                ),
-              ] else ...[
-                TextFormField(
-                  controller: _sourceController,
-                  decoration: InputDecoration(
-                    labelText: 'Image Path',
-                    hintText: 'Enter the path to the image (e.g., assets/images/cat.png)',
-                  ),
-                  validator: (value) => value == null || value.isEmpty ? 'Enter an image path' : null,
-                ),
-              ],
+                             if (widget.vocabulary is TextVocabulary) ...[
+                 TextFormField(
+                   controller: _sourceController,
+                   decoration: InputDecoration(
+                     labelText: 'Source Language ( ${(widget.vocabulary as TextVocabulary).sourceLanguage})',
+                     hintText: 'Enter a word from the source language',
+                   ),
+                   validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
+                 ),
+               ] else ...[
+                 TextFormField(
+                   controller: _sourceController,
+                   decoration: InputDecoration(
+                     labelText: 'Image Path',
+                     hintText: 'Enter the path to the image (e.g., assets/images/cat.png)',
+                   ),
+                   validator: (value) => value == null || value.isEmpty ? 'Enter an image path' : null,
+                   enabled: false, // Disable editing for ImageVocabulary
+                 ),
+               ],
               const SizedBox(height: 16),
               TextFormField(
                 controller: _targetController,
