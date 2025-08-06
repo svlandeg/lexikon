@@ -29,9 +29,9 @@ void main() {
       
       // Check that the modal shows all three creation options
       expect(find.text('Create Vocabulary'), findsOneWidget);
-      expect(find.text('Create an empty text-to-text vocabulary'), findsOneWidget);
-      expect(find.text('Upload a text-to-text vocabulary from a CSV File'), findsOneWidget);
-      expect(find.text('Upload a image-to-text vocabulary from a directory'), findsOneWidget);
+      expect(find.text('Create an empty Text-to-Text vocabulary'), findsOneWidget);
+      expect(find.text('Upload a Text-to-Text vocabulary from a CSV File'), findsOneWidget);
+      expect(find.text('Upload an Image-to-Text vocabulary from a directory'), findsOneWidget);
     });
 
     testWidgets('can create empty vocabulary', (WidgetTester tester) async {
@@ -40,7 +40,7 @@ void main() {
       await tester.pumpAndSettle();
       
       // Select "Create an empty text-to-text vocabulary" option
-      await tester.tap(find.text('Create an empty text-to-text vocabulary'));
+      await tester.tap(find.text('Create an empty Text-to-Text vocabulary'));
       await tester.pumpAndSettle();
       
       // Fill in the form

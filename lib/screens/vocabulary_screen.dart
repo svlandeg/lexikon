@@ -180,8 +180,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.create),
-              title: const Text('Create an empty text-to-text vocabulary'),
-              // subtitle: const Text('Start with an empty vocabulary and add word pairs manually'),
+              title: const Text('Create an empty Text-to-Text vocabulary'),
               onTap: () {
                 Navigator.pop(context);
                 _createEmptyVocabulary();
@@ -189,22 +188,20 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.upload_file),
-              title: const Text('Upload a text-to-text vocabulary from a CSV File'),
-              // subtitle: const Text('Import vocabulary from a CSV file'),
+              title: const Text('Upload a Text-to-Text vocabulary from a CSV File'),
               onTap: () {
                 Navigator.pop(context);
                 _createFromCsvFile();
               },
             ),
-                         ListTile(
-               leading: const Icon(Icons.folder),
-               title: const Text('Upload a image-to-text vocabulary from a directory'),
-               // subtitle: const Text('Create image vocabulary from a directory'),
-               onTap: () {
-                 Navigator.pop(context);
-                 _createFromDirectory();
-               },
-             ),
+            ListTile(
+              leading: const Icon(Icons.folder),
+              title: const Text('Upload an Image-to-Text vocabulary from a directory'),
+              onTap: () {
+                Navigator.pop(context);
+                _createFromDirectory();
+              },
+            ),
           ],
         ),
       ),
@@ -245,13 +242,6 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           
           if (vocabulary != null) {
             _addVocabulary(vocabulary);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} entries!'),
-                ),
-              );
-            }
           }
         } catch (e) {
           if (mounted) {
@@ -373,13 +363,6 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
          
                   if (vocabulary != null) {
             _addVocabulary(vocabulary);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                                 SnackBar(
-                    content: Text('Image vocabulary "${vocabulary.name}" created successfully with ${vocabulary.entries.length} entries!'),
-                  ),
-              );
-            }
           }
       }
     } catch (e) {
@@ -426,73 +409,98 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                   child: ListTile(
                     title: Text(vocabulary.name),
                     subtitle: Text('${vocabulary.inputSource} → ${vocabulary.targetLanguage} (${vocabulary.entries.length} entries)'),
-                    leading: const Icon(Icons.book),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          tooltip: 'Edit Vocabulary',
-                          onPressed: () async {
-                            Vocabulary? result;
-                            
-                            if (vocabulary is TextVocabulary) {
-                              // Edit text vocabulary using AddVocabularyScreen
-                              result = await Navigator.push<Vocabulary>(
+                    leading: SizedBox(
+                      width: 150, // Increased width to accommodate 3 buttons with padding
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            tooltip: 'Edit Vocabulary',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                            onPressed: () async {
+                              Vocabulary? result;
+                              
+                              if (vocabulary is TextVocabulary) {
+                                // Edit text vocabulary using AddVocabularyScreen
+                                result = await Navigator.push<Vocabulary>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddVocabularyScreen(
+                                      initialVocabulary: vocabulary,
+                                    ),
+                                  ),
+                                );
+                              } else if (vocabulary is ImageVocabulary) {
+                                // Edit image vocabulary using ImageVocabularyCreationScreen
+                                result = await Navigator.push<Vocabulary>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ImageVocabularyCreationScreen(
+                                      directoryName: vocabulary.name,
+                                      entries: vocabulary.imageEntries,
+                                      vocabularyId: vocabulary.id,
+                                      initialVocabulary: vocabulary,
+                                    ),
+                                  ),
+                                );
+                              }
+                              
+                              if (result != null) {
+                                _updateVocabulary(index, result);
+                              }
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.list),
+                            tooltip: 'Edit Entries',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                            onPressed: () {
+                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => AddVocabularyScreen(
-                                    initialVocabulary: vocabulary,
-                                  ),
-                                ),
-                              );
-                            } else if (vocabulary is ImageVocabulary) {
-                              // Edit image vocabulary using ImageVocabularyCreationScreen
-                              result = await Navigator.push<Vocabulary>(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ImageVocabularyCreationScreen(
-                                    directoryName: vocabulary.name,
-                                    entries: vocabulary.imageEntries,
-                                    vocabularyId: vocabulary.id,
-                                    initialVocabulary: vocabulary,
-                                  ),
-                                ),
-                              );
-                            }
-                            
-                            if (result != null) {
-                              _updateVocabulary(index, result);
-                            }
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          tooltip: 'Delete Vocabulary',
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Delete Vocabulary'),
-                                content: Text('Are you sure you want to delete "${vocabulary.name}" and all its ${vocabulary.entries.length} words?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _removeVocabulary(index);
+                                  builder: (context) => VocabularyDetailScreen(
+                                    vocabulary: vocabulary,
+                                    onVocabularyUpdated: (updatedVocabulary) {
+                                      _updateVocabulary(index, updatedVocabulary);
                                     },
-                                    child: const Text('Delete'),
                                   ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            tooltip: 'Delete Vocabulary',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete Vocabulary'),
+                                  content: Text('Are you sure you want to delete "${vocabulary.name}" and all its ${vocabulary.entries.length} words?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        _removeVocabulary(index);
+                                      },
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                     onTap: () {
                       Navigator.push(
@@ -511,13 +519,15 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showCreateVocabularyOptions();
-        },
-        tooltip: 'Create Vocabulary',
-        child: const Icon(Icons.add),
-      ),
+             floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+       floatingActionButton: FloatingActionButton.extended(
+         onPressed: () {
+           _showCreateVocabularyOptions();
+         },
+         tooltip: 'Create Vocabulary',
+         icon: const Icon(Icons.add),
+         label: const Text('Create new vocabulary'),
+       ),
     );
   }
 }
@@ -784,60 +794,90 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     itemCount: _vocabulary.entries.length,
                     itemBuilder: (context, index) {
                       final entry = _vocabulary.entries[index];
-                      return ListTile(
-                        title: EntrySourceWidget(
-                          entry: entry,
-                          style: Theme.of(context).textTheme.titleMedium,
-                          vocabulary: _vocabulary,
-                          imageSize: ImageSize.small, 
-                        ),
-                        subtitle: Text(entry.target),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Row(
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              tooltip: 'Edit',
-                              onPressed: () async {
-                                final result = await Navigator.push<Entry>(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AddEntryScreen(
-                                      initialEntry: entry,
-                                      vocabulary: _vocabulary,
-                                    ),
+                            // Edit buttons on the left
+                            SizedBox(
+                              width: 100,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    tooltip: 'Edit',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                                    onPressed: () async {
+                                      final result = await Navigator.push<Entry>(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => AddEntryScreen(
+                                            initialEntry: entry,
+                                            vocabulary: _vocabulary,
+                                          ),
+                                        ),
+                                      );
+                                      if (result != null) {
+                                        _editEntry(index, result);
+                                      }
+                                    },
                                   ),
-                                );
-                                if (result != null) {
-                                  _editEntry(index, result);
-                                }
-                              },
+                                  IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    tooltip: 'Delete',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('Delete Entry'),
+                                          content: const Text('Are you sure you want to delete this entry?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                                _removeEntry(index);
+                                              },
+                                              child: const Text('Delete'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              tooltip: 'Delete',
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Delete Entry'),
-                                    content: const Text('Are you sure you want to delete this entry?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('Cancel'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                          _removeEntry(index);
-                                        },
-                                        child: const Text('Delete'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
+                            // Source column (image or text)
+                            Expanded(
+                              flex: 1,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: EntrySourceWidget(
+                                  entry: entry,
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                  vocabulary: _vocabulary,
+                                  imageSize: ImageSize.small,
+                                ),
+                              ),
+                            ),
+                            // Target column (text)
+                            Expanded(
+                              flex: 1,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: Text(
+                                  entry.target,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -847,24 +887,28 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
           ),
         ],
       ),
-             floatingActionButton: FloatingActionButton(
-         heroTag: 'addEntry',
-         onPressed: () async {
-           final result = await Navigator.push<Entry>(
-             context,
-             MaterialPageRoute(
-               builder: (context) => AddEntryScreen(
-                 vocabulary: _vocabulary,
-               ),
-             ),
-           );
-           if (result != null) {
-             _addEntry(result);
-           }
-         },
-         tooltip: 'Add Word',
-         child: const Icon(Icons.add),
-       ),
+                                                     floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+                           floatingActionButton: _vocabulary is ImageVocabulary 
+                 ? null 
+                 : FloatingActionButton.extended(
+                     heroTag: 'addEntry',
+                     onPressed: () async {
+                       final result = await Navigator.push<Entry>(
+                         context,
+                         MaterialPageRoute(
+                           builder: (context) => AddEntryScreen(
+                             vocabulary: _vocabulary,
+                           ),
+                         ),
+                       );
+                       if (result != null) {
+                         _addEntry(result);
+                       }
+                     },
+                     tooltip: 'Add Entry',
+                     icon: const Icon(Icons.add),
+                     label: const Text('Add entry'),
+                   ),
     );
   }
 }
@@ -916,30 +960,31 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           key: _formKey,
           child: Column(
             children: [
-              if (widget.vocabulary is TextVocabulary) ...[
-                TextFormField(
-                  controller: _sourceController,
-                  decoration: InputDecoration(
-                    labelText: 'Source Language ( ${(widget.vocabulary as TextVocabulary).sourceLanguage})',
-                    hintText: 'Enter a word from the source language',
-                  ),
-                  validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
-                ),
-              ] else ...[
-                TextFormField(
-                  controller: _sourceController,
-                  decoration: InputDecoration(
-                    labelText: 'Image Path',
-                    hintText: 'Enter the path to the image (e.g., assets/images/cat.png)',
-                  ),
-                  validator: (value) => value == null || value.isEmpty ? 'Enter an image path' : null,
-                ),
-              ],
+                             if (widget.vocabulary is TextVocabulary) ...[
+                 TextFormField(
+                   controller: _sourceController,
+                   decoration: InputDecoration(
+                     labelText: '${(widget.vocabulary as TextVocabulary).sourceLanguage}',
+                     hintText: 'Enter a word from the source language',
+                   ),
+                   validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
+                 ),
+               ] else ...[
+                 TextFormField(
+                   controller: _sourceController,
+                   decoration: InputDecoration(
+                     labelText: 'Image Path',
+                     hintText: 'Enter the path to the image (e.g., assets/images/cat.png)',
+                   ),
+                   validator: (value) => value == null || value.isEmpty ? 'Enter an image path' : null,
+                   enabled: false, // Disable editing for ImageVocabulary
+                 ),
+               ],
               const SizedBox(height: 16),
               TextFormField(
                 controller: _targetController,
                 decoration: InputDecoration(
-                  labelText: 'Target Language ( ${widget.vocabulary.targetLanguage})',
+                  labelText: '${widget.vocabulary.targetLanguage}',
                   hintText: 'Enter a word from the target language',
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'Enter a target language entry' : null,
@@ -1056,7 +1101,7 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
                   controller: _targetLanguageController,
                   decoration: const InputDecoration(
                     labelText: 'Target Language',
-                    hintText: 'e.g., Spanish, French',
+                    hintText: 'e.g., Arabic, French',
                   ),
                   validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
                 ),
