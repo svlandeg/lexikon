@@ -166,8 +166,9 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
                          Center(
                child: Column(
                  children: [
-                   Text('${widget.vocabulary.inputSource}:', style: Theme.of(context).textTheme.titleLarge),
-                   const SizedBox(height: 8),
+                   if (entry is TextEntry)
+                     Text('${widget.vocabulary.inputSource}:', style: Theme.of(context).textTheme.titleLarge),
+                   if (entry is TextEntry) const SizedBox(height: 8),
                    EntrySourceWidget(
                      entry: entry,
                      style: Theme.of(context).textTheme.headlineMedium,
