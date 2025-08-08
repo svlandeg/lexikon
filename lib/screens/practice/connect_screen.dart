@@ -82,50 +82,20 @@ class _ConnectScreenState extends State<ConnectScreen> {
           selectedSourceIndex = null;
           selectedTargetIndex = null;
         });
-        // If all connections for this batch are made, show dialog and wait for user to proceed
-        if (connections.length == sourceEntries.length) {
-          Future.delayed(const Duration(milliseconds: 300), () {
-            if ((batchIndex + 1) * batchSize < allEntries.length) {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => AlertDialog(
-                  title: const Text('Solved!'),
-                  content: const Text('You solved this batch.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        setState(() {
-                          batchIndex++;
-                          _loadBatch();
-                        });
-                      },
-                      child: const Text('Next'),
-                    ),
-                  ],
-                ),
-              );
-            } else {
-              // All done
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => AlertDialog(
-                  title: const Text('Completed!'),
-                  content: const Text('You have finished all word pairs.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
-              );
-            }
-          });
-        }
       }
+    }
+  }
+
+  void _onNextPressed() {
+    if ((batchIndex + 1) * batchSize < allEntries.length) {
+      // Move to next batch
+      setState(() {
+        batchIndex++;
+        _loadBatch();
+      });
+    } else {
+      // All done - navigate back to main screen
+      Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
 
@@ -253,6 +223,8 @@ class _ConnectScreenState extends State<ConnectScreen> {
     int solved = (batchIndex * batchSize) + connections.length;
     int currentBatchStart = batchIndex * batchSize;
     int currentBatchEnd = ((batchIndex + 1) * batchSize).clamp(0, total);
+    bool allPairsMatched = connections.length == sourceEntries.length;
+    
     return Scaffold(
       appBar: AppBar(title: const Text('Connect')),
       body: Padding(
@@ -265,93 +237,105 @@ class _ConnectScreenState extends State<ConnectScreen> {
             double verticalPadding = 8.0;
             double totalWordHeight = wordHeight + 2 * verticalPadding;
             int n = sourceEntries.length;
-            return Stack(
+            return Column(
               children: [
-                Column(
-                  children: [
-                    // Progress bar
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Row(
+                // Progress bar
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: LinearProgressIndicator(
+                          value: total == 0 ? 0 : solved / total,
+                          minHeight: 8,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text('$solved/$total', style: Theme.of(context).textTheme.bodyMedium),
+                    ],
+                  ),
+                ),
+                // Connect game area
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Row(
                         children: [
+                          // Source entries
                           Expanded(
-                            child: LinearProgressIndicator(
-                              value: total == 0 ? 0 : solved / total,
-                              minHeight: 8,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(sourceEntries.length, (i) {
+                                bool isSelected = selectedSourceIndex == i;
+                                bool isConnected = connections.any((c) => c.sourceIndex == i);
+                                return GestureDetector(
+                                  onTap: isConnected ? null : () => onWordTap(true, i),
+                                  child: _buildSourceWidget(sourceEntries[i], isSelected, isConnected),
+                                );
+                              }),
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Text('$solved/$total', style: Theme.of(context).textTheme.bodyMedium),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Stack(
-                        children: [
-                          Row(
-                            children: [
-                              // Source entries
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: List.generate(sourceEntries.length, (i) {
-                                    bool isSelected = selectedSourceIndex == i;
-                                    bool isConnected = connections.any((c) => c.sourceIndex == i);
-                                    return GestureDetector(
-                                      onTap: isConnected ? null : () => onWordTap(true, i),
-                                      child: _buildSourceWidget(sourceEntries[i], isSelected, isConnected),
-                                    );
-                                  }),
-                                ),
-                              ),
-                              // Target words
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: List.generate(targetWords.length, (i) {
-                                    bool isSelected = selectedTargetIndex == i;
-                                    bool isConnected = connections.any((c) => c.targetIndex == i);
-                                    return GestureDetector(
-                                      onTap: isConnected ? null : () => onWordTap(false, i),
-                                      child: Container(
-                                        margin: EdgeInsets.symmetric(vertical: verticalPadding),
-                                        padding: EdgeInsets.all(12),
-                                        height: wordHeight,
-                                        decoration: BoxDecoration(
-                                          color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
-                                          border: Border.all(
-                                            color: isConnected ? borderConnectedC : borderDefaultC,
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(targetWords[i], style: TextStyle(fontSize: 18)),
+                          // Target words
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(targetWords.length, (i) {
+                                bool isSelected = selectedTargetIndex == i;
+                                bool isConnected = connections.any((c) => c.targetIndex == i);
+                                return GestureDetector(
+                                  onTap: isConnected ? null : () => onWordTap(false, i),
+                                  child: Container(
+                                    margin: EdgeInsets.symmetric(vertical: verticalPadding),
+                                    padding: EdgeInsets.all(12),
+                                    height: wordHeight,
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
+                                      border: Border.all(
+                                        color: isConnected ? borderConnectedC : borderDefaultC,
+                                        width: 2,
                                       ),
-                                    );
-                                  }),
-                                ),
-                              ),
-                            ],
-                          ),
-                          // Draw all connection lines
-                          ...connections.map((conn) => IgnorePointer(
-                            ignoring: true,
-                            child: CustomPaint(
-                              size: Size(width, height),
-                              painter: _ConnectionLinePainter(
-                                sourceIndex: conn.sourceIndex,
-                                targetIndex: conn.targetIndex,
-                                n: n,
-                                wordHeight: totalWordHeight,
-                                width: width,
-                                height: height,
-                              ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(targetWords[i], style: TextStyle(fontSize: 18)),
+                                  ),
+                                );
+                              }),
                             ),
-                          )),
+                          ),
                         ],
                       ),
+                                             // Draw all connection lines
+                       ...connections.map((conn) => IgnorePointer(
+                         ignoring: true,
+                         child: CustomPaint(
+                           size: Size(width, height),
+                           painter: _ConnectionLinePainter(
+                             sourceIndex: conn.sourceIndex,
+                             targetIndex: conn.targetIndex,
+                             n: n,
+                           ),
+                         ),
+                       )),
+                    ],
+                  ),
+                ),
+                // Next button
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: Center(
+                    child: ElevatedButton(
+                      onPressed: allPairsMatched ? _onNextPressed : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: allPairsMatched ? Theme.of(context).primaryColor : Colors.grey,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      ),
+                      child: Text(
+                        (batchIndex + 1) * batchSize < allEntries.length ? 'Next' : 'Finish',
+                        style: const TextStyle(fontSize: 18),
+                      ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             );
@@ -372,17 +356,11 @@ class _ConnectionLinePainter extends CustomPainter {
   final int sourceIndex;
   final int targetIndex;
   final int n;
-  final double wordHeight;
-  final double width;
-  final double height;
 
   _ConnectionLinePainter({
     required this.sourceIndex,
     required this.targetIndex,
     required this.n,
-    required this.wordHeight,
-    required this.width,
-    required this.height,
   });
 
   @override
@@ -391,10 +369,36 @@ class _ConnectionLinePainter extends CustomPainter {
       ..color = lineC
       ..strokeWidth = 4.0
       ..style = PaintingStyle.stroke;
-    double leftX = width * 0.25;
-    double rightX = width * 0.75;
-    double y1 = (height - n * wordHeight) / 2 + wordHeight * (sourceIndex + 0.5);
-    double y2 = (height - n * wordHeight) / 2 + wordHeight * (targetIndex + 0.5);
+    
+    // Use the actual size of the CustomPaint widget
+    double actualWidth = size.width;
+    double actualHeight = size.height;
+    
+    // Calculate the actual layout positions
+    // The layout has two Expanded columns, so each takes half the width
+    double columnWidth = actualWidth / 2;
+    
+    // Source boxes are in the left column, target boxes in the right column
+    // Both columns use MainAxisAlignment.center, so boxes are centered vertically
+    double leftX = columnWidth / 2; // Center of left column
+    double rightX = columnWidth + columnWidth / 2; // Center of right column
+    
+    // Calculate vertical positions
+    // Each box has height + 2 * margin (8.0 vertical margin on each side)
+    double boxHeight = 60.0;
+    double margin = 8.0;
+    double totalBoxHeight = boxHeight + 2 * margin;
+    
+    // The Column with MainAxisAlignment.center centers the content
+    double totalContentHeight = n * totalBoxHeight;
+    double startY = (actualHeight - totalContentHeight) / 2;
+    
+    // Calculate the center of each box
+    // Each box starts at startY + margin + (index * totalBoxHeight)
+    double y1 = startY + margin + (totalBoxHeight * sourceIndex) + boxHeight / 2;
+    double y2 = startY + margin + (totalBoxHeight * targetIndex) + boxHeight / 2;
+    
+    // Connect to the edges of the boxes, not the centers
     const double boxWidth = 120.0; // Approximate width of the word box
     final p1 = Offset(leftX + boxWidth / 2, y1);
     final p2 = Offset(rightX - boxWidth / 2, y2);
