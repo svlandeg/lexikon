@@ -68,12 +68,14 @@ class _ConnectScreenState extends State<ConnectScreen> {
       }
     });
 
-    // If both are selected and they match, add connection and clear selection
+    // If both are selected, check if they match
     if (selectedSourceIndex != null && selectedTargetIndex != null) {
       final sourceEntry = sourceEntries[selectedSourceIndex!];
       final target = targetWords[selectedTargetIndex!];
       final match = sourceEntry.target == target;
+      
       if (match) {
+        // If they match, add connection and clear selection
         setState(() {
           connections.add(_Connection(
             sourceIndex: selectedSourceIndex!,
@@ -81,6 +83,16 @@ class _ConnectScreenState extends State<ConnectScreen> {
           ));
           selectedSourceIndex = null;
           selectedTargetIndex = null;
+        });
+      } else {
+        // If they don't match, clear both selections after a short delay
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            setState(() {
+              selectedSourceIndex = null;
+              selectedTargetIndex = null;
+            });
+          }
         });
       }
     }
@@ -100,25 +112,45 @@ class _ConnectScreenState extends State<ConnectScreen> {
   }
 
   Widget _buildSourceWidget(Entry entry, bool isSelected, bool isConnected) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      padding: const EdgeInsets.all(12),
-      height: 60.0,
-      decoration: BoxDecoration(
-        color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
-        border: Border.all(
-          color: isConnected ? borderConnectedC : borderDefaultC,
-          width: 2,
+    if (entry is ImageEntry) {
+      // For images, remove border and padding to let image fill the space
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8.0),
+        height: 60.0,
+        decoration: BoxDecoration(
+          color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
+          border: isSelected 
+            ? Border.all(color: Colors.yellow, width: 2)
+            : isConnected 
+              ? Border.all(color: Colors.grey, width: 2)
+              : Border.all(color: Colors.white, width: 2),
+          borderRadius: BorderRadius.circular(8),
         ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: entry is ImageEntry 
-        ? _buildImageWidget(entry as ImageEntry)
-        : Text(
-            (entry as TextEntry).source,
-            style: const TextStyle(fontSize: 18),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: _buildImageWidget(entry as ImageEntry),
+        ),
+      );
+    } else {
+      // For text entries, keep the original border and padding
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8.0),
+        padding: const EdgeInsets.all(12),
+        height: 60.0,
+        decoration: BoxDecoration(
+          color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
+          border: Border.all(
+            color: isConnected ? borderConnectedC : borderDefaultC,
+            width: 2,
           ),
-    );
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          (entry as TextEntry).source,
+          style: const TextStyle(fontSize: 18),
+        ),
+      );
+    }
   }
 
   Widget _buildImageWidget(ImageEntry imageEntry) {
@@ -162,7 +194,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
       
       return Image.file(
         file,
-        fit: BoxFit.contain,
+        fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
           print('Error loading image: ${imageEntry.imagePath}');
           print('Error: $error');
@@ -201,7 +233,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
       // Asset path - use Image.asset
       return Image.asset(
         imageEntry.imagePath,
-        fit: BoxFit.contain,
+        fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
           return Container(
             decoration: BoxDecoration(
