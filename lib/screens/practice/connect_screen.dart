@@ -313,9 +313,6 @@ class _ConnectScreenState extends State<ConnectScreen> {
                              sourceIndex: conn.sourceIndex,
                              targetIndex: conn.targetIndex,
                              n: n,
-                             wordHeight: totalWordHeight,
-                             width: width,
-                             height: height,
                            ),
                          ),
                        )),
@@ -359,17 +356,11 @@ class _ConnectionLinePainter extends CustomPainter {
   final int sourceIndex;
   final int targetIndex;
   final int n;
-  final double wordHeight;
-  final double width;
-  final double height;
 
   _ConnectionLinePainter({
     required this.sourceIndex,
     required this.targetIndex,
     required this.n,
-    required this.wordHeight,
-    required this.width,
-    required this.height,
   });
 
   @override
