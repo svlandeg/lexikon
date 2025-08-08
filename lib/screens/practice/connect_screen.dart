@@ -68,12 +68,14 @@ class _ConnectScreenState extends State<ConnectScreen> {
       }
     });
 
-    // If both are selected and they match, add connection and clear selection
+    // If both are selected, check if they match
     if (selectedSourceIndex != null && selectedTargetIndex != null) {
       final sourceEntry = sourceEntries[selectedSourceIndex!];
       final target = targetWords[selectedTargetIndex!];
       final match = sourceEntry.target == target;
+      
       if (match) {
+        // If they match, add connection and clear selection
         setState(() {
           connections.add(_Connection(
             sourceIndex: selectedSourceIndex!,
@@ -81,6 +83,16 @@ class _ConnectScreenState extends State<ConnectScreen> {
           ));
           selectedSourceIndex = null;
           selectedTargetIndex = null;
+        });
+      } else {
+        // If they don't match, clear both selections after a short delay
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            setState(() {
+              selectedSourceIndex = null;
+              selectedTargetIndex = null;
+            });
+          }
         });
       }
     }
