@@ -348,8 +348,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
                             );
                           } else {
                             // 10 or more: show slider dialog for multiples of 5
+                            // the default is 10, unless there are more than 20, then it's 20
+                            int selected = 10;  
+                            if (entryCount > 20)
+                                selected = 20;
                             int maxCount = (entryCount ~/ 5) * 5;
-                            int selected = 20;
                             final FocusNode startButtonFocusNode = FocusNode();
                             int? count = await showDialog<int>(
                               context: context,
