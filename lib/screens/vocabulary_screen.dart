@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:image/image.dart' as img;
 import 'package:archive/archive.dart';
+import 'package:path_provider/path_provider.dart';
 import 'practice_screen.dart';
 import 'package:lexikon/voc/csv_parser.dart';
 
@@ -34,6 +35,34 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
   void initState() {
     super.initState();
     _loadVocabularies();
+  }
+
+  /// Gets the appropriate app data directory path for the current platform
+  Future<String> _getAppDataPath() async {
+    print('Detecting platform...');
+    print('Platform.isAndroid: ${Platform.isAndroid}');
+    print('Platform.isIOS: ${Platform.isIOS}');
+    
+    if (Platform.isAndroid || Platform.isIOS) {
+      // On mobile platforms, use the app documents directory
+      print('Mobile platform detected, using app documents directory');
+      final appDocDir = await getApplicationDocumentsDirectory();
+      final path = '${appDocDir.path}/app_data';
+      print('Mobile app data path: $path');
+      return path;
+    } else {
+      // On desktop platforms, use relative path
+      print('Desktop platform detected, using relative path');
+      final path = 'app_data';
+      print('Desktop app data path: $path');
+      return path;
+    }
+  }
+
+  /// Gets the vocabulary-specific directory path
+  Future<String> _getVocabularyPath(String vocabularyId) async {
+    final appDataPath = await _getAppDataPath();
+    return '$appDataPath/vocabularies/$vocabularyId';
   }
 
   Future<void> _loadVocabularies() async {
@@ -88,17 +117,19 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
      _saveVocabularies();
    }
 
-       void _cleanupVocabularyImages(ImageVocabulary vocabulary) {
-      try {
-        // Delete the entire vocabulary directory
-        final vocabularyDir = Directory('app_data/vocabularies/${vocabulary.id}');
+         void _cleanupVocabularyImages(ImageVocabulary vocabulary) {
+    try {
+      // Delete the entire vocabulary directory
+      _getVocabularyPath(vocabulary.id).then((vocabularyPath) {
+        final vocabularyDir = Directory(vocabularyPath);
         if (vocabularyDir.existsSync()) {
           vocabularyDir.deleteSync(recursive: true);
         }
-      } catch (e) {
-        // Silently handle cleanup errors
-      }
+      });
+    } catch (e) {
+      // Silently handle cleanup errors
     }
+  }
 
      void _updateVocabulary(int index, Vocabulary vocabulary) {
      setState(() {
@@ -107,36 +138,54 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
      _saveVocabularies();
    }
 
-               Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension, String vocabularyId) async {
-      try {
-        // Create app data directory for images with vocabulary ID subdirectory
-        final appDataDir = Directory('app_data/vocabularies/$vocabularyId');
-        if (!appDataDir.existsSync()) {
-          appDataDir.createSync(recursive: true);
-        }
+                   Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension, String vocabularyId) async {
+    try {
+      print('Starting _copyAndResizeImage for: $targetWord');
+      
+      // Create app data directory for images with vocabulary ID subdirectory
+      final vocabularyPath = await _getVocabularyPath(vocabularyId);
+      print('Vocabulary path: $vocabularyPath');
+      
+      final appDataDir = Directory(vocabularyPath);
+      if (!appDataDir.existsSync()) {
+        print('Creating directory: ${appDataDir.path}');
+        appDataDir.createSync(recursive: true);
+      } else {
+        print('Directory already exists: ${appDataDir.path}');
+      }
 
-        // Create a unique filename based on target word and timestamp
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final filename = '${targetWord}_$timestamp.$extension';
-        final destinationFile = File('${appDataDir.path}/$filename');
+      // Create a unique filename based on target word and timestamp
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filename = '${targetWord}_$timestamp.$extension';
+      final destinationFile = File('${appDataDir.path}/$filename');
+      print('Destination file: ${destinationFile.path}');
 
-        // Read and decode the source image
-        final bytes = await sourceFile.readAsBytes();
-        final image = img.decodeImage(bytes);
-        
-        if (image == null) {
-          return null; // Failed to decode image
-        }
+      // Read and decode the source image
+      print('Reading source file: ${sourceFile.path}');
+      final bytes = await sourceFile.readAsBytes();
+      print('Source file size: ${bytes.length} bytes');
+      
+      final image = img.decodeImage(bytes);
+      
+      if (image == null) {
+        print('Failed to decode image from bytes');
+        return null; // Failed to decode image
+      }
+      
+      print('Successfully decoded image: ${image.width}x${image.height}');
 
         // Resize image to standard size (300x300) while maintaining aspect ratio
+        print('Resizing image to 300x300...');
         final resizedImage = img.copyResize(
           image,
           width: 300,
           height: 300,
           interpolation: img.Interpolation.linear,
         );
+        print('Image resized successfully');
 
                  // Encode the resized image
+         print('Encoding image with extension: $extension');
          List<int> encodedBytes;
          switch (extension.toLowerCase()) {
            case 'jpg':
@@ -155,13 +204,24 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
              encodedBytes = img.encodePng(resizedImage);
              break;
          }
+         print('Encoded image size: ${encodedBytes.length} bytes');
 
         // Write the resized image to the destination file
+        print('Writing image to destination file...');
         await destinationFile.writeAsBytes(encodedBytes);
+        print('Image written successfully');
 
         // Return the relative path for storage in vocabulary
-        return 'app_data/vocabularies/$vocabularyId/$filename';
+        // For mobile, we need to store the full path; for desktop, we can use relative
+        if (Platform.isAndroid || Platform.isIOS) {
+          print('Mobile platform detected, returning full path: ${destinationFile.path}');
+          return destinationFile.path;
+        } else {
+          print('Desktop platform detected, returning relative path: app_data/vocabularies/$vocabularyId/$filename');
+          return 'app_data/vocabularies/$vocabularyId/$filename';
+        }
       } catch (e) {
+        print('Error in _copyAndResizeImage: $e');
         return null;
       }
     }
@@ -381,6 +441,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
 
   void _createFromArchive() async {
     try {
+      print('Starting archive import process...');
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['zip', 'tar', 'gz', 'bz2'],
@@ -391,7 +452,10 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         final archiveFile = File(result.files.single.path!);
         final archiveName = result.files.single.name;
         
+        print('Selected archive: $archiveName at path: ${archiveFile.path}');
+        
         if (!archiveFile.existsSync()) {
+          print('Archive file does not exist at path: ${archiveFile.path}');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -402,6 +466,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           }
           return;
         }
+        
+        print('Archive file exists, proceeding with extraction...');
 
         // Extract archive to temporary directory
         final tempDir = await _extractArchive(archiveFile, archiveName);
@@ -419,6 +485,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
 
         // Get all image files from the extracted directory (including subdirectories)
         final files = _findAllImageFiles(tempDir);
+        print('Found ${files.length} image files in extracted archive');
         
         if (files.isEmpty) {
           if (mounted) {
@@ -437,14 +504,18 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         // Create image entries from files
         final entries = <ImageEntry>[];
         final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
+        print('Processing ${files.length} image files for vocabulary ID: $vocabularyId');
         
         for (final file in files) {
           final fileName = file.path.split(Platform.pathSeparator).last;
           final targetWord = fileName.split('.').first; // Remove extension
+          print('Processing image file: $fileName -> target word: $targetWord');
           
           // Check if the image can be loaded and copy it to app data
           if (file is File && file.existsSync()) {
             try {
+              print('File exists, checking if it can be loaded as image...');
+              
               // Try to create a FileImage and test if it can be loaded
               final imageProvider = FileImage(file);
               
@@ -455,38 +526,54 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
               stream.addListener(ImageStreamListener((info, _) {
                 completer.complete(true);
               }, onError: (error, stackTrace) {
+                print('Image loading error for $fileName: $error');
                 completer.complete(false);
               }));
               
               final isValid = await completer.future;
+              print('Image validation result for $fileName: $isValid');
               
               if (isValid) {
                 // Generate a unique filename for the copied image
                 final extension = file.path.split('.').last.toLowerCase();
+                print('Copying and resizing image: $fileName with extension $extension');
                 final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
                 
                 if (copiedImagePath != null) {
+                  print('Successfully copied image to: $copiedImagePath');
                   entries.add(ImageEntry(
                     imagePath: copiedImagePath,
                     target: targetWord,
                   ));
                 } else {
+                  print('Failed to copy image: $fileName');
                   continue;
                 }
               } else {
+                print('Image validation failed for: $fileName');
                 continue;
               }
             } catch (e) {
+              print('Error processing image file $fileName: $e');
               // Skip this file if it can't be loaded
               continue;
             }
+          } else {
+            print('File does not exist or is not a file: ${file.path}');
           }
         }
+        
+        print('Created ${entries.length} image entries');
         
         // Clean up temp directory
         tempDir.deleteSync(recursive: true);
         
         // Navigate to image vocabulary creation screen
+        print('About to navigate to ImageVocabularyCreationScreen with ${entries.length} entries');
+        for (int i = 0; i < entries.length; i++) {
+          print('Entry $i: target="${entries[i].target}", imagePath="${entries[i].imagePath}"');
+        }
+        
         final vocabulary = await Navigator.push<Vocabulary>(
           context,
           MaterialPageRoute(
@@ -499,7 +586,10 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         );
         
         if (vocabulary != null) {
+          print('Vocabulary created successfully: ${vocabulary.name} with ${vocabulary.entries.length} entries');
           _addVocabulary(vocabulary);
+        } else {
+          print('Vocabulary creation was cancelled or failed');
         }
       }
     } catch (e) {
@@ -520,29 +610,38 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       final tempDir = Directory('${Directory.systemTemp.path}/lexikon_archive_${DateTime.now().millisecondsSinceEpoch}');
       tempDir.createSync(recursive: true);
       
+      print('Created temp directory: ${tempDir.path}');
+      
       final bytes = await archiveFile.readAsBytes();
+      print('Read archive file: ${archiveFile.path}, size: ${bytes.length} bytes');
+      
       final extension = archiveName.split('.').last.toLowerCase();
+      print('Processing archive with extension: $extension');
       
       if (extension == 'zip') {
         // Extract ZIP archive
         final archive = ZipDecoder().decodeBytes(bytes);
+        print('ZIP archive contains ${archive.length} entries');
         for (final file in archive) {
           final filename = file.name;
           if (file.isFile) {
             final outFile = File('${tempDir.path}/$filename');
             outFile.parent.createSync(recursive: true);
             outFile.writeAsBytesSync(file.content as List<int>);
+            print('Extracted file: $filename (${(file.content as List<int>).length} bytes)');
           }
         }
       } else if (extension == 'tar') {
         // Extract TAR archive
         final archive = TarDecoder().decodeBytes(bytes);
+        print('TAR archive contains ${archive.length} entries');
         for (final file in archive) {
           final filename = file.name;
           if (file.isFile) {
             final outFile = File('${tempDir.path}/$filename');
             outFile.parent.createSync(recursive: true);
             outFile.writeAsBytesSync(file.content as List<int>);
+            print('Extracted file: $filename (${(file.content as List<int>).length} bytes)');
           }
         }
 
@@ -555,6 +654,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           final baseName = archiveName.replaceAll('.gz', '');
           final outFile = File('${tempDir.path}/$baseName');
           outFile.writeAsBytesSync(decompressed);
+          print('Extracted GZIP file: $baseName (${decompressed.length} bytes)');
         }
       } else if (extension == 'bz2') {
         // Extract BZIP2 archive (single file)
@@ -565,13 +665,16 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           final baseName = archiveName.replaceAll('.bz2', '');
           final outFile = File('${tempDir.path}/$baseName');
           outFile.writeAsBytesSync(decompressed);
+          print('Extracted BZIP2 file: $baseName (${decompressed.length} bytes)');
         }
       } else {
         // Unsupported archive format
+        print('Unsupported archive format: $extension');
         tempDir.deleteSync(recursive: true);
         return null;
       }
       
+      print('Archive extraction completed successfully');
       return tempDir;
     } catch (e) {
       print('Error extracting archive: $e');
@@ -584,15 +687,22 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     final List<File> imageFiles = [];
     final imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
     
+    print('Searching directory: ${directory.path}');
+    
     try {
       final entities = directory.listSync();
+      print('Found ${entities.length} entities in directory');
+      
       for (final entity in entities) {
         if (entity is File) {
           final extension = entity.path.split('.').last.toLowerCase();
+          print('Found file: ${entity.path} with extension: $extension');
           if (imageExtensions.contains(extension)) {
             imageFiles.add(entity);
+            print('Added image file: ${entity.path}');
           }
         } else if (entity is Directory) {
+          print('Found subdirectory: ${entity.path}, searching recursively...');
           // Recursively search subdirectories
           imageFiles.addAll(_findAllImageFiles(entity));
         }
@@ -601,6 +711,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       print('Error searching directory ${directory.path}: $e');
     }
     
+    print('Total image files found: ${imageFiles.length}');
     return imageFiles;
   }
 
