@@ -9,6 +9,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:image/image.dart' as img;
+import 'package:archive/archive.dart';
 import 'practice_screen.dart';
 import 'package:lexikon/voc/csv_parser.dart';
 
@@ -202,6 +203,14 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                 _createFromDirectory();
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.archive),
+              title: const Text('Upload an Image-to-Text vocabulary from an archive (ZIP/TAR)'),
+              onTap: () {
+                Navigator.pop(context);
+                _createFromArchive();
+              },
+            ),
           ],
         ),
       ),
@@ -276,15 +285,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         final directory = Directory(directoryPath);
         final directoryName = directory.path.split(Platform.pathSeparator).last;
         
-        // Get all image files from the directory
-        final imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
-        final files = directory.listSync().where((file) {
-          if (file is File) {
-            final extension = file.path.split('.').last.toLowerCase();
-            return imageExtensions.contains(extension);
-          }
-          return false;
-        }).toList();
+        // Get all image files from the directory (including subdirectories)
+        final files = _findAllImageFiles(directory);
         
         if (files.isEmpty) {
           if (mounted) {
@@ -375,6 +377,210 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         );
       }
     }
+  }
+
+  void _createFromArchive() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['zip', 'tar'],
+        dialogTitle: 'Select Archive File (ZIP or TAR)',
+      );
+      
+      if (result != null && result.files.single.path != null) {
+        final archiveFile = File(result.files.single.path!);
+        final archiveName = result.files.single.name;
+        
+        if (!archiveFile.existsSync()) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Selected archive file does not exist'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        // Extract archive to temporary directory
+        final tempDir = await _extractArchive(archiveFile, archiveName);
+        if (tempDir == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to extract archive file'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        // Get all image files from the extracted directory (including subdirectories)
+        final files = _findAllImageFiles(tempDir);
+        
+        if (files.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No image files found in the archive'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          // Clean up temp directory
+          tempDir.deleteSync(recursive: true);
+          return;
+        }
+        
+        // Create image entries from files
+        final entries = <ImageEntry>[];
+        final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
+        
+        for (final file in files) {
+          final fileName = file.path.split(Platform.pathSeparator).last;
+          final targetWord = fileName.split('.').first; // Remove extension
+          
+          // Check if the image can be loaded and copy it to app data
+          if (file is File && file.existsSync()) {
+            try {
+              // Try to create a FileImage and test if it can be loaded
+              final imageProvider = FileImage(file);
+              
+              // Test the image by trying to resolve it
+              final stream = imageProvider.resolve(ImageConfiguration.empty);
+              final completer = Completer<bool>();
+              
+              stream.addListener(ImageStreamListener((info, _) {
+                completer.complete(true);
+              }, onError: (error, stackTrace) {
+                completer.complete(false);
+              }));
+              
+              final isValid = await completer.future;
+              
+              if (isValid) {
+                // Generate a unique filename for the copied image
+                final extension = file.path.split('.').last.toLowerCase();
+                final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
+                
+                if (copiedImagePath != null) {
+                  entries.add(ImageEntry(
+                    imagePath: copiedImagePath,
+                    target: targetWord,
+                  ));
+                } else {
+                  continue;
+                }
+              } else {
+                continue;
+              }
+            } catch (e) {
+              // Skip this file if it can't be loaded
+              continue;
+            }
+          }
+        }
+        
+        // Clean up temp directory
+        tempDir.deleteSync(recursive: true);
+        
+        // Navigate to image vocabulary creation screen
+        final vocabulary = await Navigator.push<Vocabulary>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ImageVocabularyCreationScreen(
+              directoryName: archiveName.split('.').first, // Use archive name without extension
+              entries: entries,
+              vocabularyId: vocabularyId,
+            ),
+          ),
+        );
+        
+        if (vocabulary != null) {
+          _addVocabulary(vocabulary);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error reading archive: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<Directory?> _extractArchive(File archiveFile, String archiveName) async {
+    try {
+      // Create temporary directory for extraction
+      final tempDir = Directory('${Directory.systemTemp.path}/lexikon_archive_${DateTime.now().millisecondsSinceEpoch}');
+      tempDir.createSync(recursive: true);
+      
+      final bytes = await archiveFile.readAsBytes();
+      final extension = archiveName.split('.').last.toLowerCase();
+      
+      if (extension == 'zip') {
+        // Extract ZIP archive
+        final archive = ZipDecoder().decodeBytes(bytes);
+        for (final file in archive) {
+          final filename = file.name;
+          if (file.isFile) {
+            final outFile = File('${tempDir.path}/$filename');
+            outFile.parent.createSync(recursive: true);
+            outFile.writeAsBytesSync(file.content as List<int>);
+          }
+        }
+      } else if (extension == 'tar') {
+        // Extract TAR archive
+        final archive = TarDecoder().decodeBytes(bytes);
+        for (final file in archive) {
+          final filename = file.name;
+          if (file.isFile) {
+            final outFile = File('${tempDir.path}/$filename');
+            outFile.parent.createSync(recursive: true);
+            outFile.writeAsBytesSync(file.content as List<int>);
+          }
+        }
+      } else {
+        // Unsupported archive format
+        tempDir.deleteSync(recursive: true);
+        return null;
+      }
+      
+      return tempDir;
+    } catch (e) {
+      print('Error extracting archive: $e');
+      return null;
+    }
+  }
+
+  /// Recursively finds all image files in a directory and its subdirectories
+  List<File> _findAllImageFiles(Directory directory) {
+    final List<File> imageFiles = [];
+    final imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
+    
+    try {
+      final entities = directory.listSync();
+      for (final entity in entities) {
+        if (entity is File) {
+          final extension = entity.path.split('.').last.toLowerCase();
+          if (imageExtensions.contains(extension)) {
+            imageFiles.add(entity);
+          }
+        } else if (entity is Directory) {
+          // Recursively search subdirectories
+          imageFiles.addAll(_findAllImageFiles(entity));
+        }
+      }
+    } catch (e) {
+      print('Error searching directory ${directory.path}: $e');
+    }
+    
+    return imageFiles;
   }
 
   @override
