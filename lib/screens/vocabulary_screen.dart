@@ -169,49 +169,55 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
   void _showCreateVocabularyOptions() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Create Vocabulary',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.create),
-              title: const Text('Create an empty Text-to-Text vocabulary'),
-              onTap: () {
-                Navigator.pop(context);
-                _createEmptyVocabulary();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.upload_file),
-              title: const Text('Upload a Text-to-Text vocabulary from a CSV File'),
-              onTap: () {
-                Navigator.pop(context);
-                _createFromCsvFile();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.folder),
-              title: const Text('Upload an Image-to-Text vocabulary from a directory'),
-              onTap: () {
-                Navigator.pop(context);
-                _createFromDirectory();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.archive),
-              title: const Text('Upload an Image-to-Text vocabulary from an archive (ZIP, TAR, GZ, BZ2)'),
-              onTap: () {
-                Navigator.pop(context);
-                _createFromArchive();
-              },
-            ),
-          ],
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Create Vocabulary',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.create),
+                title: const Text('Create an empty Text-to-Text vocabulary'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _createEmptyVocabulary();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.upload_file),
+                title: const Text('Upload a Text-to-Text vocabulary from a CSV File'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _createFromCsvFile();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.folder),
+                title: const Text('Upload an Image-to-Text vocabulary from a directory'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _createFromDirectory();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.archive),
+                title: const Text('Upload an Image-to-Text vocabulary from an archive (ZIP, TAR, GZ, BZ2)'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _createFromArchive();
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
