@@ -210,7 +210,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.archive),
-                title: const Text('Upload an Image-to-Text vocabulary from an archive (ZIP, TAR, GZ, BZ2)'),
+                title: const Text('Upload an Image-to-Text vocabulary from an archive file'),
                 onTap: () {
                   Navigator.pop(context);
                   _createFromArchive();
