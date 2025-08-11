@@ -205,7 +205,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.archive),
-              title: const Text('Upload an Image-to-Text vocabulary from an archive (ZIP/TAR)'),
+              title: const Text('Upload an Image-to-Text vocabulary from an archive (ZIP, TAR, GZ, BZ2)'),
               onTap: () {
                 Navigator.pop(context);
                 _createFromArchive();
@@ -383,8 +383,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['zip', 'tar'],
-        dialogTitle: 'Select Archive File (ZIP or TAR)',
+        allowedExtensions: ['zip', 'tar', 'gz', 'bz2'],
+        dialogTitle: 'Select Archive File (ZIP, TAR, GZ, BZ2)',
       );
       
       if (result != null && result.files.single.path != null) {
@@ -544,6 +544,27 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             outFile.parent.createSync(recursive: true);
             outFile.writeAsBytesSync(file.content as List<int>);
           }
+        }
+
+      } else if (extension == 'gz') {
+        // Extract GZIP archive (single file)
+        final decompressed = GZipDecoder().decodeBytes(bytes);
+        if (decompressed.isNotEmpty) {
+          // For GZIP, we need to determine the original filename
+          // Remove .gz extension and try to extract the base name
+          final baseName = archiveName.replaceAll('.gz', '');
+          final outFile = File('${tempDir.path}/$baseName');
+          outFile.writeAsBytesSync(decompressed);
+        }
+      } else if (extension == 'bz2') {
+        // Extract BZIP2 archive (single file)
+        final decompressed = BZip2Decoder().decodeBytes(bytes);
+        if (decompressed.isNotEmpty) {
+          // For BZIP2, we need to determine the original filename
+          // Remove .bz2 extension and try to extract the base name
+          final baseName = archiveName.replaceAll('.bz2', '');
+          final outFile = File('${tempDir.path}/$baseName');
+          outFile.writeAsBytesSync(decompressed);
         }
       } else {
         // Unsupported archive format
