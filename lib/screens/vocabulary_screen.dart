@@ -11,6 +11,7 @@ import 'package:csv/csv.dart';
 import 'package:image/image.dart' as img;
 import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'practice_screen.dart';
 import 'package:lexikon/voc/csv_parser.dart';
 
@@ -63,6 +64,186 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
   Future<String> _getVocabularyPath(String vocabularyId) async {
     final appDataPath = await _getAppDataPath();
     return '$appDataPath/vocabularies/$vocabularyId';
+  }
+
+  /// Checks if the app has permission to access external storage
+  Future<bool> _checkStoragePermission() async {
+    if (Platform.isAndroid) {
+      print('Checking Android storage permissions...');
+      
+      // Check Android version
+      if (Platform.isAndroid) {
+        // For Android 13+ (API 33+), check READ_MEDIA_IMAGES permission
+        final mediaImagesStatus = await Permission.photos.status;
+        print('READ_MEDIA_IMAGES permission status: $mediaImagesStatus');
+        
+        if (mediaImagesStatus.isGranted) {
+          print('READ_MEDIA_IMAGES permission granted');
+          return true;
+        } else if (mediaImagesStatus.isDenied) {
+          print('READ_MEDIA_IMAGES permission denied, requesting...');
+          final result = await Permission.photos.request();
+          print('Permission request result: $result');
+          return result.isGranted;
+        } else if (mediaImagesStatus.isPermanentlyDenied) {
+          print('READ_MEDIA_IMAGES permission permanently denied');
+          // Show dialog to open app settings
+          if (mounted) {
+            final shouldOpenSettings = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Permission Required'),
+                content: const Text('Storage permission is required to access image files. Please grant permission in app settings.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Open Settings'),
+                  ),
+                ],
+              ),
+            );
+            
+            if (shouldOpenSettings == true) {
+              await openAppSettings();
+            }
+          }
+          return false;
+        }
+      }
+      
+      // Fallback: try to access a test directory
+      try {
+        final testDir = Directory('/storage/emulated/0/Download');
+        if (testDir.existsSync()) {
+          final entities = testDir.listSync();
+          print('Storage permission check: Successfully listed ${entities.length} entities in Download directory');
+          return true;
+        } else {
+          print('Storage permission check: Download directory does not exist');
+          return false;
+        }
+      } catch (e) {
+        print('Storage permission check failed: $e');
+        return false;
+      }
+    } else if (Platform.isIOS) {
+      // On iOS, file picker handles permissions automatically
+      return true;
+    } else {
+      // On desktop, no permission issues
+      return true;
+    }
+  }
+
+  /// Requests storage permissions explicitly
+  Future<bool> _requestStoragePermissions() async {
+    if (Platform.isAndroid) {
+      print('Requesting storage permissions...');
+      
+      // Request READ_MEDIA_IMAGES permission for Android 13+
+      final photosStatus = await Permission.photos.request();
+      print('Photos permission result: $photosStatus');
+      
+      // Also try to request storage permission for older Android versions
+      final storageStatus = await Permission.storage.request();
+      print('Storage permission result: $storageStatus');
+      
+      return photosStatus.isGranted || storageStatus.isGranted;
+    }
+    return true;
+  }
+
+
+
+  /// Tests different methods of directory access to debug permission issues
+  Future<void> _testDirectoryAccess(String directoryPath) async {
+    print('=== Testing directory access for: $directoryPath ===');
+    
+    final directory = Directory(directoryPath);
+    
+    // Test 1: Basic existence check
+    print('Test 1: Basic existence check');
+    print('Directory exists: ${directory.existsSync()}');
+    
+    // Test 2: Absolute path
+    print('Test 2: Absolute path');
+    print('Absolute path: ${directory.absolute.path}');
+    
+    // Test 3: Try to list with listSync
+    print('Test 3: listSync test');
+    try {
+      final entities = directory.listSync();
+      print('listSync result: ${entities.length} entities');
+    } catch (e) {
+      print('listSync error: $e');
+    }
+    
+    // Test 4: Try to list with list
+    print('Test 4: list test');
+    try {
+      final stream = directory.list();
+      final entities = await stream.toList();
+      print('list result: ${entities.length} entities');
+    } catch (e) {
+      print('list error: $e');
+    }
+    
+    // Test 5: Try to get directory info
+    print('Test 5: Directory info');
+    try {
+      final stat = directory.statSync();
+      print('Directory stat: $stat');
+    } catch (e) {
+      print('stat error: $e');
+    }
+    
+    // Test 6: Try to create a test file
+    print('Test 6: Test file creation');
+    try {
+      final testFile = File('${directory.path}/test_permission.txt');
+      await testFile.writeAsString('test');
+      print('Test file created successfully');
+      await testFile.delete();
+      print('Test file deleted successfully');
+    } catch (e) {
+      print('Test file creation error: $e');
+    }
+    
+    // Test 7: Try to access with different path formats
+    print('Test 7: Different path formats');
+    try {
+      final altPath = directoryPath.replaceAll('\\', '/');
+      final altDir = Directory(altPath);
+      print('Alternative path: $altPath');
+      print('Alternative directory exists: ${altDir.existsSync()}');
+      if (altDir.existsSync()) {
+        final entities = altDir.listSync();
+        print('Alternative path listSync result: ${entities.length} entities');
+      }
+    } catch (e) {
+      print('Alternative path test error: $e');
+    }
+    
+    // Test 8: Try to access parent directory
+    print('Test 8: Parent directory access');
+    try {
+      final parentPath = directoryPath.substring(0, directoryPath.lastIndexOf(Platform.pathSeparator));
+      final parentDir = Directory(parentPath);
+      print('Parent path: $parentPath');
+      print('Parent directory exists: ${parentDir.existsSync()}');
+      if (parentDir.existsSync()) {
+        final entities = parentDir.listSync();
+        print('Parent directory listSync result: ${entities.length} entities');
+      }
+    } catch (e) {
+      print('Parent directory test error: $e');
+    }
+    
+    print('=== End directory access test ===');
   }
 
   Future<void> _loadVocabularies() async {
@@ -337,23 +518,143 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
 
   void _createFromDirectory() async {
     try {
+      print('Starting directory import process...');
+      
+      // Check storage permissions first
+      var hasPermission = await _checkStoragePermission();
+      if (!hasPermission) {
+        print('Storage permission check failed, trying to request permissions...');
+        hasPermission = await _requestStoragePermissions();
+        
+        if (!hasPermission) {
+          print('Failed to get storage permissions');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Storage permission required to access directories'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+      }
+      print('Storage permission check passed');
+      
       String? directoryPath = await FilePicker.platform.getDirectoryPath(
         dialogTitle: 'Select Directory for Image Vocabulary',
       );
       
       if (directoryPath != null) {
+        print('Selected directory: $directoryPath');
+        print('Directory path type: ${directoryPath.runtimeType}');
+        print('Directory path length: ${directoryPath.length}');
+        print('Directory path contains backslashes: ${directoryPath.contains('\\')}');
+        print('Directory path contains forward slashes: ${directoryPath.contains('/')}');
+        
         final directory = Directory(directoryPath);
         final directoryName = directory.path.split(Platform.pathSeparator).last;
+        print('Directory name: $directoryName');
+        print('Platform path separator: ${Platform.pathSeparator}');
+        
+        // Check if directory exists
+        if (!directory.existsSync()) {
+          print('Selected directory does not exist at path: $directoryPath');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Selected directory does not exist'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+        
+        print('Directory exists, proceeding with image search...');
         
         // Get all image files from the directory (including subdirectories)
         final files = _findAllImageFiles(directory);
+        print('Found ${files.length} image files in selected directory');
         
         if (files.isEmpty) {
+          print('No image files found in directory');
+          
+          // Run additional tests to debug the issue
+          await _testDirectoryAccess(directoryPath);
+          
+          // Try alternative approach: use file picker to get files from the same directory
+          print('Trying alternative approach: file picker from same directory');
+          print('Initial directory for file picker: $directoryPath');
+          
+          try {
+            final result = await FilePicker.platform.pickFiles(
+              type: FileType.image,
+              allowMultiple: true,
+              dialogTitle: 'Select Images from Directory',
+              initialDirectory: directoryPath,
+            );
+            
+            if (result != null && result.files.isNotEmpty) {
+              print('Alternative approach found ${result.files.length} files');
+              // Process these files instead
+              final entries = <ImageEntry>[];
+              final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
+              
+              for (final file in result.files) {
+                if (file.path != null) {
+                  final sourceFile = File(file.path!);
+                  final targetWord = file.name.split('.').first;
+                  
+                  if (sourceFile.existsSync()) {
+                    try {
+                      final extension = file.extension?.toLowerCase() ?? 'png';
+                      final copiedImagePath = await _copyAndResizeImage(sourceFile, targetWord, extension, vocabularyId);
+                      
+                      if (copiedImagePath != null) {
+                        entries.add(ImageEntry(
+                          imagePath: copiedImagePath,
+                          target: targetWord,
+                        ));
+                      }
+                    } catch (e) {
+                      print('Error processing alternative file: $e');
+                      continue;
+                    }
+                  }
+                }
+              }
+              
+              if (entries.isNotEmpty) {
+                print('Alternative approach created ${entries.length} entries');
+                final vocabulary = await Navigator.push<Vocabulary>(
+                  context,
+                  MaterialPageRoute(
+                                  builder: (context) => ImageVocabularyCreationScreen(
+                directoryName: directoryName,
+                entries: entries,
+                vocabularyId: vocabularyId,
+              ),
+                  ),
+                );
+                
+                if (vocabulary != null) {
+                  _addVocabulary(vocabulary);
+                  return;
+                }
+              }
+            }
+          } catch (e) {
+            print('Alternative approach failed: $e');
+          }
+          
+
+          
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('No image files found in the selected directory'),
-                backgroundColor: Colors.orange,
+                backgroundColor: Colors.red,
               ),
             );
           }
@@ -363,55 +664,87 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
            // Create image entries from files
            final entries = <ImageEntry>[];
            final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
+           print('Processing ${files.length} image files with vocabulary ID: $vocabularyId');
            
-           for (final file in files) {
+           for (int i = 0; i < files.length; i++) {
+             final file = files[i];
+             print('Processing file ${i + 1}/${files.length}: ${file.path}');
+             
              final fileName = file.path.split(Platform.pathSeparator).last;
              final targetWord = fileName.split('.').first; // Remove extension
+             print('Target word: $targetWord');
              
-              // Check if the image can be loaded and copy it to app data
-              if (file is File && file.existsSync()) {
-                try {
-                  // Try to create a FileImage and test if it can be loaded
-                  final imageProvider = FileImage(file);
-                  
-                  // Test the image by trying to resolve it
-                  final stream = imageProvider.resolve(ImageConfiguration.empty);
-                  final completer = Completer<bool>();
-                  
-                  stream.addListener(ImageStreamListener((info, _) {
-                    completer.complete(true);
-                  }, onError: (error, stackTrace) {
-                    completer.complete(false);
-                  }));
-                  
-                  final isValid = await completer.future;
-                  
-                  if (isValid) {
-                    // Generate a unique filename for the copied image
-                    final extension = file.path.split('.').last.toLowerCase();
-                    final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
-                    
-                                         if (copiedImagePath != null) {
-                        entries.add(ImageEntry(
-                          imagePath: copiedImagePath,
-                          target: targetWord,
-                        ));
-                      } else {
-                        continue;
-                      }
-                    } else {
-                      continue;
-                    }
-                  } catch (e) {
-                    // Skip this file if it can't be loaded
-                    continue;
-                  }
-                } else {
-                  // Skip if file doesn't exist or is not a file
-                }
+             // Check if the image can be loaded and copy it to app data
+             if (file is File && file.existsSync()) {
+               print('File exists and is valid, testing image loading...');
+               try {
+                 // Try to create a FileImage and test if it can be loaded
+                 final imageProvider = FileImage(file);
+                 
+                 // Test the image by trying to resolve it
+                 final stream = imageProvider.resolve(ImageConfiguration.empty);
+                 final completer = Completer<bool>();
+                 
+                 stream.addListener(ImageStreamListener((info, _) {
+                   print('Image loaded successfully: ${info.image.width}x${info.image.height}');
+                   completer.complete(true);
+                 }, onError: (error, stackTrace) {
+                   print('Image loading failed: $error');
+                   completer.complete(false);
+                 }));
+                 
+                 final isValid = await completer.future;
+                 
+                 if (isValid) {
+                   print('Image validation passed, copying and resizing...');
+                   // Generate a unique filename for the copied image
+                   final extension = file.path.split('.').last.toLowerCase();
+                   print('File extension: $extension');
+                   final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
+                   
+                   if (copiedImagePath != null) {
+                     print('Image copied successfully to: $copiedImagePath');
+                     entries.add(ImageEntry(
+                       imagePath: copiedImagePath,
+                       target: targetWord,
+                     ));
+                     print('Entry added to vocabulary');
+                   } else {
+                     print('Failed to copy image, skipping...');
+                     continue;
+                   }
+                 } else {
+                   print('Image validation failed, skipping...');
+                   continue;
+                 }
+               } catch (e) {
+                 print('Error processing image: $e');
+                 // Skip this file if it can't be loaded
+                 continue;
+               }
+             } else {
+               print('File does not exist or is not a valid file, skipping...');
+               // Skip if file doesn't exist or is not a file
+             }
            }
         
+         print('Finished processing images. Created ${entries.length} entries.');
+         
+         if (entries.isEmpty) {
+           print('No valid entries created, aborting vocabulary creation');
+           if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               const SnackBar(
+                 content: Text('No valid image files could be processed'),
+                 backgroundColor: Colors.orange,
+               ),
+             );
+           }
+           return;
+         }
+         
          // Navigate to image vocabulary creation screen
+         print('Navigating to ImageVocabularyCreationScreen with ${entries.length} entries');
          final vocabulary = await Navigator.push<Vocabulary>(
            context,
            MaterialPageRoute(
@@ -423,9 +756,12 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
            ),
          );
          
-                  if (vocabulary != null) {
-            _addVocabulary(vocabulary);
-          }
+         if (vocabulary != null) {
+           print('Vocabulary created successfully, adding to list');
+           _addVocabulary(vocabulary);
+         } else {
+           print('Vocabulary creation was cancelled');
+         }
       }
     } catch (e) {
       if (mounted) {
@@ -688,10 +1024,25 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     final imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
     
     print('Searching directory: ${directory.path}');
+    print('Directory absolute path: ${directory.absolute.path}');
+    print('Directory exists: ${directory.existsSync()}');
+    print('Directory isAbsolute: ${directory.path.startsWith('/')}');
     
     try {
       final entities = directory.listSync();
       print('Found ${entities.length} entities in directory');
+      
+      // Additional debugging for empty directories
+      if (entities.isEmpty) {
+        print('Directory is empty or inaccessible');
+        print('Trying to get directory info...');
+        try {
+          final stat = directory.statSync();
+          print('Directory stat: $stat');
+        } catch (e) {
+          print('Error getting directory stat: $e');
+        }
+      }
       
       for (final entity in entities) {
         if (entity is File) {
@@ -709,6 +1060,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       }
     } catch (e) {
       print('Error searching directory ${directory.path}: $e');
+      print('Error type: ${e.runtimeType}');
+      print('Error details: $e');
     }
     
     print('Total image files found: ${imageFiles.length}');
