@@ -10,6 +10,7 @@ import 'dart:io';
 
 import 'package:image/image.dart' as img;
 import 'package:archive/archive.dart';
+import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -277,6 +278,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
   void _showCreateVocabularyOptions() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.all(16),
         child: Column(
