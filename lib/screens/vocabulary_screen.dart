@@ -817,7 +817,6 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       }
     } catch (e) {
       print('Error searching directory ${directory.path}: $e');
-      // Error searching directory
     }
     
     return imageFiles;
