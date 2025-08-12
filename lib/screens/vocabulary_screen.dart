@@ -136,9 +136,6 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
   }
 
 
-
-
-
   Future<void> _loadVocabularies() async {
     final prefs = await SharedPreferences.getInstance();
     final vocabulariesJson = prefs.getStringList('vocabularies') ?? [];
@@ -151,6 +148,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           _vocabularies.add(vocabulary);
         } catch (e) {
           // Log the error and skip corrupted vocabulary data
+          print('Error loading vocabulary from JSON: $e');
+          print('Corrupted JSON string: $jsonString');
         }
       }
 
@@ -187,10 +186,10 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
      _saveVocabularies();
    }
 
-         void _cleanupVocabularyImages(ImageVocabulary vocabulary) {
-    try {
-      // Delete the entire vocabulary directory
-      _getVocabularyPath(vocabulary.id).then((vocabularyPath) {
+       void _cleanupVocabularyImages(ImageVocabulary vocabulary) {
+      try {
+        // Delete the entire vocabulary directory
+        _getVocabularyPath(vocabulary.id).then((vocabularyPath) {
         final vocabularyDir = Directory(vocabularyPath);
         if (vocabularyDir.existsSync()) {
           vocabularyDir.deleteSync(recursive: true);
@@ -208,29 +207,28 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
      _saveVocabularies();
    }
 
-                   Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension, String vocabularyId) async {
-    try {
-      // Create app data directory for images with vocabulary ID subdirectory
-      final vocabularyPath = await _getVocabularyPath(vocabularyId);
+               Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension, String vocabularyId) async {
+      try {
+        // Create app data directory for images with vocabulary ID subdirectory
+        final vocabularyPath = await _getVocabularyPath(vocabularyId);
       
-      final appDataDir = Directory(vocabularyPath);
-      if (!appDataDir.existsSync()) {
-        appDataDir.createSync(recursive: true);
-      }
+        final appDataDir = Directory(vocabularyPath);
+        if (!appDataDir.existsSync()) {
+         appDataDir.createSync(recursive: true);
+        }
 
-      // Create a unique filename based on target word and timestamp
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final filename = '${targetWord}_$timestamp.$extension';
-      final destinationFile = File('${appDataDir.path}/$filename');
+        // Create a unique filename based on target word and timestamp
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final filename = '${targetWord}_$timestamp.$extension';
+        final destinationFile = File('${appDataDir.path}/$filename');
 
-      // Read and decode the source image
-      final bytes = await sourceFile.readAsBytes();
-      
-      final image = img.decodeImage(bytes);
-      
-      if (image == null) {
-        return null; // Failed to decode image
-      }
+        // Read and decode the source image
+        final bytes = await sourceFile.readAsBytes();
+        final image = img.decodeImage(bytes);
+
+        if (image == null) {
+          return null; // Failed to decode image
+        }
 
         // Resize image to standard size (300x300) while maintaining aspect ratio
         final resizedImage = img.copyResize(
@@ -511,49 +509,48 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
              
              final fileName = file.path.split(Platform.pathSeparator).last;
              final targetWord = fileName.split('.').first; // Remove extension
-             
-             // Check if the image can be loaded and copy it to app data
-             if (file is File && file.existsSync()) {
-               try {
-                 // Try to create a FileImage and test if it can be loaded
-                 final imageProvider = FileImage(file);
-                 
-                 // Test the image by trying to resolve it
-                 final stream = imageProvider.resolve(ImageConfiguration.empty);
-                 final completer = Completer<bool>();
-                 
-                 stream.addListener(ImageStreamListener((info, _) {
-                   completer.complete(true);
-                 }, onError: (error, stackTrace) {
-                   completer.complete(false);
-                 }));
-                 
-                 final isValid = await completer.future;
-                 
-                 if (isValid) {
-                   // Generate a unique filename for the copied image
-                   final extension = file.path.split('.').last.toLowerCase();
-                   final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
-                   
-                   if (copiedImagePath != null) {
-                     entries.add(ImageEntry(
-                       imagePath: copiedImagePath,
-                       target: targetWord,
-                     ));
-                   } else {
-                     continue;
-                   }
-                 } else {
-                   continue;
-                 }
-               } catch (e) {
-                 // Skip this file if it can't be loaded
-                 continue;
-               }
-             } else {
-               // Skip if file doesn't exist or is not a file
-             }
-           }
+
+              // Check if the image can be loaded and copy it to app data
+              if (file is File && file.existsSync()) {
+                try {
+                  // Try to create a FileImage and test if it can be loaded
+                  final imageProvider = FileImage(file);
+                  
+                  // Test the image by trying to resolve it
+                  final stream = imageProvider.resolve(ImageConfiguration.empty);
+                  final completer = Completer<bool>();
+                  
+                  stream.addListener(ImageStreamListener((info, _) {
+                    completer.complete(true);
+                  }, onError: (error, stackTrace) {
+                    completer.complete(false);
+                  }));
+                  
+                  final isValid = await completer.future;
+                  
+                  if (isValid) {
+                    // Generate a unique filename for the copied image
+                    final extension = file.path.split('.').last.toLowerCase();
+                    final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
+                    
+                                         if (copiedImagePath != null) {
+                        entries.add(ImageEntry(
+                          imagePath: copiedImagePath,
+                          target: targetWord,
+                        ));
+                      } else {
+                        continue;
+                      }
+                    } else {
+                      continue;
+                    }
+                  } catch (e) {
+                    // Skip this file if it can't be loaded
+                    continue;
+                  }
+                } else {
+                  // Skip if file doesn't exist or is not a file
+                }
         
          if (entries.isEmpty) {
            if (mounted) {
@@ -579,9 +576,9 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
            ),
          );
          
-         if (vocabulary != null) {
-           _addVocabulary(vocabulary);
-         }
+                  if (vocabulary != null) {
+            _addVocabulary(vocabulary);
+          }
       }
     } catch (e) {
       if (mounted) {
@@ -794,6 +791,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       }
       return tempDir;
     } catch (e) {
+      print('Error extracting archive: $e');
       return null;
     }
   }
@@ -818,6 +816,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         }
       }
     } catch (e) {
+      print('Error searching directory ${directory.path}: $e');
       // Error searching directory
     }
     
