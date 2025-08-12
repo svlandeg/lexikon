@@ -214,7 +214,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       
         final appDataDir = Directory(vocabularyPath);
         if (!appDataDir.existsSync()) {
-         appDataDir.createSync(recursive: true);
+          appDataDir.createSync(recursive: true);
         }
 
         // Create a unique filename based on target word and timestamp
