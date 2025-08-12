@@ -7,10 +7,13 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
-import 'package:csv/csv.dart';
+
 import 'package:image/image.dart' as img;
 import 'package:archive/archive.dart';
-import 'practice_screen.dart';
+import 'package:archive/archive.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 import 'package:lexikon/voc/csv_parser.dart';
 
 // Color definitions for VocabularyScreen
@@ -28,13 +31,110 @@ class VocabularyListScreen extends StatefulWidget {
 
 class _VocabularyListScreenState extends State<VocabularyListScreen> {
   final List<Vocabulary> _vocabularies = [];
-  Vocabulary? _selectedVocabulary;
 
   @override
   void initState() {
     super.initState();
     _loadVocabularies();
   }
+
+  /// Gets the appropriate app data directory path for the current platform
+  Future<String> _getAppDataPath() async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      // On mobile platforms, use the app documents directory
+      final appDocDir = await getApplicationDocumentsDirectory();
+      final path = '${appDocDir.path}/app_data';
+      return path;
+    } else {
+      // On desktop platforms, use relative path
+      final path = 'app_data';
+      return path;
+    }
+  }
+
+  /// Gets the vocabulary-specific directory path
+  Future<String> _getVocabularyPath(String vocabularyId) async {
+    final appDataPath = await _getAppDataPath();
+    return '$appDataPath/vocabularies/$vocabularyId';
+  }
+
+  /// Checks if the app has permission to access external storage
+  Future<bool> _checkStoragePermission() async {
+    if (Platform.isAndroid) {
+      // Check Android version
+      if (Platform.isAndroid) {
+        // For Android 13+ (API 33+), check READ_MEDIA_IMAGES permission
+        final mediaImagesStatus = await Permission.photos.status;
+        
+        if (mediaImagesStatus.isGranted) {
+          return true;
+        } else if (mediaImagesStatus.isDenied) {
+          final result = await Permission.photos.request();
+          return result.isGranted;
+        } else if (mediaImagesStatus.isPermanentlyDenied) {
+          // Show dialog to open app settings
+          if (mounted) {
+            final shouldOpenSettings = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Permission Required'),
+                content: const Text('Storage permission is required to access image files. Please grant permission in app settings.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Open Settings'),
+                  ),
+                ],
+              ),
+            );
+            
+            if (shouldOpenSettings == true) {
+              await openAppSettings();
+            }
+          }
+          return false;
+        }
+      }
+      
+      // Fallback: try to access a test directory
+      try {
+        final testDir = Directory('/storage/emulated/0/Download');
+        if (testDir.existsSync()) {
+          testDir.listSync();
+          return true;
+        } else {
+          return false;
+        }
+      } catch (e) {
+        return false;
+      }
+    } else if (Platform.isIOS) {
+      // On iOS, file picker handles permissions automatically
+      return true;
+    } else {
+      // On desktop, no permission issues
+      return true;
+    }
+  }
+
+  /// Requests storage permissions explicitly
+  Future<bool> _requestStoragePermissions() async {
+    if (Platform.isAndroid) {
+      // Request READ_MEDIA_IMAGES permission for Android 13+
+      final photosStatus = await Permission.photos.request();
+      
+      // Also try to request storage permission for older Android versions
+      final storageStatus = await Permission.storage.request();
+      
+      return photosStatus.isGranted || storageStatus.isGranted;
+    }
+    return true;
+  }
+
 
   Future<void> _loadVocabularies() async {
     final prefs = await SharedPreferences.getInstance();
@@ -52,9 +152,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           print('Corrupted JSON string: $jsonString');
         }
       }
-      if (_vocabularies.isNotEmpty) {
-        _selectedVocabulary = _vocabularies.first;
-      }
+
     });
     
     // Save the cleaned vocabularies to remove any corrupted data
@@ -91,14 +189,16 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
        void _cleanupVocabularyImages(ImageVocabulary vocabulary) {
       try {
         // Delete the entire vocabulary directory
-        final vocabularyDir = Directory('app_data/vocabularies/${vocabulary.id}');
+        _getVocabularyPath(vocabulary.id).then((vocabularyPath) {
+        final vocabularyDir = Directory(vocabularyPath);
         if (vocabularyDir.existsSync()) {
           vocabularyDir.deleteSync(recursive: true);
         }
-      } catch (e) {
-        // Silently handle cleanup errors
-      }
+      });
+    } catch (e) {
+      // Silently handle cleanup errors
     }
+  }
 
      void _updateVocabulary(int index, Vocabulary vocabulary) {
      setState(() {
@@ -110,7 +210,9 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension, String vocabularyId) async {
       try {
         // Create app data directory for images with vocabulary ID subdirectory
-        final appDataDir = Directory('app_data/vocabularies/$vocabularyId');
+        final vocabularyPath = await _getVocabularyPath(vocabularyId);
+      
+        final appDataDir = Directory(vocabularyPath);
         if (!appDataDir.existsSync()) {
           appDataDir.createSync(recursive: true);
         }
@@ -123,7 +225,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         // Read and decode the source image
         final bytes = await sourceFile.readAsBytes();
         final image = img.decodeImage(bytes);
-        
+
         if (image == null) {
           return null; // Failed to decode image
         }
@@ -160,7 +262,12 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         await destinationFile.writeAsBytes(encodedBytes);
 
         // Return the relative path for storage in vocabulary
-        return 'app_data/vocabularies/$vocabularyId/$filename';
+        // For mobile, we need to store the full path; for desktop, we can use relative
+        if (Platform.isAndroid || Platform.isIOS) {
+          return destinationFile.path;
+        } else {
+          return 'app_data/vocabularies/$vocabularyId/$filename';
+        }
       } catch (e) {
         return null;
       }
@@ -172,52 +279,47 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.all(16),
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.8,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Create Vocabulary',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.create),
-                title: const Text('Create an empty Text-to-Text vocabulary'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _createEmptyVocabulary();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.upload_file),
-                title: const Text('Upload a Text-to-Text vocabulary from a CSV File'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _createFromCsvFile();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.folder),
-                title: const Text('Upload an Image-to-Text vocabulary from a directory'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _createFromDirectory();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.archive),
-                title: const Text('Upload an Image-to-Text vocabulary from an archive file'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _createFromArchive();
-                },
-              ),
-            ],
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Create Vocabulary',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.create),
+              title: const Text('Create an empty Text-to-Text vocabulary'),
+              onTap: () {
+                Navigator.pop(context);
+                _createEmptyVocabulary();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.upload_file),
+              title: const Text('Upload a Text-to-Text vocabulary from a CSV File'),
+              onTap: () {
+                Navigator.pop(context);
+                _createFromCsvFile();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.folder),
+              title: const Text('Upload an Image-to-Text vocabulary from a directory'),
+              onTap: () {
+                Navigator.pop(context);
+                _createFromDirectory();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.archive),
+              title: const Text('Upload an Image-to-Text vocabulary from an archive (ZIP, TAR, GZ, BZ2)'),
+              onTap: () {
+                Navigator.pop(context);
+                _createFromArchive();
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -283,6 +385,23 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
 
   void _createFromDirectory() async {
     try {
+      // Check storage permissions first
+      var hasPermission = await _checkStoragePermission();
+      if (!hasPermission) {
+        hasPermission = await _requestStoragePermissions();
+        
+        if (!hasPermission) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Storage permission required to access directories'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+      }
       String? directoryPath = await FilePicker.platform.getDirectoryPath(
         dialogTitle: 'Select Directory for Image Vocabulary',
       );
@@ -291,14 +410,155 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         final directory = Directory(directoryPath);
         final directoryName = directory.path.split(Platform.pathSeparator).last;
         
+        // Check if directory exists
+        if (!directory.existsSync()) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Selected directory does not exist'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+        
         // Get all image files from the directory (including subdirectories)
         final files = _findAllImageFiles(directory);
         
         if (files.isEmpty) {
+          // Try alternative approach: use file picker to get files from the same directory
+          
+          try {
+            final result = await FilePicker.platform.pickFiles(
+              type: FileType.image,
+              allowMultiple: true,
+              dialogTitle: 'Select Images from Directory',
+              initialDirectory: directoryPath,
+            );
+            
+            if (result != null && result.files.isNotEmpty) {
+              // Process these files instead
+              final entries = <ImageEntry>[];
+              final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
+              
+              for (final file in result.files) {
+                if (file.path != null) {
+                  final sourceFile = File(file.path!);
+                  final targetWord = file.name.split('.').first;
+                  
+                  if (sourceFile.existsSync()) {
+                    try {
+                      final extension = file.extension?.toLowerCase() ?? 'png';
+                      final copiedImagePath = await _copyAndResizeImage(sourceFile, targetWord, extension, vocabularyId);
+                      
+                      if (copiedImagePath != null) {
+                        entries.add(ImageEntry(
+                          imagePath: copiedImagePath,
+                          target: targetWord,
+                        ));
+                      }
+                    } catch (e) {
+                      continue;
+                    }
+                  }
+                }
+              }
+              
+              if (entries.isNotEmpty) {
+                final vocabulary = await Navigator.push<Vocabulary>(
+                  context,
+                  MaterialPageRoute(
+                                  builder: (context) => ImageVocabularyCreationScreen(
+                directoryName: directoryName,
+                entries: entries,
+                vocabularyId: vocabularyId,
+              ),
+                  ),
+                );
+                
+                if (vocabulary != null) {
+                  _addVocabulary(vocabulary);
+                  return;
+                }
+              }
+            }
+          } catch (e) {
+            // Alternative approach failed
+          }
+          
+
+          
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('No image files found in the selected directory'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+        
+        // Create image entries from files
+        final entries = <ImageEntry>[];
+        final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
+        
+        for (int i = 0; i < files.length; i++) {
+          final file = files[i];
+          
+          final fileName = file.path.split(Platform.pathSeparator).last;
+          final targetWord = fileName.split('.').first; // Remove extension
+
+          // Check if the image can be loaded and copy it to app data
+          if (file is File && file.existsSync()) {
+            try {
+              // Try to create a FileImage and test if it can be loaded
+              final imageProvider = FileImage(file);
+              
+              // Test the image by trying to resolve it
+              final stream = imageProvider.resolve(ImageConfiguration.empty);
+              final completer = Completer<bool>();
+              
+              stream.addListener(ImageStreamListener((info, _) {
+                completer.complete(true);
+              }, onError: (error, stackTrace) {
+                completer.complete(false);
+              }));
+              
+              final isValid = await completer.future;
+              
+              if (isValid) {
+                // Generate a unique filename for the copied image
+                final extension = file.path.split('.').last.toLowerCase();
+                final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
+                
+                if (copiedImagePath != null) {
+                  entries.add(ImageEntry(
+                    imagePath: copiedImagePath,
+                    target: targetWord,
+                  ));
+                } else {
+                  continue;
+                }
+              } else {
+                continue;
+              }
+            } catch (e) {
+              // Skip this file if it can't be loaded
+              continue;
+            }
+          } else {
+            // Skip if file doesn't exist or is not a file
+            continue;
+          }
+        }
+        
+        if (entries.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No valid image files could be processed'),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -306,72 +566,21 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           return;
         }
         
-           // Create image entries from files
-           final entries = <ImageEntry>[];
-           final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
-           
-           for (final file in files) {
-             final fileName = file.path.split(Platform.pathSeparator).last;
-             final targetWord = fileName.split('.').first; // Remove extension
-             
-              // Check if the image can be loaded and copy it to app data
-              if (file is File && file.existsSync()) {
-                try {
-                  // Try to create a FileImage and test if it can be loaded
-                  final imageProvider = FileImage(file);
-                  
-                  // Test the image by trying to resolve it
-                  final stream = imageProvider.resolve(ImageConfiguration.empty);
-                  final completer = Completer<bool>();
-                  
-                  stream.addListener(ImageStreamListener((info, _) {
-                    completer.complete(true);
-                  }, onError: (error, stackTrace) {
-                    completer.complete(false);
-                  }));
-                  
-                  final isValid = await completer.future;
-                  
-                  if (isValid) {
-                    // Generate a unique filename for the copied image
-                    final extension = file.path.split('.').last.toLowerCase();
-                    final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
-                    
-                                         if (copiedImagePath != null) {
-                        entries.add(ImageEntry(
-                          imagePath: copiedImagePath,
-                          target: targetWord,
-                        ));
-                      } else {
-                        continue;
-                      }
-                    } else {
-                      continue;
-                    }
-                  } catch (e) {
-                    // Skip this file if it can't be loaded
-                    continue;
-                  }
-                } else {
-                  // Skip if file doesn't exist or is not a file
-                }
-           }
+        // Navigate to image vocabulary creation screen
+        final vocabulary = await Navigator.push<Vocabulary>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ImageVocabularyCreationScreen(
+              directoryName: directoryName,
+              entries: entries,
+              vocabularyId: vocabularyId,
+            ),
+          ),
+        );
         
-         // Navigate to image vocabulary creation screen
-         final vocabulary = await Navigator.push<Vocabulary>(
-           context,
-           MaterialPageRoute(
-             builder: (context) => ImageVocabularyCreationScreen(
-               directoryName: directoryName,
-               entries: entries,
-               vocabularyId: vocabularyId,
-             ),
-           ),
-         );
-         
-                  if (vocabulary != null) {
-            _addVocabulary(vocabulary);
-          }
+        if (vocabulary != null) {
+          _addVocabulary(vocabulary);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -486,6 +695,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
               // Skip this file if it can't be loaded
               continue;
             }
+          } else {
+            // Skip if file doesn't exist or is not a file
           }
         }
         
@@ -527,6 +738,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       tempDir.createSync(recursive: true);
       
       final bytes = await archiveFile.readAsBytes();
+      
       final extension = archiveName.split('.').last.toLowerCase();
       
       if (extension == 'zip') {
@@ -561,6 +773,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           final baseName = archiveName.replaceAll('.gz', '');
           final outFile = File('${tempDir.path}/$baseName');
           outFile.writeAsBytesSync(decompressed);
+          // GZIP file extracted
         }
       } else if (extension == 'bz2') {
         // Extract BZIP2 archive (single file)
@@ -571,13 +784,13 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           final baseName = archiveName.replaceAll('.bz2', '');
           final outFile = File('${tempDir.path}/$baseName');
           outFile.writeAsBytesSync(decompressed);
+          // BZIP2 file extracted
         }
       } else {
         // Unsupported archive format
         tempDir.deleteSync(recursive: true);
         return null;
       }
-      
       return tempDir;
     } catch (e) {
       print('Error extracting archive: $e');
@@ -592,6 +805,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     
     try {
       final entities = directory.listSync();
+      
       for (final entity in entities) {
         if (entity is File) {
           final extension = entity.path.split('.').last.toLowerCase();

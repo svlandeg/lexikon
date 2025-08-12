@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Permissions for external storage access -->
+    <!-- For Android 13+ (API 33+): READ_MEDIA_IMAGES for accessing image files -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- For Android 12 and below: legacy storage permissions -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    
     <application
         android:label="lexikon"
         android:name="${applicationName}"
