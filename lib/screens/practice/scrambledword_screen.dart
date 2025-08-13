@@ -301,12 +301,15 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
                                           data.data,
                                         );
                                         final newIndex = i;
-                                                                                 if (oldIndex != -1 &&
-                                             oldIndex != newIndex) {
-                                           _userOrder.removeAt(oldIndex);
-                                           _userOrder.insert(newIndex, data.data);
-                                           _checkCorrect();
-                                         }
+                                        if (oldIndex != -1 &&
+                                            oldIndex != newIndex) {
+                                          _userOrder.removeAt(oldIndex);
+                                          _userOrder.insert(
+                                            newIndex,
+                                            data.data,
+                                          );
+                                          _checkCorrect();
+                                        }
                                       });
                                     },
                                     builder:
