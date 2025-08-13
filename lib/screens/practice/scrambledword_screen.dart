@@ -298,15 +298,15 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
                                     onAcceptWithDetails: (data) {
                                       setState(() {
                                         final oldIndex = _userOrder.indexOf(
-                                          data,
+                                          data.data,
                                         );
                                         final newIndex = i;
-                                        if (oldIndex != -1 &&
-                                            oldIndex != newIndex) {
-                                          _userOrder.removeAt(oldIndex);
-                                          _userOrder.insert(newIndex, data);
-                                          _checkCorrect();
-                                        }
+                                                                                 if (oldIndex != -1 &&
+                                             oldIndex != newIndex) {
+                                           _userOrder.removeAt(oldIndex);
+                                           _userOrder.insert(newIndex, data.data);
+                                           _checkCorrect();
+                                         }
                                       });
                                     },
                                     builder:
