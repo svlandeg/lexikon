@@ -1,5 +1,5 @@
 import 'package:lexikon/voc/entry.dart';
-import 'package:flutter/material.dart'; 
+import 'package:flutter/material.dart';
 
 // CSV parsing utilities for vocabulary creation
 class CsvVocabularyData {
@@ -43,11 +43,11 @@ class CsvParser {
   }
 
   /// Parses a CSV file and extracts vocabulary data
-  /// 
+  ///
   /// Expected format:
   /// - First line: "SourceLanguage,TargetLanguage" (e.g., "English,Arabic")
   /// - Subsequent lines: "source,target" pairs (e.g., "Hello,مرحبا")
-  /// 
+  ///
   /// Returns CsvVocabularyData with:
   /// - name: filename without extension
   /// - sourceLanguage: from first line, first column
@@ -57,34 +57,36 @@ class CsvParser {
   /// - targetReadingDirection: automatically determined from target language
   static CsvVocabularyData parseCsvFile(String filename, String csvContent) {
     final lines = csvContent.trim().split('\n');
-    
+
     if (lines.isEmpty) {
       throw ArgumentError('CSV file is empty');
     }
-    
+
     // Parse first line for languages
     final languageLine = lines[0].trim();
     final languageParts = languageLine.split(',');
-    
+
     if (languageParts.length < 2) {
-      throw ArgumentError('First line must contain source and target languages separated by comma');
+      throw ArgumentError(
+        'First line must contain source and target languages separated by comma',
+      );
     }
-    
+
     final sourceLanguage = languageParts[0].trim();
     final targetLanguage = languageParts[1].trim();
-    
+
     if (sourceLanguage.isEmpty || targetLanguage.isEmpty) {
       throw ArgumentError('Source and target languages cannot be empty');
     }
-    
+
     // Determine reading directions based on languages
-    final sourceReadingDirection = _isRtlLanguage(sourceLanguage) 
-        ? TextDirection.rtl 
+    final sourceReadingDirection = _isRtlLanguage(sourceLanguage)
+        ? TextDirection.rtl
         : TextDirection.ltr;
-    final targetReadingDirection = _isRtlLanguage(targetLanguage) 
-        ? TextDirection.rtl 
+    final targetReadingDirection = _isRtlLanguage(targetLanguage)
+        ? TextDirection.rtl
         : TextDirection.ltr;
-    
+
     // Parse vocabulary entries from remaining lines
     final entries = <TextEntry>[];
     for (int i = 1; i < lines.length; i++) {
@@ -100,10 +102,10 @@ class CsvParser {
         }
       }
     }
-    
+
     // Extract name from filename (remove extension)
     final name = filename.replaceAll(RegExp(r'\.csv$'), '');
-    
+
     return CsvVocabularyData(
       name: name,
       sourceLanguage: sourceLanguage,
@@ -113,4 +115,4 @@ class CsvParser {
       targetReadingDirection: targetReadingDirection,
     );
   }
-} 
+}

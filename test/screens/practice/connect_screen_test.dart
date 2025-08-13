@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lexikon/screens/practice/connect_screen.dart';
-import 'package:lexikon/voc/vocabulary.dart';
 import 'package:lexikon/voc/entry.dart';
 
 void main() {
@@ -14,9 +13,7 @@ void main() {
 
     testWidgets('renders source and target words', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: ConnectScreen(entries: entries),
-        ),
+        MaterialApp(home: ConnectScreen(entries: entries)),
       );
       await tester.pumpAndSettle();
 
@@ -35,9 +32,7 @@ void main() {
 
     testWidgets('can make a valid connection', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: ConnectScreen(entries: entries),
-        ),
+        MaterialApp(home: ConnectScreen(entries: entries)),
       );
       await tester.pumpAndSettle();
 
@@ -47,10 +42,16 @@ void main() {
       final targetFinder = find.text(firstEntry.target);
 
       // Before tapping, the source and target should be enabled (not greyed out)
-      final sourceBoxPreTap = tester.widget<Container>(find.ancestor(of: sourceFinder, matching: find.byType(Container)).first);
-      final targetBoxPreTap = tester.widget<Container>(find.ancestor(of: targetFinder, matching: find.byType(Container)).first);
-      final BoxDecoration? sourceDecorationPreTap = sourceBoxPreTap.decoration as BoxDecoration?;
-      final BoxDecoration? targetDecorationPreTap = targetBoxPreTap.decoration as BoxDecoration?;
+      final sourceBoxPreTap = tester.widget<Container>(
+        find.ancestor(of: sourceFinder, matching: find.byType(Container)).first,
+      );
+      final targetBoxPreTap = tester.widget<Container>(
+        find.ancestor(of: targetFinder, matching: find.byType(Container)).first,
+      );
+      final BoxDecoration? sourceDecorationPreTap =
+          sourceBoxPreTap.decoration as BoxDecoration?;
+      final BoxDecoration? targetDecorationPreTap =
+          targetBoxPreTap.decoration as BoxDecoration?;
       expect(sourceDecorationPreTap?.color, equals(boxC));
       expect(targetDecorationPreTap?.color, equals(boxC));
 
@@ -62,10 +63,16 @@ void main() {
       await tester.pumpAndSettle();
 
       // After connecting, the source and target should be disabled (greyed out)
-      final sourceBoxPostTap = tester.widget<Container>(find.ancestor(of: sourceFinder, matching: find.byType(Container)).first);
-      final targetBoxPostTap = tester.widget<Container>(find.ancestor(of: targetFinder, matching: find.byType(Container)).first);
-      final BoxDecoration? sourceDecorationPostTap = sourceBoxPostTap.decoration as BoxDecoration?;
-      final BoxDecoration? targetDecorationPostTap = targetBoxPostTap.decoration as BoxDecoration?;
+      final sourceBoxPostTap = tester.widget<Container>(
+        find.ancestor(of: sourceFinder, matching: find.byType(Container)).first,
+      );
+      final targetBoxPostTap = tester.widget<Container>(
+        find.ancestor(of: targetFinder, matching: find.byType(Container)).first,
+      );
+      final BoxDecoration? sourceDecorationPostTap =
+          sourceBoxPostTap.decoration as BoxDecoration?;
+      final BoxDecoration? targetDecorationPostTap =
+          targetBoxPostTap.decoration as BoxDecoration?;
       expect(sourceDecorationPostTap?.color, equals(boxConnectedC));
       expect(targetDecorationPostTap?.color, equals(boxConnectedC));
 
@@ -74,4 +81,4 @@ void main() {
       expect(find.text('0/3'), findsNothing);
     });
   });
-} 
+}

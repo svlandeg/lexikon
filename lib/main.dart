@@ -54,18 +54,12 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Welcome',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Welcome'),
           BottomNavigationBarItem(
             icon: Icon(Icons.book),
             label: 'Vocabularies',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'Practice',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Practice'),
         ],
         selectedItemColor: selectedC,
         unselectedItemColor: unselectedC,
@@ -76,7 +70,7 @@ class _MainScreenState extends State<MainScreen> {
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return const Scaffold(

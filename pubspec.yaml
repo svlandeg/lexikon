@@ -109,3 +109,12 @@ flutter_launcher_icons:
   macos:
     generate: true
     image_path: "media/app_icon.png"
+
+# Development scripts for code formatting and analysis
+scripts:
+  format: dart format .
+  format-check: dart format --set-exit-if-changed .
+  analyze: flutter analyze
+  test: flutter test
+  clean: flutter clean
+  get: flutter pub get

@@ -10,7 +10,6 @@ import 'dart:io';
 
 import 'package:image/image.dart' as img;
 import 'package:archive/archive.dart';
-import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -20,7 +19,6 @@ import 'package:lexikon/voc/csv_parser.dart';
 const Color iconC = Colors.grey;
 const Color textC = Colors.grey;
 const Color bgC = Colors.white;
-
 
 class VocabularyListScreen extends StatefulWidget {
   const VocabularyListScreen({super.key});
@@ -65,7 +63,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       if (Platform.isAndroid) {
         // For Android 13+ (API 33+), check READ_MEDIA_IMAGES permission
         final mediaImagesStatus = await Permission.photos.status;
-        
+
         if (mediaImagesStatus.isGranted) {
           return true;
         } else if (mediaImagesStatus.isDenied) {
@@ -78,7 +76,9 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('Permission Required'),
-                content: const Text('Storage permission is required to access image files. Please grant permission in app settings.'),
+                content: const Text(
+                  'Storage permission is required to access image files. Please grant permission in app settings.',
+                ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
@@ -91,7 +91,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                 ],
               ),
             );
-            
+
             if (shouldOpenSettings == true) {
               await openAppSettings();
             }
@@ -99,7 +99,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           return false;
         }
       }
-      
+
       // Fallback: try to access a test directory
       try {
         final testDir = Directory('/storage/emulated/0/Download');
@@ -126,15 +126,14 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     if (Platform.isAndroid) {
       // Request READ_MEDIA_IMAGES permission for Android 13+
       final photosStatus = await Permission.photos.request();
-      
+
       // Also try to request storage permission for older Android versions
       final storageStatus = await Permission.storage.request();
-      
+
       return photosStatus.isGranted || storageStatus.isGranted;
     }
     return true;
   }
-
 
   Future<void> _loadVocabularies() async {
     final prefs = await SharedPreferences.getInstance();
@@ -152,16 +151,17 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           print('Corrupted JSON string: $jsonString');
         }
       }
-
     });
-    
+
     // Save the cleaned vocabularies to remove any corrupted data
     _saveVocabularies();
   }
 
   Future<void> _saveVocabularies() async {
     final prefs = await SharedPreferences.getInstance();
-    final vocabulariesJson = _vocabularies.map((v) => jsonEncode(v.toJson())).toList();
+    final vocabulariesJson = _vocabularies
+        .map((v) => jsonEncode(v.toJson()))
+        .toList();
     await prefs.setStringList('vocabularies', vocabulariesJson);
   }
 
@@ -172,24 +172,24 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     _saveVocabularies();
   }
 
-     void _removeVocabulary(int index) {
-     final vocabulary = _vocabularies[index];
-     
-     // Clean up associated image files if it's an image vocabulary
-     if (vocabulary is ImageVocabulary) {
-       _cleanupVocabularyImages(vocabulary);
-     }
-     
-     setState(() {
-       _vocabularies.removeAt(index);
-     });
-     _saveVocabularies();
-   }
+  void _removeVocabulary(int index) {
+    final vocabulary = _vocabularies[index];
 
-       void _cleanupVocabularyImages(ImageVocabulary vocabulary) {
-      try {
-        // Delete the entire vocabulary directory
-        _getVocabularyPath(vocabulary.id).then((vocabularyPath) {
+    // Clean up associated image files if it's an image vocabulary
+    if (vocabulary is ImageVocabulary) {
+      _cleanupVocabularyImages(vocabulary);
+    }
+
+    setState(() {
+      _vocabularies.removeAt(index);
+    });
+    _saveVocabularies();
+  }
+
+  void _cleanupVocabularyImages(ImageVocabulary vocabulary) {
+    try {
+      // Delete the entire vocabulary directory
+      _getVocabularyPath(vocabulary.id).then((vocabularyPath) {
         final vocabularyDir = Directory(vocabularyPath);
         if (vocabularyDir.existsSync()) {
           vocabularyDir.deleteSync(recursive: true);
@@ -200,78 +200,83 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     }
   }
 
-     void _updateVocabulary(int index, Vocabulary vocabulary) {
-     setState(() {
-       _vocabularies[index] = vocabulary;
-     });
-     _saveVocabularies();
-   }
+  void _updateVocabulary(int index, Vocabulary vocabulary) {
+    setState(() {
+      _vocabularies[index] = vocabulary;
+    });
+    _saveVocabularies();
+  }
 
-               Future<String?> _copyAndResizeImage(File sourceFile, String targetWord, String extension, String vocabularyId) async {
-      try {
-        // Create app data directory for images with vocabulary ID subdirectory
-        final vocabularyPath = await _getVocabularyPath(vocabularyId);
-      
-        final appDataDir = Directory(vocabularyPath);
-        if (!appDataDir.existsSync()) {
-          appDataDir.createSync(recursive: true);
-        }
+  Future<String?> _copyAndResizeImage(
+    File sourceFile,
+    String targetWord,
+    String extension,
+    String vocabularyId,
+  ) async {
+    try {
+      // Create app data directory for images with vocabulary ID subdirectory
+      final vocabularyPath = await _getVocabularyPath(vocabularyId);
 
-        // Create a unique filename based on target word and timestamp
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final filename = '${targetWord}_$timestamp.$extension';
-        final destinationFile = File('${appDataDir.path}/$filename');
-
-        // Read and decode the source image
-        final bytes = await sourceFile.readAsBytes();
-        final image = img.decodeImage(bytes);
-
-        if (image == null) {
-          return null; // Failed to decode image
-        }
-
-        // Resize image to standard size (300x300) while maintaining aspect ratio
-        final resizedImage = img.copyResize(
-          image,
-          width: 300,
-          height: 300,
-          interpolation: img.Interpolation.linear,
-        );
-
-                 // Encode the resized image
-         List<int> encodedBytes;
-         switch (extension.toLowerCase()) {
-           case 'jpg':
-           case 'jpeg':
-             encodedBytes = img.encodeJpg(resizedImage, quality: 85);
-             break;
-           case 'png':
-             encodedBytes = img.encodePng(resizedImage);
-             break;
-           case 'webp':
-             // WebP not supported by image package, convert to PNG
-             encodedBytes = img.encodePng(resizedImage);
-             break;
-           default:
-             // For other formats, use PNG as fallback
-             encodedBytes = img.encodePng(resizedImage);
-             break;
-         }
-
-        // Write the resized image to the destination file
-        await destinationFile.writeAsBytes(encodedBytes);
-
-        // Return the relative path for storage in vocabulary
-        // For mobile, we need to store the full path; for desktop, we can use relative
-        if (Platform.isAndroid || Platform.isIOS) {
-          return destinationFile.path;
-        } else {
-          return 'app_data/vocabularies/$vocabularyId/$filename';
-        }
-      } catch (e) {
-        return null;
+      final appDataDir = Directory(vocabularyPath);
+      if (!appDataDir.existsSync()) {
+        appDataDir.createSync(recursive: true);
       }
+
+      // Create a unique filename based on target word and timestamp
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filename = '${targetWord}_$timestamp.$extension';
+      final destinationFile = File('${appDataDir.path}/$filename');
+
+      // Read and decode the source image
+      final bytes = await sourceFile.readAsBytes();
+      final image = img.decodeImage(bytes);
+
+      if (image == null) {
+        return null; // Failed to decode image
+      }
+
+      // Resize image to standard size (300x300) while maintaining aspect ratio
+      final resizedImage = img.copyResize(
+        image,
+        width: 300,
+        height: 300,
+        interpolation: img.Interpolation.linear,
+      );
+
+      // Encode the resized image
+      List<int> encodedBytes;
+      switch (extension.toLowerCase()) {
+        case 'jpg':
+        case 'jpeg':
+          encodedBytes = img.encodeJpg(resizedImage, quality: 85);
+          break;
+        case 'png':
+          encodedBytes = img.encodePng(resizedImage);
+          break;
+        case 'webp':
+          // WebP not supported by image package, convert to PNG
+          encodedBytes = img.encodePng(resizedImage);
+          break;
+        default:
+          // For other formats, use PNG as fallback
+          encodedBytes = img.encodePng(resizedImage);
+          break;
+      }
+
+      // Write the resized image to the destination file
+      await destinationFile.writeAsBytes(encodedBytes);
+
+      // Return the relative path for storage in vocabulary
+      // For mobile, we need to store the full path; for desktop, we can use relative
+      if (Platform.isAndroid || Platform.isIOS) {
+        return destinationFile.path;
+      } else {
+        return 'app_data/vocabularies/$vocabularyId/$filename';
+      }
+    } catch (e) {
+      return null;
     }
+  }
 
   void _showCreateVocabularyOptions() {
     showModalBottomSheet(
@@ -297,7 +302,9 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.upload_file),
-              title: const Text('Upload a Text-to-Text vocabulary from a CSV File'),
+              title: const Text(
+                'Upload a Text-to-Text vocabulary from a CSV File',
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _createFromCsvFile();
@@ -305,7 +312,9 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.folder),
-              title: const Text('Upload an Image-to-Text vocabulary from a directory'),
+              title: const Text(
+                'Upload an Image-to-Text vocabulary from a directory',
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _createFromDirectory();
@@ -313,7 +322,9 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.archive),
-              title: const Text('Upload an Image-to-Text vocabulary from an archive (ZIP, TAR, GZ, BZ2)'),
+              title: const Text(
+                'Upload an Image-to-Text vocabulary from an archive (ZIP, TAR, GZ, BZ2)',
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _createFromArchive();
@@ -341,22 +352,23 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         type: FileType.custom,
         allowedExtensions: ['csv'],
       );
-      
+
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
         final content = await file.readAsString();
         final filename = result.files.single.name;
-        
+
         try {
           final csvData = CsvParser.parseCsvFile(filename, content);
-          
+
           final vocabulary = await Navigator.push<Vocabulary>(
             context,
             MaterialPageRoute(
-              builder: (context) => CsvVocabularyCreationScreen(csvData: csvData),
+              builder: (context) =>
+                  CsvVocabularyCreationScreen(csvData: csvData),
             ),
           );
-          
+
           if (vocabulary != null) {
             _addVocabulary(vocabulary);
           }
@@ -389,12 +401,14 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       var hasPermission = await _checkStoragePermission();
       if (!hasPermission) {
         hasPermission = await _requestStoragePermissions();
-        
+
         if (!hasPermission) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Storage permission required to access directories'),
+                content: Text(
+                  'Storage permission required to access directories',
+                ),
                 backgroundColor: Colors.red,
               ),
             );
@@ -405,11 +419,11 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       String? directoryPath = await FilePicker.platform.getDirectoryPath(
         dialogTitle: 'Select Directory for Image Vocabulary',
       );
-      
+
       if (directoryPath != null) {
         final directory = Directory(directoryPath);
         final directoryName = directory.path.split(Platform.pathSeparator).last;
-        
+
         // Check if directory exists
         if (!directory.existsSync()) {
           if (mounted) {
@@ -422,13 +436,13 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           }
           return;
         }
-        
+
         // Get all image files from the directory (including subdirectories)
         final files = _findAllImageFiles(directory);
-        
+
         if (files.isEmpty) {
           // Try alternative approach: use file picker to get files from the same directory
-          
+
           try {
             final result = await FilePicker.platform.pickFiles(
               type: FileType.image,
@@ -436,27 +450,35 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
               dialogTitle: 'Select Images from Directory',
               initialDirectory: directoryPath,
             );
-            
+
             if (result != null && result.files.isNotEmpty) {
               // Process these files instead
               final entries = <ImageEntry>[];
-              final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
-              
+              final vocabularyId = DateTime.now().millisecondsSinceEpoch
+                  .toString();
+
               for (final file in result.files) {
                 if (file.path != null) {
                   final sourceFile = File(file.path!);
                   final targetWord = file.name.split('.').first;
-                  
+
                   if (sourceFile.existsSync()) {
                     try {
                       final extension = file.extension?.toLowerCase() ?? 'png';
-                      final copiedImagePath = await _copyAndResizeImage(sourceFile, targetWord, extension, vocabularyId);
-                      
+                      final copiedImagePath = await _copyAndResizeImage(
+                        sourceFile,
+                        targetWord,
+                        extension,
+                        vocabularyId,
+                      );
+
                       if (copiedImagePath != null) {
-                        entries.add(ImageEntry(
-                          imagePath: copiedImagePath,
-                          target: targetWord,
-                        ));
+                        entries.add(
+                          ImageEntry(
+                            imagePath: copiedImagePath,
+                            target: targetWord,
+                          ),
+                        );
                       }
                     } catch (e) {
                       continue;
@@ -464,19 +486,19 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                   }
                 }
               }
-              
+
               if (entries.isNotEmpty) {
                 final vocabulary = await Navigator.push<Vocabulary>(
                   context,
                   MaterialPageRoute(
-                                  builder: (context) => ImageVocabularyCreationScreen(
-                directoryName: directoryName,
-                entries: entries,
-                vocabularyId: vocabularyId,
-              ),
+                    builder: (context) => ImageVocabularyCreationScreen(
+                      directoryName: directoryName,
+                      entries: entries,
+                      vocabularyId: vocabularyId,
+                    ),
                   ),
                 );
-                
+
                 if (vocabulary != null) {
                   _addVocabulary(vocabulary);
                   return;
@@ -486,9 +508,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           } catch (e) {
             // Alternative approach failed
           }
-          
 
-          
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -499,45 +519,54 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           }
           return;
         }
-        
+
         // Create image entries from files
         final entries = <ImageEntry>[];
         final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
-        
+
         for (int i = 0; i < files.length; i++) {
           final file = files[i];
-          
+
           final fileName = file.path.split(Platform.pathSeparator).last;
           final targetWord = fileName.split('.').first; // Remove extension
 
           // Check if the image can be loaded and copy it to app data
-          if (file is File && file.existsSync()) {
+          if (file.existsSync()) {
             try {
               // Try to create a FileImage and test if it can be loaded
               final imageProvider = FileImage(file);
-              
+
               // Test the image by trying to resolve it
               final stream = imageProvider.resolve(ImageConfiguration.empty);
               final completer = Completer<bool>();
-              
-              stream.addListener(ImageStreamListener((info, _) {
-                completer.complete(true);
-              }, onError: (error, stackTrace) {
-                completer.complete(false);
-              }));
-              
+
+              stream.addListener(
+                ImageStreamListener(
+                  (info, _) {
+                    completer.complete(true);
+                  },
+                  onError: (error, stackTrace) {
+                    completer.complete(false);
+                  },
+                ),
+              );
+
               final isValid = await completer.future;
-              
+
               if (isValid) {
                 // Generate a unique filename for the copied image
                 final extension = file.path.split('.').last.toLowerCase();
-                final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
-                
+                final copiedImagePath = await _copyAndResizeImage(
+                  file,
+                  targetWord,
+                  extension,
+                  vocabularyId,
+                );
+
                 if (copiedImagePath != null) {
-                  entries.add(ImageEntry(
-                    imagePath: copiedImagePath,
-                    target: targetWord,
-                  ));
+                  entries.add(
+                    ImageEntry(imagePath: copiedImagePath, target: targetWord),
+                  );
                 } else {
                   continue;
                 }
@@ -553,7 +582,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             continue;
           }
         }
-        
+
         if (entries.isEmpty) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -565,7 +594,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           }
           return;
         }
-        
+
         // Navigate to image vocabulary creation screen
         final vocabulary = await Navigator.push<Vocabulary>(
           context,
@@ -577,7 +606,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             ),
           ),
         );
-        
+
         if (vocabulary != null) {
           _addVocabulary(vocabulary);
         }
@@ -601,11 +630,11 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
         allowedExtensions: ['zip', 'tar', 'gz', 'bz2'],
         dialogTitle: 'Select Archive File (ZIP, TAR, GZ, BZ2)',
       );
-      
+
       if (result != null && result.files.single.path != null) {
         final archiveFile = File(result.files.single.path!);
         final archiveName = result.files.single.name;
-        
+
         if (!archiveFile.existsSync()) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -634,7 +663,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
 
         // Get all image files from the extracted directory (including subdirectories)
         final files = _findAllImageFiles(tempDir);
-        
+
         if (files.isEmpty) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -648,43 +677,52 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           tempDir.deleteSync(recursive: true);
           return;
         }
-        
+
         // Create image entries from files
         final entries = <ImageEntry>[];
         final vocabularyId = DateTime.now().millisecondsSinceEpoch.toString();
-        
+
         for (final file in files) {
           final fileName = file.path.split(Platform.pathSeparator).last;
           final targetWord = fileName.split('.').first; // Remove extension
-          
+
           // Check if the image can be loaded and copy it to app data
-          if (file is File && file.existsSync()) {
+          if (file.existsSync()) {
             try {
               // Try to create a FileImage and test if it can be loaded
               final imageProvider = FileImage(file);
-              
+
               // Test the image by trying to resolve it
               final stream = imageProvider.resolve(ImageConfiguration.empty);
               final completer = Completer<bool>();
-              
-              stream.addListener(ImageStreamListener((info, _) {
-                completer.complete(true);
-              }, onError: (error, stackTrace) {
-                completer.complete(false);
-              }));
-              
+
+              stream.addListener(
+                ImageStreamListener(
+                  (info, _) {
+                    completer.complete(true);
+                  },
+                  onError: (error, stackTrace) {
+                    completer.complete(false);
+                  },
+                ),
+              );
+
               final isValid = await completer.future;
-              
+
               if (isValid) {
                 // Generate a unique filename for the copied image
                 final extension = file.path.split('.').last.toLowerCase();
-                final copiedImagePath = await _copyAndResizeImage(file, targetWord, extension, vocabularyId);
-                
+                final copiedImagePath = await _copyAndResizeImage(
+                  file,
+                  targetWord,
+                  extension,
+                  vocabularyId,
+                );
+
                 if (copiedImagePath != null) {
-                  entries.add(ImageEntry(
-                    imagePath: copiedImagePath,
-                    target: targetWord,
-                  ));
+                  entries.add(
+                    ImageEntry(imagePath: copiedImagePath, target: targetWord),
+                  );
                 } else {
                   continue;
                 }
@@ -699,22 +737,24 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             // Skip if file doesn't exist or is not a file
           }
         }
-        
+
         // Clean up temp directory
         tempDir.deleteSync(recursive: true);
-        
+
         // Navigate to image vocabulary creation screen
         final vocabulary = await Navigator.push<Vocabulary>(
           context,
           MaterialPageRoute(
             builder: (context) => ImageVocabularyCreationScreen(
-              directoryName: archiveName.split('.').first, // Use archive name without extension
+              directoryName: archiveName
+                  .split('.')
+                  .first, // Use archive name without extension
               entries: entries,
               vocabularyId: vocabularyId,
             ),
           ),
         );
-        
+
         if (vocabulary != null) {
           _addVocabulary(vocabulary);
         }
@@ -731,16 +771,21 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     }
   }
 
-  Future<Directory?> _extractArchive(File archiveFile, String archiveName) async {
+  Future<Directory?> _extractArchive(
+    File archiveFile,
+    String archiveName,
+  ) async {
     try {
       // Create temporary directory for extraction
-      final tempDir = Directory('${Directory.systemTemp.path}/lexikon_archive_${DateTime.now().millisecondsSinceEpoch}');
+      final tempDir = Directory(
+        '${Directory.systemTemp.path}/lexikon_archive_${DateTime.now().millisecondsSinceEpoch}',
+      );
       tempDir.createSync(recursive: true);
-      
+
       final bytes = await archiveFile.readAsBytes();
-      
+
       final extension = archiveName.split('.').last.toLowerCase();
-      
+
       if (extension == 'zip') {
         // Extract ZIP archive
         final archive = ZipDecoder().decodeBytes(bytes);
@@ -763,7 +808,6 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
             outFile.writeAsBytesSync(file.content as List<int>);
           }
         }
-
       } else if (extension == 'gz') {
         // Extract GZIP archive (single file)
         final decompressed = GZipDecoder().decodeBytes(bytes);
@@ -802,10 +846,10 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
   List<File> _findAllImageFiles(Directory directory) {
     final List<File> imageFiles = [];
     final imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
-    
+
     try {
       final entities = directory.listSync();
-      
+
       for (final entity in entities) {
         if (entity is File) {
           final extension = entity.path.split('.').last.toLowerCase();
@@ -820,7 +864,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     } catch (e) {
       print('Error searching directory ${directory.path}: $e');
     }
-    
+
     return imageFiles;
   }
 
@@ -852,12 +896,18 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
               itemBuilder: (context, index) {
                 final vocabulary = _vocabularies[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: ListTile(
                     title: Text(vocabulary.name),
-                    subtitle: Text('${vocabulary.inputSource} → ${vocabulary.targetLanguage} (${vocabulary.entries.length} entries)'),
+                    subtitle: Text(
+                      '${vocabulary.inputSource} → ${vocabulary.targetLanguage} (${vocabulary.entries.length} entries)',
+                    ),
                     leading: SizedBox(
-                      width: 150, // Increased width to accommodate 3 buttons with padding
+                      width:
+                          150, // Increased width to accommodate 3 buttons with padding
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -865,10 +915,13 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                             icon: const Icon(Icons.edit),
                             tooltip: 'Edit Vocabulary',
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                            constraints: const BoxConstraints(
+                              minWidth: 35,
+                              minHeight: 35,
+                            ),
                             onPressed: () async {
                               Vocabulary? result;
-                              
+
                               if (vocabulary is TextVocabulary) {
                                 // Edit text vocabulary using AddVocabularyScreen
                                 result = await Navigator.push<Vocabulary>(
@@ -884,16 +937,17 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                                 result = await Navigator.push<Vocabulary>(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ImageVocabularyCreationScreen(
-                                      directoryName: vocabulary.name,
-                                      entries: vocabulary.imageEntries,
-                                      vocabularyId: vocabulary.id,
-                                      initialVocabulary: vocabulary,
-                                    ),
+                                    builder: (context) =>
+                                        ImageVocabularyCreationScreen(
+                                          directoryName: vocabulary.name,
+                                          entries: vocabulary.imageEntries,
+                                          vocabularyId: vocabulary.id,
+                                          initialVocabulary: vocabulary,
+                                        ),
                                   ),
                                 );
                               }
-                              
+
                               if (result != null) {
                                 _updateVocabulary(index, result);
                               }
@@ -903,7 +957,10 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                             icon: const Icon(Icons.list),
                             tooltip: 'Edit Entries',
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                            constraints: const BoxConstraints(
+                              minWidth: 35,
+                              minHeight: 35,
+                            ),
                             onPressed: () {
                               Navigator.push(
                                 context,
@@ -911,7 +968,10 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                                   builder: (context) => VocabularyDetailScreen(
                                     vocabulary: vocabulary,
                                     onVocabularyUpdated: (updatedVocabulary) {
-                                      _updateVocabulary(index, updatedVocabulary);
+                                      _updateVocabulary(
+                                        index,
+                                        updatedVocabulary,
+                                      );
                                     },
                                   ),
                                 ),
@@ -922,13 +982,18 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                             icon: const Icon(Icons.delete),
                             tooltip: 'Delete Vocabulary',
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                            constraints: const BoxConstraints(
+                              minWidth: 35,
+                              minHeight: 35,
+                            ),
                             onPressed: () {
                               showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
                                   title: const Text('Delete Vocabulary'),
-                                  content: Text('Are you sure you want to delete "${vocabulary.name}" and all its ${vocabulary.entries.length} words?'),
+                                  content: Text(
+                                    'Are you sure you want to delete "${vocabulary.name}" and all its ${vocabulary.entries.length} words?',
+                                  ),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.pop(context),
@@ -966,15 +1031,15 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                 );
               },
             ),
-             floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-       floatingActionButton: FloatingActionButton.extended(
-         onPressed: () {
-           _showCreateVocabularyOptions();
-         },
-         tooltip: 'Create Vocabulary',
-         icon: const Icon(Icons.add),
-         label: const Text('Create new vocabulary'),
-       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          _showCreateVocabularyOptions();
+        },
+        tooltip: 'Create Vocabulary',
+        icon: const Icon(Icons.add),
+        label: const Text('Create new vocabulary'),
+      ),
     );
   }
 }
@@ -998,11 +1063,19 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.initialVocabulary?.name ?? '');
-    _sourceLanguageController = TextEditingController(text: widget.initialVocabulary?.sourceLanguage ?? '');
-    _targetLanguageController = TextEditingController(text: widget.initialVocabulary?.targetLanguage ?? '');
-    _sourceReadingDirection = widget.initialVocabulary?.sourceReadingDirection ?? TextDirection.ltr;
-    _targetReadingDirection = widget.initialVocabulary?.targetReadingDirection ?? TextDirection.ltr;
+    _nameController = TextEditingController(
+      text: widget.initialVocabulary?.name ?? '',
+    );
+    _sourceLanguageController = TextEditingController(
+      text: widget.initialVocabulary?.sourceLanguage ?? '',
+    );
+    _targetLanguageController = TextEditingController(
+      text: widget.initialVocabulary?.targetLanguage ?? '',
+    );
+    _sourceReadingDirection =
+        widget.initialVocabulary?.sourceReadingDirection ?? TextDirection.ltr;
+    _targetReadingDirection =
+        widget.initialVocabulary?.targetReadingDirection ?? TextDirection.ltr;
   }
 
   @override
@@ -1017,7 +1090,9 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
   Widget build(BuildContext context) {
     final isEditing = widget.initialVocabulary != null;
     return Scaffold(
-      appBar: AppBar(title: Text(isEditing ? 'Edit Vocabulary' : 'Add Vocabulary')),
+      appBar: AppBar(
+        title: Text(isEditing ? 'Edit Vocabulary' : 'Add Vocabulary'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -1030,7 +1105,9 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                   labelText: 'Vocabulary Name',
                   hintText: 'e.g., Spanish Basics, French Travel',
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Enter a vocabulary name' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Enter a vocabulary name'
+                    : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -1039,7 +1116,9 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                   labelText: 'Source Language',
                   hintText: 'e.g., English, Spanish',
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Enter source language' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Enter source language'
+                    : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -1048,7 +1127,9 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                   labelText: 'Target Language',
                   hintText: 'e.g., Spanish, French',
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Enter target language'
+                    : null,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<TextDirection>(
@@ -1096,13 +1177,17 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
                   if (_formKey.currentState!.validate()) {
                     final now = DateTime.now();
                     final vocabulary = TextVocabulary(
-                      id: widget.initialVocabulary?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                      id:
+                          widget.initialVocabulary?.id ??
+                          DateTime.now().millisecondsSinceEpoch.toString(),
                       name: _nameController.text,
                       sourceLanguage: _sourceLanguageController.text,
                       targetLanguage: _targetLanguageController.text,
                       sourceReadingDirection: _sourceReadingDirection,
                       targetReadingDirection: _targetReadingDirection,
-                      entries: widget.initialVocabulary?.entries.cast<TextEntry>() ?? [],
+                      entries:
+                          widget.initialVocabulary?.entries.cast<TextEntry>() ??
+                          [],
                     );
                     Navigator.pop(context, vocabulary);
                   }
@@ -1120,7 +1205,7 @@ class _AddVocabularyScreenState extends State<AddVocabularyScreen> {
 class VocabularyDetailScreen extends StatefulWidget {
   final Vocabulary vocabulary;
   final Function(Vocabulary) onVocabularyUpdated;
-  
+
   const VocabularyDetailScreen({
     super.key,
     required this.vocabulary,
@@ -1142,7 +1227,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
 
   void _addEntry(Entry entry) {
     setState(() {
-      final newEntries = List<Entry>.from(_vocabulary.entries);   
+      final newEntries = List<Entry>.from(_vocabulary.entries);
       newEntries.add(entry);
       _vocabulary.setEntries(newEntries);
     });
@@ -1151,12 +1236,12 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
 
   void _removeEntry(int index) {
     final entry = _vocabulary.entries[index];
-    
+
     // Clean up image file if it's an image entry
     if (entry is ImageEntry) {
       _cleanupImageFile(entry.imagePath);
     }
-    
+
     setState(() {
       final newEntries = List<Entry>.from(_vocabulary.entries);
       newEntries.removeAt(index);
@@ -1188,9 +1273,7 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_vocabulary.name),
-      ),
+      appBar: AppBar(title: Text(_vocabulary.name)),
       body: Column(
         children: [
           Container(
@@ -1208,12 +1291,13 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                       ),
                       Text(
                         '${_vocabulary.entries.length} words',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: textC),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: textC),
                       ),
                     ],
                   ),
                 ),
-
               ],
             ),
           ),
@@ -1242,7 +1326,10 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                     itemBuilder: (context, index) {
                       final entry = _vocabulary.entries[index];
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         child: Row(
                           children: [
                             // Edit buttons on the left
@@ -1255,17 +1342,22 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                                     icon: const Icon(Icons.edit),
                                     tooltip: 'Edit',
                                     padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 35,
+                                      minHeight: 35,
+                                    ),
                                     onPressed: () async {
-                                      final result = await Navigator.push<Entry>(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => AddEntryScreen(
-                                            initialEntry: entry,
-                                            vocabulary: _vocabulary,
-                                          ),
-                                        ),
-                                      );
+                                      final result =
+                                          await Navigator.push<Entry>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  AddEntryScreen(
+                                                    initialEntry: entry,
+                                                    vocabulary: _vocabulary,
+                                                  ),
+                                            ),
+                                          );
                                       if (result != null) {
                                         _editEntry(index, result);
                                       }
@@ -1275,16 +1367,22 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                                     icon: const Icon(Icons.delete),
                                     tooltip: 'Delete',
                                     padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 35, minHeight: 35),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 35,
+                                      minHeight: 35,
+                                    ),
                                     onPressed: () {
                                       showDialog(
                                         context: context,
                                         builder: (context) => AlertDialog(
                                           title: const Text('Delete Entry'),
-                                          content: const Text('Are you sure you want to delete this entry?'),
+                                          content: const Text(
+                                            'Are you sure you want to delete this entry?',
+                                          ),
                                           actions: [
                                             TextButton(
-                                              onPressed: () => Navigator.pop(context),
+                                              onPressed: () =>
+                                                  Navigator.pop(context),
                                               child: const Text('Cancel'),
                                             ),
                                             TextButton(
@@ -1306,10 +1404,14 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                             Expanded(
                               flex: 1,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
                                 child: EntrySourceWidget(
                                   entry: entry,
-                                  style: Theme.of(context).textTheme.titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                   vocabulary: _vocabulary,
                                   imageSize: ImageSize.small,
                                 ),
@@ -1319,7 +1421,9 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
                             Expanded(
                               flex: 1,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
                                 child: Text(
                                   entry.target,
                                   style: Theme.of(context).textTheme.bodyMedium,
@@ -1334,28 +1438,27 @@ class _VocabularyDetailScreenState extends State<VocabularyDetailScreen> {
           ),
         ],
       ),
-                                                     floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-                           floatingActionButton: _vocabulary is ImageVocabulary 
-                 ? null 
-                 : FloatingActionButton.extended(
-                     heroTag: 'addEntry',
-                     onPressed: () async {
-                       final result = await Navigator.push<Entry>(
-                         context,
-                         MaterialPageRoute(
-                           builder: (context) => AddEntryScreen(
-                             vocabulary: _vocabulary,
-                           ),
-                         ),
-                       );
-                       if (result != null) {
-                         _addEntry(result);
-                       }
-                     },
-                     tooltip: 'Add Entry',
-                     icon: const Icon(Icons.add),
-                     label: const Text('Add entry'),
-                   ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: _vocabulary is ImageVocabulary
+          ? null
+          : FloatingActionButton.extended(
+              heroTag: 'addEntry',
+              onPressed: () async {
+                final result = await Navigator.push<Entry>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AddEntryScreen(vocabulary: _vocabulary),
+                  ),
+                );
+                if (result != null) {
+                  _addEntry(result);
+                }
+              },
+              tooltip: 'Add Entry',
+              icon: const Icon(Icons.add),
+              label: const Text('Add entry'),
+            ),
     );
   }
 }
@@ -1364,8 +1467,8 @@ class AddEntryScreen extends StatefulWidget {
   final Entry? initialEntry;
   final Vocabulary vocabulary;
   const AddEntryScreen({
-    super.key, 
-    this.initialEntry, 
+    super.key,
+    this.initialEntry,
     required this.vocabulary,
   });
 
@@ -1381,12 +1484,16 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   @override
   void initState() {
     super.initState();
-    _sourceController = TextEditingController(text: widget.initialEntry is TextEntry 
-      ? (widget.initialEntry as TextEntry).source 
-      : widget.initialEntry is ImageEntry 
-        ? (widget.initialEntry as ImageEntry).imagePath 
-        : '');
-    _targetController = TextEditingController(text: widget.initialEntry?.target ?? '');
+    _sourceController = TextEditingController(
+      text: widget.initialEntry is TextEntry
+          ? (widget.initialEntry as TextEntry).source
+          : widget.initialEntry is ImageEntry
+          ? (widget.initialEntry as ImageEntry).imagePath
+          : '',
+    );
+    _targetController = TextEditingController(
+      text: widget.initialEntry?.target ?? '',
+    );
   }
 
   @override
@@ -1407,34 +1514,42 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           key: _formKey,
           child: Column(
             children: [
-                             if (widget.vocabulary is TextVocabulary) ...[
-                 TextFormField(
-                   controller: _sourceController,
-                   decoration: InputDecoration(
-                     labelText: '${(widget.vocabulary as TextVocabulary).sourceLanguage}',
-                     hintText: 'Enter a word from the source language',
-                   ),
-                   validator: (value) => value == null || value.isEmpty ? 'Enter a source language entry' : null,
-                 ),
-               ] else ...[
-                 TextFormField(
-                   controller: _sourceController,
-                   decoration: InputDecoration(
-                     labelText: 'Image Path',
-                     hintText: 'Enter the path to the image (e.g., assets/images/cat.png)',
-                   ),
-                   validator: (value) => value == null || value.isEmpty ? 'Enter an image path' : null,
-                   enabled: false, // Disable editing for ImageVocabulary
-                 ),
-               ],
+              if (widget.vocabulary is TextVocabulary) ...[
+                TextFormField(
+                  controller: _sourceController,
+                  decoration: InputDecoration(
+                    labelText:
+                        (widget.vocabulary as TextVocabulary).sourceLanguage,
+                    hintText: 'Enter a word from the source language',
+                  ),
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Enter a source language entry'
+                      : null,
+                ),
+              ] else ...[
+                TextFormField(
+                  controller: _sourceController,
+                  decoration: InputDecoration(
+                    labelText: 'Image Path',
+                    hintText:
+                        'Enter the path to the image (e.g., assets/images/cat.png)',
+                  ),
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Enter an image path'
+                      : null,
+                  enabled: false, // Disable editing for ImageVocabulary
+                ),
+              ],
               const SizedBox(height: 16),
               TextFormField(
                 controller: _targetController,
                 decoration: InputDecoration(
-                  labelText: '${widget.vocabulary.targetLanguage}',
+                  labelText: widget.vocabulary.targetLanguage,
                   hintText: 'Enter a word from the target language',
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Enter a target language entry' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Enter a target language entry'
+                    : null,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -1466,22 +1581,22 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 }
 
 extension TextDirectionDisplayName on TextDirection {
-  String get displayName => this == TextDirection.ltr ? 'Left to Right' : 'Right to Left';
+  String get displayName =>
+      this == TextDirection.ltr ? 'Left to Right' : 'Right to Left';
 }
 
 class CsvVocabularyCreationScreen extends StatefulWidget {
   final CsvVocabularyData csvData;
-  
-  const CsvVocabularyCreationScreen({
-    super.key,
-    required this.csvData,
-  });
+
+  const CsvVocabularyCreationScreen({super.key, required this.csvData});
 
   @override
-  State<CsvVocabularyCreationScreen> createState() => _CsvVocabularyCreationScreenState();
+  State<CsvVocabularyCreationScreen> createState() =>
+      _CsvVocabularyCreationScreenState();
 }
 
-class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScreen> {
+class _CsvVocabularyCreationScreenState
+    extends State<CsvVocabularyCreationScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _sourceLanguageController;
@@ -1493,8 +1608,12 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.csvData.name);
-    _sourceLanguageController = TextEditingController(text: widget.csvData.sourceLanguage);
-    _targetLanguageController = TextEditingController(text: widget.csvData.targetLanguage);
+    _sourceLanguageController = TextEditingController(
+      text: widget.csvData.sourceLanguage,
+    );
+    _targetLanguageController = TextEditingController(
+      text: widget.csvData.targetLanguage,
+    );
     _sourceReadingDirection = widget.csvData.sourceReadingDirection;
     _targetReadingDirection = widget.csvData.targetReadingDirection;
   }
@@ -1518,21 +1637,23 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-                             children: [
-                 // Vocabulary details form
+              children: [
+                // Vocabulary details form
                 Text(
                   'Vocabulary Details',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 16),
-                
+
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: 'Vocabulary Name',
                     hintText: 'e.g., Spanish Basics, French Travel',
                   ),
-                  validator: (value) => value == null || value.isEmpty ? 'Enter a vocabulary name' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Enter a vocabulary name'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -1541,7 +1662,9 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
                     labelText: 'Source Language',
                     hintText: 'e.g., English, Spanish',
                   ),
-                  validator: (value) => value == null || value.isEmpty ? 'Enter source language' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Enter source language'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -1550,7 +1673,9 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
                     labelText: 'Target Language',
                     hintText: 'e.g., Arabic, French',
                   ),
-                  validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Enter target language'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<TextDirection>(
@@ -1593,15 +1718,21 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
                   },
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Create button
                 Center(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
@@ -1620,7 +1751,9 @@ class _CsvVocabularyCreationScreenState extends State<CsvVocabularyCreationScree
                     child: const Text('Create Vocabulary'),
                   ),
                 ),
-                const SizedBox(height: 16), // Extra padding at bottom for safety
+                const SizedBox(
+                  height: 16,
+                ), // Extra padding at bottom for safety
               ],
             ),
           ),
@@ -1634,8 +1767,9 @@ class ImageVocabularyCreationScreen extends StatefulWidget {
   final String directoryName;
   final List<ImageEntry> entries;
   final String vocabularyId;
-  final ImageVocabulary? initialVocabulary; // Add support for editing existing vocabulary
-  
+  final ImageVocabulary?
+  initialVocabulary; // Add support for editing existing vocabulary
+
   const ImageVocabularyCreationScreen({
     super.key,
     required this.directoryName,
@@ -1645,10 +1779,12 @@ class ImageVocabularyCreationScreen extends StatefulWidget {
   });
 
   @override
-  State<ImageVocabularyCreationScreen> createState() => _ImageVocabularyCreationScreenState();
+  State<ImageVocabularyCreationScreen> createState() =>
+      _ImageVocabularyCreationScreenState();
 }
 
-class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationScreen> {
+class _ImageVocabularyCreationScreenState
+    extends State<ImageVocabularyCreationScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _targetLanguageController;
@@ -1660,14 +1796,16 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
     // If editing existing vocabulary, use its properties; otherwise use directory name
     final isEditing = widget.initialVocabulary != null;
     _nameController = TextEditingController(
-      text: isEditing ? widget.initialVocabulary!.name : widget.directoryName
+      text: isEditing ? widget.initialVocabulary!.name : widget.directoryName,
     );
     _targetLanguageController = TextEditingController(
-      text: isEditing ? widget.initialVocabulary!.targetLanguage : widget.directoryName
+      text: isEditing
+          ? widget.initialVocabulary!.targetLanguage
+          : widget.directoryName,
     );
-    _targetReadingDirection = isEditing 
-      ? widget.initialVocabulary!.targetReadingDirection 
-      : TextDirection.ltr;
+    _targetReadingDirection = isEditing
+        ? widget.initialVocabulary!.targetReadingDirection
+        : TextDirection.ltr;
   }
 
   @override
@@ -1681,7 +1819,11 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
   Widget build(BuildContext context) {
     final isEditing = widget.initialVocabulary != null;
     return Scaffold(
-      appBar: AppBar(title: Text(isEditing ? 'Edit Image Vocabulary' : 'Create Image Vocabulary')),
+      appBar: AppBar(
+        title: Text(
+          isEditing ? 'Edit Image Vocabulary' : 'Create Image Vocabulary',
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -1696,14 +1838,16 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 16),
-                
+
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: 'Vocabulary Name',
                     hintText: 'e.g., Animals, Objects, Colors',
                   ),
-                  validator: (value) => value == null || value.isEmpty ? 'Enter a vocabulary name' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Enter a vocabulary name'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -1712,7 +1856,9 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
                     labelText: 'Target Language',
                     hintText: 'e.g., English, Spanish, French',
                   ),
-                  validator: (value) => value == null || value.isEmpty ? 'Enter target language' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Enter target language'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<TextDirection>(
@@ -1734,8 +1880,8 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
                     }
                   },
                 ),
-                                 const SizedBox(height: 24),
-                
+                const SizedBox(height: 24),
+
                 // Create button
                 Center(
                   child: Focus(
@@ -1744,8 +1890,14 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
@@ -1756,15 +1908,19 @@ class _ImageVocabularyCreationScreenState extends State<ImageVocabularyCreationS
                             targetReadingDirection: _targetReadingDirection,
                             entries: widget.entries,
                           );
-                          
+
                           Navigator.pop(context, vocabulary);
                         }
                       },
-                      child: Text(isEditing ? 'Save Changes' : 'Create Image Vocabulary'),
+                      child: Text(
+                        isEditing ? 'Save Changes' : 'Create Image Vocabulary',
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16), // Extra padding at bottom for safety
+                const SizedBox(
+                  height: 16,
+                ), // Extra padding at bottom for safety
               ],
             ),
           ),

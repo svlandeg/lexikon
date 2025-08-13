@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lexikon/voc/vocabulary.dart';
 import 'package:lexikon/voc/entry.dart';
-import 'package:flutter/material.dart';
 
 void main() {
   group('Vocabulary Inheritance', () {
@@ -10,7 +9,7 @@ void main() {
         TextEntry(source: 'cat', target: 'قطة'),
         TextEntry(source: 'dog', target: 'كلب'),
       ];
-      
+
       final vocab = TextVocabulary(
         id: '1',
         name: 'Arabic Animals',
@@ -18,7 +17,7 @@ void main() {
         targetLanguage: 'Arabic',
         entries: entries,
       );
-      
+
       expect(vocab, isA<TextVocabulary>());
       expect(vocab.entries.length, 2);
       expect(vocab.textEntries.length, 2);
@@ -28,21 +27,30 @@ void main() {
 
     test('ImageVocabulary can be created with ImageEntry list', () {
       final entries = [
-        ImageEntry(imagePath: 'assets/images/vocabulary/cat.png', target: 'قطة'),
-        ImageEntry(imagePath: 'assets/images/vocabulary/dog.png', target: 'كلب'),
+        ImageEntry(
+          imagePath: 'assets/images/vocabulary/cat.png',
+          target: 'قطة',
+        ),
+        ImageEntry(
+          imagePath: 'assets/images/vocabulary/dog.png',
+          target: 'كلب',
+        ),
       ];
-      
+
       final vocab = ImageVocabulary(
         id: '2',
         name: 'Arabic Animals Images',
         targetLanguage: 'Arabic',
         entries: entries,
       );
-      
+
       expect(vocab, isA<ImageVocabulary>());
       expect(vocab.entries.length, 2);
       expect(vocab.imageEntries.length, 2);
-      expect(vocab.imageEntries[0].imagePath, 'assets/images/vocabulary/cat.png');
+      expect(
+        vocab.imageEntries[0].imagePath,
+        'assets/images/vocabulary/cat.png',
+      );
       expect(vocab.imageEntries[0].target, 'قطة');
     });
 
@@ -54,7 +62,7 @@ void main() {
         targetLanguage: 'Spanish',
         entries: [TextEntry(source: 'hello', target: 'hola')],
       );
-      
+
       final json = vocab.toJson();
       expect(json['type'], 'text');
       expect(json['entries'][0]['type'], 'text');
@@ -67,9 +75,11 @@ void main() {
         id: '1',
         name: 'Test',
         targetLanguage: 'Spanish',
-        entries: [ImageEntry(imagePath: 'assets/images/cat.png', target: 'gato')],
+        entries: [
+          ImageEntry(imagePath: 'assets/images/cat.png', target: 'gato'),
+        ],
       );
-      
+
       final json = vocab.toJson();
       expect(json['type'], 'image');
       expect(json['entries'][0]['type'], 'image');
@@ -87,14 +97,10 @@ void main() {
         'sourceReadingDirection': 'ltr',
         'targetReadingDirection': 'ltr',
         'entries': [
-          {
-            'type': 'text',
-            'source': 'hello',
-            'target': 'hola',
-          }
+          {'type': 'text', 'source': 'hello', 'target': 'hola'},
         ],
       };
-      
+
       final vocab = vocabularyFromJson(json);
       expect(vocab, isA<TextVocabulary>());
       expect(vocab.entries.length, 1);
@@ -114,24 +120,23 @@ void main() {
             'type': 'image',
             'imagePath': 'assets/images/cat.png',
             'target': 'gato',
-          }
+          },
         ],
       };
-      
+
       final vocab = vocabularyFromJson(json);
       expect(vocab, isA<ImageVocabulary>());
       expect(vocab.entries.length, 1);
       expect(vocab.entries[0], isA<ImageEntry>());
-      expect((vocab.entries[0] as ImageEntry).imagePath, 'assets/images/cat.png');
+      expect(
+        (vocab.entries[0] as ImageEntry).imagePath,
+        'assets/images/cat.png',
+      );
     });
 
     test('entryFromJson creates TextEntry from JSON', () {
-      final json = {
-        'type': 'text',
-        'source': 'hello',
-        'target': 'hola',
-      };
-      
+      final json = {'type': 'text', 'source': 'hello', 'target': 'hola'};
+
       final entry = entryFromJson(json);
       expect(entry, isA<TextEntry>());
       expect(entry.target, 'hola');
@@ -144,11 +149,11 @@ void main() {
         'imagePath': 'assets/images/cat.png',
         'target': 'gato',
       };
-      
+
       final entry = entryFromJson(json);
       expect(entry, isA<ImageEntry>());
       expect(entry.target, 'gato');
       expect((entry as ImageEntry).imagePath, 'assets/images/cat.png');
     });
   });
-} 
+}

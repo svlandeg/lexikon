@@ -22,7 +22,7 @@ void main() {
       id: '1',
       name: 'Greek',
       sourceLanguage: 'English',
-      sourceReadingDirection: TextDirection.ltr,  
+      sourceReadingDirection: TextDirection.ltr,
       targetLanguage: 'Greek',
       targetReadingDirection: TextDirection.ltr,
       entries: greekEntries,
@@ -31,10 +31,7 @@ void main() {
     testWidgets('renders 10x10 grid', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: WordSearchScreen(
-            entries: greekEntries,
-            vocabulary: vocab,
-          ),
+          home: WordSearchScreen(entries: greekEntries, vocabulary: vocab),
         ),
       );
       await tester.pumpAndSettle();
@@ -48,11 +45,11 @@ void main() {
         of: gridFinder,
         matching: find.byWidgetPredicate(
           (widget) =>
-            widget is Container &&
-            widget.child is Center &&
-            (widget.child as Center).child is Text &&
-            ((widget.child as Center).child as Text).data != null &&
-            ((widget.child as Center).child as Text).data!.length == 1,
+              widget is Container &&
+              widget.child is Center &&
+              (widget.child as Center).child is Text &&
+              ((widget.child as Center).child as Text).data != null &&
+              ((widget.child as Center).child as Text).data!.length == 1,
         ),
       );
       expect(cellFinder, findsNWidgets(gridDim * gridDim));
@@ -72,10 +69,7 @@ void main() {
     testWidgets('toggles difficulty correctly', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: WordSearchScreen(
-            entries: greekEntries,
-            vocabulary: vocab,
-          ),
+          home: WordSearchScreen(entries: greekEntries, vocabulary: vocab),
         ),
       );
       await tester.pumpAndSettle();
@@ -109,19 +103,21 @@ void main() {
           ),
           findsNothing, // source is not inside the chip
         );
-        expect(find.text(entry.source), findsWidgets); // source is present somewhere below
+        expect(
+          find.text(entry.source),
+          findsWidgets,
+        ); // source is present somewhere below
       }
       await tester.pumpWidget(Container());
       await tester.pumpAndSettle();
     });
 
-    testWidgets('highlights cells on selection (yellow)', (WidgetTester tester) async {
+    testWidgets('highlights cells on selection (yellow)', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: WordSearchScreen(
-            entries: greekEntries,
-            vocabulary: vocab,
-          ),
+          home: WordSearchScreen(entries: greekEntries, vocabulary: vocab),
         ),
       );
       await tester.pumpAndSettle();
@@ -134,45 +130,47 @@ void main() {
       int cellIndex(int row, int col) => row * gridDim + col;
 
       // Tap cell (4,2)
-      final cellA = find.descendant(
-        of: gridFinder,
-        matching: find.byWidgetPredicate(
-          (widget) =>
-            widget is Container &&
-            widget.child is Center &&
-            (widget.child as Center).child is Text &&
-            ((widget.child as Center).child as Text).data != null &&
-            ((widget.child as Center).child as Text).data!.length == 1,
-        ),
-      ).at(cellIndex(4, 2));
+      final cellA = find
+          .descendant(
+            of: gridFinder,
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is Container &&
+                  widget.child is Center &&
+                  (widget.child as Center).child is Text &&
+                  ((widget.child as Center).child as Text).data != null &&
+                  ((widget.child as Center).child as Text).data!.length == 1,
+            ),
+          )
+          .at(cellIndex(4, 2));
       await tester.tap(cellA);
       await tester.pumpAndSettle();
 
       // Tap cell (4,4)
-      final cellB = find.descendant(
-        of: gridFinder,
-        matching: find.byWidgetPredicate(
-          (widget) =>
-            widget is Container &&
-            widget.child is Center &&
-            (widget.child as Center).child is Text &&
-            ((widget.child as Center).child as Text).data != null &&
-            ((widget.child as Center).child as Text).data!.length == 1,
-        ),
-      ).at(cellIndex(4, 4));
+      final cellB = find
+          .descendant(
+            of: gridFinder,
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is Container &&
+                  widget.child is Center &&
+                  (widget.child as Center).child is Text &&
+                  ((widget.child as Center).child as Text).data != null &&
+                  ((widget.child as Center).child as Text).data!.length == 1,
+            ),
+          )
+          .at(cellIndex(4, 4));
       await tester.tap(cellB);
       await tester.pumpAndSettle();
 
       // After two taps, at least the selected cells should be highlighted (yellow)
       int highlightedCount = 0;
-      final cellWidgets = tester.widgetList<Container>(find.descendant(
-        of: gridFinder,
-        matching: find.byType(Container),
-      ));
+      final cellWidgets = tester.widgetList<Container>(
+        find.descendant(of: gridFinder, matching: find.byType(Container)),
+      );
       for (final container in cellWidgets) {
         final decoration = container.decoration;
-        if (decoration is BoxDecoration &&
-            decoration.color == selectedC) {
+        if (decoration is BoxDecoration && decoration.color == selectedC) {
           highlightedCount++;
         }
       }
@@ -181,13 +179,12 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('permanently highlights correct word (green)', (WidgetTester tester) async {
+    testWidgets('permanently highlights correct word (green)', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: WordSearchScreen(
-            entries: greekEntries,
-            vocabulary: vocab,
-          ),
+          home: WordSearchScreen(entries: greekEntries, vocabulary: vocab),
         ),
       );
       await tester.pumpAndSettle();
@@ -199,16 +196,19 @@ void main() {
       int cellIndex(int row, int col) => row * gridDim + col;
 
       // Read the grid into a 2D list of strings
-      List<List<String>> gridLetters = List.generate(gridDim, (_) => List.filled(gridDim, ''));
+      List<List<String>> gridLetters = List.generate(
+        gridDim,
+        (_) => List.filled(gridDim, ''),
+      );
       final cellFinder = find.descendant(
         of: gridFinder,
         matching: find.byWidgetPredicate(
           (widget) =>
-            widget is Container &&
-            widget.child is Center &&
-            (widget.child as Center).child is Text &&
-            ((widget.child as Center).child as Text).data != null &&
-            ((widget.child as Center).child as Text).data!.length == 1,
+              widget is Container &&
+              widget.child is Center &&
+              (widget.child as Center).child is Text &&
+              ((widget.child as Center).child as Text).data != null &&
+              ((widget.child as Center).child as Text).data!.length == 1,
         ),
       );
       final cellWidgets = tester.widgetList<Container>(cellFinder).toList();
@@ -233,7 +233,8 @@ void main() {
         for (int col = 0; col <= gridDim - wordLen; col++) {
           bool match = true;
           for (int k = 0; k < wordLen; k++) {
-            if (gridLetters[row][col + k] != String.fromCharCode(wordRunes[k])) {
+            if (gridLetters[row][col + k] !=
+                String.fromCharCode(wordRunes[k])) {
               match = false;
               break;
             }
@@ -253,7 +254,8 @@ void main() {
         for (int row = 0; row <= gridDim - wordLen; row++) {
           bool match = true;
           for (int k = 0; k < wordLen; k++) {
-            if (gridLetters[row + k][col] != String.fromCharCode(wordRunes[k])) {
+            if (gridLetters[row + k][col] !=
+                String.fromCharCode(wordRunes[k])) {
               match = false;
               break;
             }
@@ -277,7 +279,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check that all cells in the word are highlighted green
-      final updatedCellWidgets = tester.widgetList<Container>(cellFinder).toList();
+      final updatedCellWidgets = tester
+          .widgetList<Container>(cellFinder)
+          .toList();
       // Collect indices for ΠΟΥΛΙ
       List<int> pouliIndices = [];
       for (int k = 0; k < wordLen; k++) {
@@ -331,7 +335,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check: all ΠΟΥΛΙ cells are green again
-      final afterSecondTapWidgets = tester.widgetList<Container>(cellFinder).toList();
+      final afterSecondTapWidgets = tester
+          .widgetList<Container>(cellFinder)
+          .toList();
       for (final idx in pouliIndices) {
         final container = afterSecondTapWidgets[idx];
         final decoration = container.decoration;
@@ -345,4 +351,4 @@ void main() {
       await tester.pumpAndSettle();
     });
   });
-} 
+}

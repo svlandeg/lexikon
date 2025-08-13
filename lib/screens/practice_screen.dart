@@ -5,11 +5,6 @@ import 'practice/wordsearch_screen.dart';
 import 'practice/flashcard_screen.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/services.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
-import 'package:csv/csv.dart';
-import 'dart:math';
 import 'practice/scrambledword_screen.dart';
 import 'practice/connect_screen.dart';
 
@@ -27,7 +22,7 @@ class PracticeScreen extends StatefulWidget {
 }
 
 class _PracticeScreenState extends State<PracticeScreen> {
-  List<Vocabulary> _vocabularies = [];
+  final List<Vocabulary> _vocabularies = [];
   Vocabulary? _selectedVocabulary;
 
   @override
@@ -101,12 +96,17 @@ class _PracticeScreenState extends State<PracticeScreen> {
               value: _selectedVocabulary,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
               items: _vocabularies.map((vocabulary) {
                 return DropdownMenuItem<Vocabulary>(
                   value: vocabulary,
-                  child: Text('${vocabulary.name} (${vocabulary.entries.length} entries)'),
+                  child: Text(
+                    '${vocabulary.name} (${vocabulary.entries.length} entries)',
+                  ),
                 );
               }).toList(),
               onChanged: (Vocabulary? newValue) {
@@ -116,7 +116,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
               },
             ),
             const SizedBox(height: 32),
-            
+
             // Practice Options
             if (_selectedVocabulary != null) ...[
               Text(
@@ -124,7 +124,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 16),
-              
+
               if (_selectedVocabulary!.entries.isEmpty) ...[
                 const Card(
                   child: Padding(
@@ -156,7 +156,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Practice Flashcards'),
-                          content: const Text('There is only one word in this vocabulary.'),
+                          content: const Text(
+                            'There is only one word in this vocabulary.',
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
@@ -173,7 +175,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       count = await showDialog<int>(
                         context: context,
                         builder: (context) {
-                          int selected = entryCount >= kDefaultFlashcardCount ? kDefaultFlashcardCount : entryCount;
+                          int selected = entryCount >= kDefaultFlashcardCount
+                              ? kDefaultFlashcardCount
+                              : entryCount;
                           final FocusNode startButtonFocusNode = FocusNode();
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             startButtonFocusNode.requestFocus();
@@ -190,7 +194,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                                     max: entryCount.toDouble(),
                                     divisions: entryCount - 1,
                                     label: selected.toString(),
-                                    onChanged: (v) => setState(() => selected = v.round()),
+                                    onChanged: (v) =>
+                                        setState(() => selected = v.round()),
                                   ),
                                   Text('Words: $selected'),
                                 ],
@@ -203,7 +208,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               ),
                               TextButton(
                                 focusNode: startButtonFocusNode,
-                                onPressed: () => Navigator.pop(context, selected),
+                                onPressed: () =>
+                                    Navigator.pop(context, selected),
                                 child: const Text('Start'),
                               ),
                             ],
@@ -232,7 +238,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => WordSearchScreen(entries: _selectedVocabulary!.entries, vocabulary: _selectedVocabulary!),
+                        builder: (context) => WordSearchScreen(
+                          entries: _selectedVocabulary!.entries,
+                          vocabulary: _selectedVocabulary!,
+                        ),
                       ),
                     );
                   },
@@ -240,7 +249,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ListTile(
                   leading: const Icon(Icons.shuffle),
                   title: const Text('Scrambled Word'),
-                  subtitle: const Text('Reorder scrambled letters to form the correct word'),
+                  subtitle: const Text(
+                    'Reorder scrambled letters to form the correct word',
+                  ),
                   onTap: () async {
                     final entryCount = _selectedVocabulary!.entries.length;
                     int? count;
@@ -249,7 +260,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Practice Scrambled Words'),
-                          content: const Text('There is only one word in this vocabulary.'),
+                          content: const Text(
+                            'There is only one word in this vocabulary.',
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
@@ -266,7 +279,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       count = await showDialog<int>(
                         context: context,
                         builder: (context) {
-                          int selected = entryCount >= kDefaultFlashcardCount ? kDefaultFlashcardCount : entryCount;
+                          int selected = entryCount >= kDefaultFlashcardCount
+                              ? kDefaultFlashcardCount
+                              : entryCount;
                           final FocusNode startButtonFocusNode = FocusNode();
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             startButtonFocusNode.requestFocus();
@@ -283,7 +298,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                                     max: entryCount.toDouble(),
                                     divisions: entryCount - 1,
                                     label: selected.toString(),
-                                    onChanged: (v) => setState(() => selected = v.round()),
+                                    onChanged: (v) =>
+                                        setState(() => selected = v.round()),
                                   ),
                                   Text('Words: $selected'),
                                 ],
@@ -296,7 +312,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               ),
                               TextButton(
                                 focusNode: startButtonFocusNode,
-                                onPressed: () => Navigator.pop(context, selected),
+                                onPressed: () =>
+                                    Navigator.pop(context, selected),
                                 child: const Text('Start'),
                               ),
                             ],
@@ -321,20 +338,25 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ListTile(
                   leading: const Icon(Icons.compare_arrows),
                   title: const Text('Connect'),
-                  subtitle: const Text('Match source and target words by drawing connections'),
+                  subtitle: const Text(
+                    'Match source and target words by drawing connections',
+                  ),
                   enabled: _selectedVocabulary!.entries.isNotEmpty,
                   onTap: _selectedVocabulary!.entries.isEmpty
                       ? null
                       : () async {
                           final entries = _selectedVocabulary!.entries;
                           final entryCount = entries.length;
-                          List<Entry> selectedEntries = List<Entry>.from(entries);
+                          List<Entry> selectedEntries = List<Entry>.from(
+                            entries,
+                          );
                           if (entryCount < 5) {
                             // Fewer than 5: use all
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ConnectScreen(entries: selectedEntries),
+                                builder: (context) =>
+                                    ConnectScreen(entries: selectedEntries),
                               ),
                             );
                           } else if (entryCount < 10) {
@@ -343,25 +365,30 @@ class _PracticeScreenState extends State<PracticeScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ConnectScreen(entries: selectedEntries.take(5).toList()),
+                                builder: (context) => ConnectScreen(
+                                  entries: selectedEntries.take(5).toList(),
+                                ),
                               ),
                             );
                           } else {
                             // 10 or more: show slider dialog for multiples of 5
                             // the default is 10, unless there are more than 20, then it's 20
-                            int selected = 10;  
-                            if (entryCount > 20)
-                                selected = 20;
+                            int selected = 10;
+                            if (entryCount > 20) selected = 20;
                             int maxCount = (entryCount ~/ 5) * 5;
                             final FocusNode startButtonFocusNode = FocusNode();
                             int? count = await showDialog<int>(
                               context: context,
                               builder: (context) {
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
                                   startButtonFocusNode.requestFocus();
                                 });
                                 return AlertDialog(
-                                  title: const Text('How many word pairs to practice?'),
+                                  title: const Text(
+                                    'How many word pairs to practice?',
+                                  ),
                                   content: StatefulBuilder(
                                     builder: (context, setState) => Column(
                                       mainAxisSize: MainAxisSize.min,
@@ -372,7 +399,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                                           max: maxCount.toDouble(),
                                           divisions: (maxCount ~/ 5) - 1,
                                           label: selected.toString(),
-                                          onChanged: (v) => setState(() => selected = (v ~/ 5) * 5),
+                                          onChanged: (v) => setState(
+                                            () => selected = (v ~/ 5) * 5,
+                                          ),
                                         ),
                                         Text('Pairs: $selected'),
                                       ],
@@ -385,7 +414,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                                     ),
                                     TextButton(
                                       focusNode: startButtonFocusNode,
-                                      onPressed: () => Navigator.pop(context, selected),
+                                      onPressed: () =>
+                                          Navigator.pop(context, selected),
                                       child: const Text('Start'),
                                     ),
                                   ],
@@ -397,7 +427,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => ConnectScreen(entries: selectedEntries.take(count).toList()),
+                                  builder: (context) => ConnectScreen(
+                                    entries: selectedEntries
+                                        .take(count)
+                                        .toList(),
+                                  ),
                                 ),
                               );
                             }
@@ -411,4 +445,4 @@ class _PracticeScreenState extends State<PracticeScreen> {
       ),
     );
   }
-} 
+}
