@@ -1,0 +1,52 @@
+name: Auto Fix Code Issues
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-fix:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        ref: ${{ github.head_ref }}
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+
+    - name: Get dependencies
+      run: flutter pub get
+
+    - name: Check if fixes are needed
+      id: check-issues
+      run: |
+        dart format --set-exit-if-changed . || echo "format_issues=true" >> $GITHUB_OUTPUT
+        dart analyze --fatal-infos || echo "lint_issues=true" >> $GITHUB_OUTPUT
+      continue-on-error: true
+
+    - name: Format code
+      if: steps.check-issues.outputs.format_issues == 'true'
+      run: dart format .
+
+    - name: Fix linting issues
+      if: steps.check-issues.outputs.lint_issues == 'true'
+      run: dart fix --apply
+
+    - name: Commit and push fixes
+      if: steps.check-issues.outputs.format_issues == 'true' || steps.check-issues.outputs.lint_issues == 'true'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git commit -m "Auto fix code issues"
+        git push origin HEAD:${{ github.head_ref }}

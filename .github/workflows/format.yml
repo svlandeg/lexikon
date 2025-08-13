@@ -1,12 +1,10 @@
-name: Code Format Check
+name: Code Quality Check
 
 on:
   pull_request:
     branches: [main]
-
-permissions:
-  contents: write
-  pull-requests: write
+  push:
+    branches: [main]
 
 jobs:
   quality-check:
@@ -15,9 +13,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        ref: ${{ github.head_ref }}
 
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
@@ -28,28 +23,7 @@ jobs:
       run: flutter pub get
 
     - name: Check formatting
-      id: format-check
       run: dart format --set-exit-if-changed .
-      continue-on-error: true
 
     - name: Check linting
-      id: lint-check
       run: dart analyze --fatal-infos
-      continue-on-error: true
-
-    - name: Format code
-      if: steps.format-check.outcome == 'failure'
-      run: dart format .
-
-    - name: Fix linting issues
-      if: steps.lint-check.outcome == 'failure'
-      run: dart fix --apply
-
-    - name: Commit and push formatting and linting changes
-      if: steps.format-check.outcome == 'failure' || steps.lint-check.outcome == 'failure'
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add -A
-        git commit -m "auto fix"
-        git push origin HEAD:${{ github.head_ref }}
