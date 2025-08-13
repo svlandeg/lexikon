@@ -25,16 +25,26 @@ jobs:
     - name: Check formatting
       id: format-check
       run: dart format --set-exit-if-changed .
+      continue-on-error: true
+
+    - name: Check linting
+      id: lint-check
+      run: dart analyze --fatal-infos
+      continue-on-error: true
 
     - name: Format code
       if: steps.format-check.outcome == 'failure'
       run: dart format .
 
-    - name: Commit and push formatting changes
-      if: steps.format-check.outcome == 'failure'
+    - name: Fix linting issues
+      if: steps.lint-check.outcome == 'failure'
+      run: dart fix --apply
+
+    - name: Commit and push formatting and linting changes
+      if: steps.format-check.outcome == 'failure' || steps.lint-check.outcome == 'failure'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add -A
-        git commit -m "Auto format code"
+        git commit -m "auto fix"
         git push
