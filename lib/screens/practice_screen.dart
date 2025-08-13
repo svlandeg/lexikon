@@ -5,11 +5,6 @@ import 'practice/wordsearch_screen.dart';
 import 'practice/flashcard_screen.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/services.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
-import 'package:csv/csv.dart';
-import 'dart:math';
 import 'practice/scrambledword_screen.dart';
 import 'practice/connect_screen.dart';
 
@@ -27,7 +22,7 @@ class PracticeScreen extends StatefulWidget {
 }
 
 class _PracticeScreenState extends State<PracticeScreen> {
-  List<Vocabulary> _vocabularies = [];
+  final List<Vocabulary> _vocabularies = [];
   Vocabulary? _selectedVocabulary;
 
   @override

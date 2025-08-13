@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'dart:io';
-import 'package:lexikon/voc/vocabulary.dart';
 import 'package:lexikon/voc/entry.dart';
 
 // Color definitions for ConnectScreen
@@ -14,7 +12,7 @@ const Color lineC = Colors.greenAccent;
 
 class ConnectScreen extends StatefulWidget {
   final List<Entry> entries;
-  ConnectScreen({Key? key, required this.entries}) : super(key: key);
+  const ConnectScreen({super.key, required this.entries});
 
   @override
   _ConnectScreenState createState() => _ConnectScreenState();
@@ -134,7 +132,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: _buildImageWidget(entry as ImageEntry),
+          child: _buildImageWidget(entry),
         ),
       );
     } else {

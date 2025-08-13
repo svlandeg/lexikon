@@ -6,8 +6,6 @@ import 'package:lexikon/voc/entry.dart';
 import 'package:lexikon/voc/csv_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'dart:io';
-import 'package:path/path.dart' as path;
 
 void main() {
   group('VocabularyListScreen', () {

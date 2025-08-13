@@ -43,8 +43,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   late List<List<String>> _grid;
   late int _gridSize;
   late List<_PlacedWord> _placedWords;
-  Set<int> _foundWordIndexes = {};
-  List<_FoundWord> _foundWords = [];
+  final Set<int> _foundWordIndexes = {};
+  final List<_FoundWord> _foundWords = [];
   int? _selectStartRow;
   int? _selectStartCol;
   int? _selectEndRow;
@@ -150,7 +150,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     for (final wordOrig in wordList) {
       // For RTL, reverse the word string, but placement logic is always left-to-right or top-to-bottom
       final isRTL = direction == TextDirection.rtl;
-      final word = isRTL ? wordOrig.split("").reversed.join("") : wordOrig;
+      final word = isRTL ? wordOrig.split('').reversed.join('') : wordOrig;
       List<_PlacementOption> bestOptions = [];
       int maxOverlap = -1;
       for (final isHorizontal in [true, false]) {
@@ -476,8 +476,9 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     if (_selectStartRow == null ||
         _selectStartCol == null ||
         _selectEndRow == null ||
-        _selectEndCol == null)
+        _selectEndCol == null) {
       return;
+    }
     final start = [_selectStartRow!, _selectStartCol!];
     final end = [_selectEndRow!, _selectEndCol!];
     // Only allow horizontal or vertical
@@ -587,8 +588,9 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     if (_selectStartRow == null ||
         _selectStartCol == null ||
         _selectEndRow == null ||
-        _selectEndCol == null)
+        _selectEndCol == null) {
       return [];
+    }
     final start = [_selectStartRow!, _selectStartCol!];
     final end = [_selectEndRow!, _selectEndCol!];
     final isRTL = widget.readingDirection == TextDirection.rtl;
@@ -634,11 +636,13 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   bool _isCellInFoundWord(int row, int col) {
     for (final fw in _foundWords) {
       if (fw.isHorizontal) {
-        if (row == fw.start[0] && col >= fw.start[1] && col <= fw.end[1])
+        if (row == fw.start[0] && col >= fw.start[1] && col <= fw.end[1]) {
           return true;
+        }
       } else {
-        if (col == fw.start[1] && row >= fw.start[0] && row <= fw.end[0])
+        if (col == fw.start[1] && row >= fw.start[0] && row <= fw.end[0]) {
           return true;
+        }
       }
     }
     return false;
@@ -653,21 +657,25 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     if (_selectStartRow == _selectEndRow) {
       if (row == _selectStartRow &&
           col >= _selectStartCol! &&
-          col <= _selectEndCol!)
+          col <= _selectEndCol!) {
         return true;
+      }
       if (row == _selectStartRow &&
           col <= _selectStartCol! &&
-          col >= _selectEndCol!)
+          col >= _selectEndCol!) {
         return true;
+      }
     } else if (_selectStartCol == _selectEndCol) {
       if (col == _selectStartCol &&
           row >= _selectStartRow! &&
-          row <= _selectEndRow!)
+          row <= _selectEndRow!) {
         return true;
+      }
       if (col == _selectStartCol &&
           row <= _selectStartRow! &&
-          row >= _selectEndRow!)
+          row >= _selectEndRow!) {
         return true;
+      }
     }
     return false;
   }

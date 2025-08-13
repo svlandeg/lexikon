@@ -38,8 +38,9 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
   /// Checks if a word can be meaningfully scrambled
   bool _canBeScrambled(String word) {
     if (word.length <= 1) return false;
-    if (word.split('').toSet().length == 1)
+    if (word.split('').toSet().length == 1) {
       return false; // all identical characters
+    }
     return true;
   }
 
@@ -292,8 +293,8 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
                                     ),
                                   ),
                                   child: DragTarget<String>(
-                                    onWillAccept: (data) => data != null,
-                                    onAccept: (data) {
+                                    onWillAcceptWithDetails: (data) => data != null,
+                                    onAcceptWithDetails: (data) {
                                       setState(() {
                                         final oldIndex = _userOrder.indexOf(
                                           data,

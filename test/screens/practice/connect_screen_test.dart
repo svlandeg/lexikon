@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lexikon/screens/practice/connect_screen.dart';
-import 'package:lexikon/voc/vocabulary.dart';
 import 'package:lexikon/voc/entry.dart';
 
 void main() {
