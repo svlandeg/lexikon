@@ -48,5 +48,9 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add -A
-        git commit -m "Auto fix"
-        git push origin HEAD:${{ github.head_ref }}
+        if [ -n "$(git status --porcelain)" ]; then
+          git commit -m "Auto fix"
+          git push origin HEAD:${{ github.head_ref }}
+        else
+          echo "No changes to commit"
+        fi
