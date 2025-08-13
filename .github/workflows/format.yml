@@ -1,0 +1,40 @@
+name: Code Format Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+
+    - name: Get dependencies
+      run: flutter pub get
+
+    - name: Check formatting
+      id: format-check
+      run: dart format --set-exit-if-changed .
+
+    - name: Format code
+      if: steps.format-check.outcome == 'failure'
+      run: dart format .
+
+    - name: Commit and push formatting changes
+      if: steps.format-check.outcome == 'failure'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git commit -m "Auto format code"
+        git push
