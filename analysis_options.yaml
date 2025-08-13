@@ -9,22 +9,13 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
-# Dart format configuration
+# Dart code metrics configuration
 dart_code_metrics:
   rules:
     - prefer-single-widget-per-file
     - no-empty-block
     - prefer-trailing-comma
     - prefer-match-file-name
-
-# Formatting rules
-formatter:
-  indent: 2
-  line_length: 80
-  prefer_single_quotes: true
-  prefer_double_quotes: false
-  trailing_comma: true
-  trailing_comma_ignore: [one_line, single_line]
 
 linter:
   # The lint rules applied to this project can be customized in the
@@ -38,8 +29,7 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    prefer_single_quotes: true  # Enable the `prefer_single_quotes` rule
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
