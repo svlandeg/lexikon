@@ -82,7 +82,7 @@ class TextVocabulary extends Vocabulary {
         );
       }
     }
-      this.entries = textEntries;
+    this.entries = textEntries;
   }
 
   factory TextVocabulary.fromJson(Map<String, dynamic> json) {
@@ -188,7 +188,7 @@ class ImageVocabulary extends Vocabulary {
         );
       }
     }
-      this.entries = imageEntries;
+    this.entries = imageEntries;
   }
 
   factory ImageVocabulary.fromJson(Map<String, dynamic> json) {

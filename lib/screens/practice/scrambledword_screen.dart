@@ -293,7 +293,8 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
                                     ),
                                   ),
                                   child: DragTarget<String>(
-                                    onWillAcceptWithDetails: (data) => data != null,
+                                    onWillAcceptWithDetails: (data) =>
+                                        data != null,
                                     onAcceptWithDetails: (data) {
                                       setState(() {
                                         final oldIndex = _userOrder.indexOf(

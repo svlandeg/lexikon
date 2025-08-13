@@ -1,4 +1,3 @@
-
 // Base abstract class for all entries
 abstract class Entry {
   final String target;
