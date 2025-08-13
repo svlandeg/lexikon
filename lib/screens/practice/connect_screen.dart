@@ -73,14 +73,16 @@ class _ConnectScreenState extends State<ConnectScreen> {
       final sourceEntry = sourceEntries[selectedSourceIndex!];
       final target = targetWords[selectedTargetIndex!];
       final match = sourceEntry.target == target;
-      
+
       if (match) {
         // If they match, add connection and clear selection
         setState(() {
-          connections.add(_Connection(
-            sourceIndex: selectedSourceIndex!,
-            targetIndex: selectedTargetIndex!,
-          ));
+          connections.add(
+            _Connection(
+              sourceIndex: selectedSourceIndex!,
+              targetIndex: selectedTargetIndex!,
+            ),
+          );
           selectedSourceIndex = null;
           selectedTargetIndex = null;
         });
@@ -118,10 +120,14 @@ class _ConnectScreenState extends State<ConnectScreen> {
         margin: const EdgeInsets.symmetric(vertical: 8.0),
         height: 60.0,
         decoration: BoxDecoration(
-          color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
-          border: isSelected 
-            ? Border.all(color: Colors.yellow, width: 2)
-            : isConnected 
+          color: isSelected
+              ? boxSelectedC
+              : isConnected
+              ? boxConnectedC
+              : boxC,
+          border: isSelected
+              ? Border.all(color: Colors.yellow, width: 2)
+              : isConnected
               ? Border.all(color: Colors.grey, width: 2)
               : Border.all(color: Colors.white, width: 2),
           borderRadius: BorderRadius.circular(8),
@@ -138,7 +144,11 @@ class _ConnectScreenState extends State<ConnectScreen> {
         padding: const EdgeInsets.all(12),
         height: 60.0,
         decoration: BoxDecoration(
-          color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
+          color: isSelected
+              ? boxSelectedC
+              : isConnected
+              ? boxConnectedC
+              : boxC,
           border: Border.all(
             color: isConnected ? borderConnectedC : borderDefaultC,
             width: 2,
@@ -155,10 +165,11 @@ class _ConnectScreenState extends State<ConnectScreen> {
 
   Widget _buildImageWidget(ImageEntry imageEntry) {
     // Check if the path is a local file path (contains directory separators)
-    if (imageEntry.imagePath.contains('/') || imageEntry.imagePath.contains('\\')) {
+    if (imageEntry.imagePath.contains('/') ||
+        imageEntry.imagePath.contains('\\')) {
       // Local file path - use Image.file
       final file = File(imageEntry.imagePath);
-      
+
       // Check if file exists before trying to load it
       if (!file.existsSync()) {
         return Container(
@@ -174,24 +185,18 @@ class _ConnectScreenState extends State<ConnectScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'File not found',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.red[700],
-                  ),
+                  style: TextStyle(fontSize: 10, color: Colors.red[700]),
                 ),
                 Text(
                   imageEntry.imagePath.split('/').last,
-                  style: TextStyle(
-                    fontSize: 8,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 8, color: Colors.grey[600]),
                 ),
               ],
             ),
           ),
         );
       }
-      
+
       return Image.file(
         file,
         fit: BoxFit.cover,
@@ -211,17 +216,11 @@ class _ConnectScreenState extends State<ConnectScreen> {
                   const SizedBox(height: 4),
                   Text(
                     'Load failed',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.red[700],
-                    ),
+                    style: TextStyle(fontSize: 10, color: Colors.red[700]),
                   ),
                   Text(
                     imageEntry.imagePath.split('/').last,
-                    style: TextStyle(
-                      fontSize: 8,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 8, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -240,9 +239,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
               border: Border.all(color: Colors.red),
               color: Colors.grey[200],
             ),
-            child: const Center(
-              child: Icon(Icons.error, color: Colors.red),
-            ),
+            child: const Center(child: Icon(Icons.error, color: Colors.red)),
           );
         },
       );
@@ -256,7 +253,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
     int currentBatchStart = batchIndex * batchSize;
     int currentBatchEnd = ((batchIndex + 1) * batchSize).clamp(0, total);
     bool allPairsMatched = connections.length == sourceEntries.length;
-    
+
     return Scaffold(
       appBar: AppBar(title: const Text('Connect')),
       body: Padding(
@@ -283,7 +280,10 @@ class _ConnectScreenState extends State<ConnectScreen> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Text('$solved/$total', style: Theme.of(context).textTheme.bodyMedium),
+                      Text(
+                        '$solved/$total',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ],
                   ),
                 ),
@@ -297,12 +297,22 @@ class _ConnectScreenState extends State<ConnectScreen> {
                           Expanded(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: List.generate(sourceEntries.length, (i) {
+                              children: List.generate(sourceEntries.length, (
+                                i,
+                              ) {
                                 bool isSelected = selectedSourceIndex == i;
-                                bool isConnected = connections.any((c) => c.sourceIndex == i);
+                                bool isConnected = connections.any(
+                                  (c) => c.sourceIndex == i,
+                                );
                                 return GestureDetector(
-                                  onTap: isConnected ? null : () => onWordTap(true, i),
-                                  child: _buildSourceWidget(sourceEntries[i], isSelected, isConnected),
+                                  onTap: isConnected
+                                      ? null
+                                      : () => onWordTap(true, i),
+                                  child: _buildSourceWidget(
+                                    sourceEntries[i],
+                                    isSelected,
+                                    isConnected,
+                                  ),
                                 );
                               }),
                             ),
@@ -313,22 +323,37 @@ class _ConnectScreenState extends State<ConnectScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: List.generate(targetWords.length, (i) {
                                 bool isSelected = selectedTargetIndex == i;
-                                bool isConnected = connections.any((c) => c.targetIndex == i);
+                                bool isConnected = connections.any(
+                                  (c) => c.targetIndex == i,
+                                );
                                 return GestureDetector(
-                                  onTap: isConnected ? null : () => onWordTap(false, i),
+                                  onTap: isConnected
+                                      ? null
+                                      : () => onWordTap(false, i),
                                   child: Container(
-                                    margin: EdgeInsets.symmetric(vertical: verticalPadding),
+                                    margin: EdgeInsets.symmetric(
+                                      vertical: verticalPadding,
+                                    ),
                                     padding: EdgeInsets.all(12),
                                     height: wordHeight,
                                     decoration: BoxDecoration(
-                                      color: isSelected ? boxSelectedC : isConnected ? boxConnectedC : boxC,
+                                      color: isSelected
+                                          ? boxSelectedC
+                                          : isConnected
+                                          ? boxConnectedC
+                                          : boxC,
                                       border: Border.all(
-                                        color: isConnected ? borderConnectedC : borderDefaultC,
+                                        color: isConnected
+                                            ? borderConnectedC
+                                            : borderDefaultC,
                                         width: 2,
                                       ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: Text(targetWords[i], style: TextStyle(fontSize: 18)),
+                                    child: Text(
+                                      targetWords[i],
+                                      style: TextStyle(fontSize: 18),
+                                    ),
                                   ),
                                 );
                               }),
@@ -336,18 +361,20 @@ class _ConnectScreenState extends State<ConnectScreen> {
                           ),
                         ],
                       ),
-                                             // Draw all connection lines
-                       ...connections.map((conn) => IgnorePointer(
-                         ignoring: true,
-                         child: CustomPaint(
-                           size: Size(width, height),
-                           painter: _ConnectionLinePainter(
-                             sourceIndex: conn.sourceIndex,
-                             targetIndex: conn.targetIndex,
-                             n: n,
-                           ),
-                         ),
-                       )),
+                      // Draw all connection lines
+                      ...connections.map(
+                        (conn) => IgnorePointer(
+                          ignoring: true,
+                          child: CustomPaint(
+                            size: Size(width, height),
+                            painter: _ConnectionLinePainter(
+                              sourceIndex: conn.sourceIndex,
+                              targetIndex: conn.targetIndex,
+                              n: n,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -358,12 +385,19 @@ class _ConnectScreenState extends State<ConnectScreen> {
                     child: ElevatedButton(
                       onPressed: allPairsMatched ? _onNextPressed : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: allPairsMatched ? Theme.of(context).primaryColor : Colors.grey,
+                        backgroundColor: allPairsMatched
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
                       ),
                       child: Text(
-                        (batchIndex + 1) * batchSize < allEntries.length ? 'Next' : 'Finish',
+                        (batchIndex + 1) * batchSize < allEntries.length
+                            ? 'Next'
+                            : 'Finish',
                         style: const TextStyle(fontSize: 18),
                       ),
                     ),
@@ -401,35 +435,37 @@ class _ConnectionLinePainter extends CustomPainter {
       ..color = lineC
       ..strokeWidth = 4.0
       ..style = PaintingStyle.stroke;
-    
+
     // Use the actual size of the CustomPaint widget
     double actualWidth = size.width;
     double actualHeight = size.height;
-    
+
     // Calculate the actual layout positions
     // The layout has two Expanded columns, so each takes half the width
     double columnWidth = actualWidth / 2;
-    
+
     // Source boxes are in the left column, target boxes in the right column
     // Both columns use MainAxisAlignment.center, so boxes are centered vertically
     double leftX = columnWidth / 2; // Center of left column
     double rightX = columnWidth + columnWidth / 2; // Center of right column
-    
+
     // Calculate vertical positions
     // Each box has height + 2 * margin (8.0 vertical margin on each side)
     double boxHeight = 60.0;
     double margin = 8.0;
     double totalBoxHeight = boxHeight + 2 * margin;
-    
+
     // The Column with MainAxisAlignment.center centers the content
     double totalContentHeight = n * totalBoxHeight;
     double startY = (actualHeight - totalContentHeight) / 2;
-    
+
     // Calculate the center of each box
     // Each box starts at startY + margin + (index * totalBoxHeight)
-    double y1 = startY + margin + (totalBoxHeight * sourceIndex) + boxHeight / 2;
-    double y2 = startY + margin + (totalBoxHeight * targetIndex) + boxHeight / 2;
-    
+    double y1 =
+        startY + margin + (totalBoxHeight * sourceIndex) + boxHeight / 2;
+    double y2 =
+        startY + margin + (totalBoxHeight * targetIndex) + boxHeight / 2;
+
     // Connect to the edges of the boxes, not the centers
     const double boxWidth = 120.0; // Approximate width of the word box
     final p1 = Offset(leftX + boxWidth / 2, y1);
@@ -439,4 +475,4 @@ class _ConnectionLinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-} 
+}

@@ -11,12 +11,7 @@ void main() {
     });
 
     test('handles JSON with null values', () {
-      final json = {
-        'type': null,
-        'id': null,
-        'name': null,
-        'entries': null,
-      };
+      final json = {'type': null, 'id': null, 'name': null, 'entries': null};
       expect(() => vocabularyFromJson(json), throwsArgumentError);
     });
 
@@ -32,7 +27,7 @@ void main() {
             'type': null, // Missing type
             'source': 'hello',
             'target': 'hola',
-          }
+          },
         ],
       };
       expect(() => vocabularyFromJson(json), throwsArgumentError);
@@ -50,7 +45,7 @@ void main() {
             'type': 'text',
             // Missing source
             'target': 'hola',
-          }
+          },
         ],
       };
       expect(() => vocabularyFromJson(json), throwsArgumentError);
@@ -76,11 +71,7 @@ void main() {
         'sourceLanguage': 'English',
         'targetLanguage': 'Spanish',
         'entries': [
-          {
-            'type': 'corrupted_entry_type',
-            'source': 'hello',
-            'target': 'hola',
-          }
+          {'type': 'corrupted_entry_type', 'source': 'hello', 'target': 'hola'},
         ],
       };
       expect(() => vocabularyFromJson(json), throwsArgumentError);
@@ -126,7 +117,7 @@ void main() {
             'type': 'image',
             // Missing imagePath
             'target': 'gato',
-          }
+          },
         ],
       };
       expect(() => vocabularyFromJson(json), throwsArgumentError);
@@ -140,16 +131,12 @@ void main() {
         'sourceLanguage': 'English',
         'targetLanguage': 'Spanish',
         'entries': [
-          {
-            'type': 'text',
-            'source': 'hello',
-            'target': 'hola',
-          },
+          {'type': 'text', 'source': 'hello', 'target': 'hola'},
           {
             'type': 'text',
             // Missing source - should cause error
             'target': 'adios',
-          }
+          },
         ],
       };
       expect(() => vocabularyFromJson(json), throwsArgumentError);
@@ -163,38 +150,22 @@ void main() {
     });
 
     test('handles entry with null type', () {
-      final json = {
-        'type': null,
-        'source': 'hello',
-        'target': 'hola',
-      };
+      final json = {'type': null, 'source': 'hello', 'target': 'hola'};
       expect(() => entryFromJson(json), throwsArgumentError);
     });
 
     test('handles entry with null target', () {
-      final json = {
-        'type': 'text',
-        'source': 'hello',
-        'target': null,
-      };
+      final json = {'type': 'text', 'source': 'hello', 'target': null};
       expect(() => entryFromJson(json), throwsArgumentError);
     });
 
     test('handles text entry with null source', () {
-      final json = {
-        'type': 'text',
-        'source': null,
-        'target': 'hola',
-      };
+      final json = {'type': 'text', 'source': null, 'target': 'hola'};
       expect(() => entryFromJson(json), throwsArgumentError);
     });
 
     test('handles image entry with null imagePath', () {
-      final json = {
-        'type': 'image',
-        'imagePath': null,
-        'target': 'gato',
-      };
+      final json = {'type': 'image', 'imagePath': null, 'target': 'gato'};
       expect(() => entryFromJson(json), throwsArgumentError);
     });
 
@@ -207,4 +178,4 @@ void main() {
       expect(() => entryFromJson(json), throwsArgumentError);
     });
   });
-} 
+}

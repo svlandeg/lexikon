@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 
 void main() {
   group('Vocabulary', () {
-    final entryList = [TextEntry(source: 'cat', target: 'gato'), TextEntry(source: 'dog', target: 'perro')];
+    final entryList = [
+      TextEntry(source: 'cat', target: 'gato'),
+      TextEntry(source: 'dog', target: 'perro'),
+    ];
     final vocab = TextVocabulary(
       id: '1',
       name: 'TestName',
@@ -34,4 +37,4 @@ void main() {
       expect(vocab.entries, isEmpty);
     });
   });
-} 
+}

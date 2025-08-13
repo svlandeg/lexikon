@@ -3,7 +3,6 @@ import 'dart:io';
 import 'entry.dart';
 import 'csv_parser.dart';
 
-
 // Base abstract class for all vocabularies
 abstract class Vocabulary {
   final String id;
@@ -17,7 +16,7 @@ abstract class Vocabulary {
     required this.name,
     required this.targetLanguage,
     this.targetReadingDirection = TextDirection.ltr,
-    required this.entries
+    required this.entries,
   });
 
   Map<String, dynamic> toJson();
@@ -29,7 +28,6 @@ abstract class Vocabulary {
 
 // Text vocabulary with text entries
 class TextVocabulary extends Vocabulary {
-
   String sourceLanguage;
   TextDirection sourceReadingDirection;
 
@@ -52,7 +50,9 @@ class TextVocabulary extends Vocabulary {
     // Ensure all entries are TextEntry
     for (final entry in super.entries) {
       if (entry is! TextEntry) {
-        throw ArgumentError('TextVocabulary can only contain TextEntry objects, found: ${entry.runtimeType}');
+        throw ArgumentError(
+          'TextVocabulary can only contain TextEntry objects, found: ${entry.runtimeType}',
+        );
       }
     }
     return super.entries;
@@ -79,48 +79,64 @@ class TextVocabulary extends Vocabulary {
         if (entry is TextEntry) {
           textEntries.add(entry);
         } else {
-          throw ArgumentError('TextVocabulary can only contain TextEntry objects, found: ${entry.runtimeType}');
+          throw ArgumentError(
+            'TextVocabulary can only contain TextEntry objects, found: ${entry.runtimeType}',
+          );
         }
       }
-    } 
+    }
     this.entries = textEntries;
   }
 
   factory TextVocabulary.fromJson(Map<String, dynamic> json) {
-    const requiredFields = ['id', 'name', 'sourceLanguage', 'targetLanguage', 'entries', 'sourceReadingDirection', 'targetReadingDirection'];
+    const requiredFields = [
+      'id',
+      'name',
+      'sourceLanguage',
+      'targetLanguage',
+      'entries',
+      'sourceReadingDirection',
+      'targetReadingDirection',
+    ];
     for (final field in requiredFields) {
       if (json[field] == null) {
-        throw ArgumentError('TextVocabulary JSON is missing required field: $field');
+        throw ArgumentError(
+          'TextVocabulary JSON is missing required field: $field',
+        );
       }
     }
 
-    final entries = (json['entries'] as List).map((e) => entryFromJson(e)).toList();
+    final entries = (json['entries'] as List)
+        .map((e) => entryFromJson(e))
+        .toList();
 
-      // Validate that all entries are TextEntry
-      final textEntries = <TextEntry>[];
-      for (final entry in entries) {
-        if (entry is TextEntry) {
-          textEntries.add(entry);
-        } else {
-          throw ArgumentError('TextVocabulary can only contain TextEntry objects, found: ${entry.runtimeType}');
-        }
+    // Validate that all entries are TextEntry
+    final textEntries = <TextEntry>[];
+    for (final entry in entries) {
+      if (entry is TextEntry) {
+        textEntries.add(entry);
+      } else {
+        throw ArgumentError(
+          'TextVocabulary can only contain TextEntry objects, found: ${entry.runtimeType}',
+        );
       }
-      
-      return TextVocabulary(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        sourceLanguage: json['sourceLanguage'] as String,
-        targetLanguage: json['targetLanguage'] as String,
-        sourceReadingDirection: TextDirection.values.firstWhere(
-          (e) => e.name == (json['sourceReadingDirection'] as String? ?? 'ltr'),
-          orElse: () => TextDirection.ltr,
-        ),
-        targetReadingDirection: TextDirection.values.firstWhere(
-          (e) => e.name == (json['targetReadingDirection'] as String? ?? 'ltr'),
-          orElse: () => TextDirection.ltr,
-        ),
-        entries: textEntries,
-      );
+    }
+
+    return TextVocabulary(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      sourceLanguage: json['sourceLanguage'] as String,
+      targetLanguage: json['targetLanguage'] as String,
+      sourceReadingDirection: TextDirection.values.firstWhere(
+        (e) => e.name == (json['sourceReadingDirection'] as String? ?? 'ltr'),
+        orElse: () => TextDirection.ltr,
+      ),
+      targetReadingDirection: TextDirection.values.firstWhere(
+        (e) => e.name == (json['targetReadingDirection'] as String? ?? 'ltr'),
+        orElse: () => TextDirection.ltr,
+      ),
+      entries: textEntries,
+    );
   }
 }
 
@@ -143,7 +159,9 @@ class ImageVocabulary extends Vocabulary {
     // Ensure all entries are ImageEntry
     for (final entry in super.entries) {
       if (entry is! ImageEntry) {
-        throw ArgumentError('ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}');
+        throw ArgumentError(
+          'ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}',
+        );
       }
     }
     return super.entries;
@@ -168,7 +186,9 @@ class ImageVocabulary extends Vocabulary {
         if (entry is ImageEntry) {
           imageEntries.add(entry);
         } else {
-          throw ArgumentError('ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}');
+          throw ArgumentError(
+            'ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}',
+          );
         }
       }
     }
@@ -176,35 +196,47 @@ class ImageVocabulary extends Vocabulary {
   }
 
   factory ImageVocabulary.fromJson(Map<String, dynamic> json) {
-    const requiredFields = ['id', 'name', 'targetLanguage', 'entries', 'targetReadingDirection'];
+    const requiredFields = [
+      'id',
+      'name',
+      'targetLanguage',
+      'entries',
+      'targetReadingDirection',
+    ];
     for (final field in requiredFields) {
       if (json[field] == null) {
-        throw ArgumentError('ImageVocabulary JSON is missing required field: $field');
+        throw ArgumentError(
+          'ImageVocabulary JSON is missing required field: $field',
+        );
       }
     }
 
-    final entries = (json['entries'] as List).map((e) => entryFromJson(e)).toList();
-      
-      // Validate that all entries are ImageEntry
-      final imageEntries = <ImageEntry>[];
-      for (final entry in entries) {
-        if (entry is ImageEntry) {
-          imageEntries.add(entry);
-        } else {
-          throw ArgumentError('ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}');
-        }
+    final entries = (json['entries'] as List)
+        .map((e) => entryFromJson(e))
+        .toList();
+
+    // Validate that all entries are ImageEntry
+    final imageEntries = <ImageEntry>[];
+    for (final entry in entries) {
+      if (entry is ImageEntry) {
+        imageEntries.add(entry);
+      } else {
+        throw ArgumentError(
+          'ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}',
+        );
       }
-      
-      return ImageVocabulary(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        targetLanguage: json['targetLanguage'] as String,
-        targetReadingDirection: TextDirection.values.firstWhere(
-          (e) => e.name == (json['targetReadingDirection'] as String? ?? 'ltr'),
-          orElse: () => TextDirection.ltr,
-        ),
-        entries: imageEntries,
-      );
+    }
+
+    return ImageVocabulary(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      targetLanguage: json['targetLanguage'] as String,
+      targetReadingDirection: TextDirection.values.firstWhere(
+        (e) => e.name == (json['targetReadingDirection'] as String? ?? 'ltr'),
+        orElse: () => TextDirection.ltr,
+      ),
+      entries: imageEntries,
+    );
   }
 }
 
@@ -224,5 +256,4 @@ Vocabulary vocabularyFromJson(Map<String, dynamic> json) {
     default:
       throw ArgumentError('Unknown vocabulary type: $type');
   }
-
 }

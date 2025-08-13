@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:io';   
+import 'dart:io';
 
 // Base abstract class for all entries
 abstract class Entry {
@@ -25,15 +25,15 @@ class TextEntry extends Entry {
 
   factory TextEntry.fromJson(Map<String, dynamic> json) {
     if (json['source'] == null) {
-        throw ArgumentError('TextEntry JSON is missing required field: source');
-      }
+      throw ArgumentError('TextEntry JSON is missing required field: source');
+    }
     if (json['target'] == null) {
       throw ArgumentError('TextEntry JSON is missing required field: target');
     }
     return TextEntry(
       source: json['source'] as String,
       target: json['target'] as String,
-      );
+    );
   }
 }
 
@@ -52,8 +52,10 @@ class ImageEntry extends Entry {
 
   factory ImageEntry.fromJson(Map<String, dynamic> json) {
     if (json['imagePath'] == null) {
-        throw ArgumentError('ImageEntry JSON is missing required field: imagePath');
-      } 
+      throw ArgumentError(
+        'ImageEntry JSON is missing required field: imagePath',
+      );
+    }
     if (json['target'] == null) {
       throw ArgumentError('ImageEntry JSON is missing required field: target');
     }

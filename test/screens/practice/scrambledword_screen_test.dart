@@ -6,7 +6,9 @@ import 'package:lexikon/voc/entry.dart';
 
 void main() {
   group('ScrambledWordScreen', () {
-    testWidgets('shows source word and scrambled chips', (WidgetTester tester) async {
+    testWidgets('shows source word and scrambled chips', (
+      WidgetTester tester,
+    ) async {
       final vocab = TextVocabulary(
         id: '1',
         name: 'TestVocab',
@@ -18,9 +20,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: ScrambledWordScreen(vocabulary: vocab, count: 1),
-        ),
+        MaterialApp(home: ScrambledWordScreen(vocabulary: vocab, count: 1)),
       );
 
       // Source word is shown
@@ -32,16 +32,21 @@ void main() {
 
       // Chips for each letter in 'gato' are shown (in any order)
       for (final letter in 'tgao'.split('')) {
-        expect(find.text(letter), findsWidgets); // could be more than one if scrambled
+        expect(
+          find.text(letter),
+          findsWidgets,
+        ); // could be more than one if scrambled
       }
       // The 'Correct!' message should not be shown initially
       expect(find.text('Correct!'), findsNothing);
     });
 
-    testWidgets('scrambled word is never accidentally correct', (WidgetTester tester) async {
+    testWidgets('scrambled word is never accidentally correct', (
+      WidgetTester tester,
+    ) async {
       final targetWord = 'من';
       final targetLength = targetWord.length;
-      
+
       final vocab = TextVocabulary(
         id: '1',
         name: 'TestVocab',
@@ -53,9 +58,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: ScrambledWordScreen(vocabulary: vocab, count: 1),
-        ),
+        MaterialApp(home: ScrambledWordScreen(vocabulary: vocab, count: 1)),
       );
 
       // Wait for the widget to fully build
@@ -66,7 +69,7 @@ void main() {
 
       // Get all the letter chips
       final letterChips = find.byType(Chip);
-      expect(letterChips, findsNWidgets(targetLength)); 
+      expect(letterChips, findsNWidgets(targetLength));
 
       // Extract the text from each chip
       final List<String> displayedLetters = [];
@@ -75,22 +78,28 @@ void main() {
         final text = (chip.label as Text).data!;
         displayedLetters.add(text);
       }
-      
+
       // Verify all letters from the target word are present
       final targetLetters = targetWord.split('')..sort();
       final displayedLettersSorted = displayedLetters..sort();
-      expect(displayedLettersSorted, equals(targetLetters),
-          reason: 'All letters from target word should be present');
+      expect(
+        displayedLettersSorted,
+        equals(targetLetters),
+        reason: 'All letters from target word should be present',
+      );
 
       // For RTL text, the visual order is reversed from the logical order
       // So we need to reverse the displayed letters to get the actual word
-      final actualWord = vocab.targetReadingDirection == TextDirection.rtl 
+      final actualWord = vocab.targetReadingDirection == TextDirection.rtl
           ? displayedLetters.reversed.join()
           : displayedLetters.join();
 
       // Verify the displayed letters don't spell the correct word
-      expect(actualWord, isNot(targetWord), 
-          reason: 'Scrambled word should not be correct');
+      expect(
+        actualWord,
+        isNot(targetWord),
+        reason: 'Scrambled word should not be correct',
+      );
     });
   });
-} 
+}

@@ -12,7 +12,7 @@ void main() {
       TextEntry(source: 'dog', target: 'chien'),
       TextEntry(source: 'fish', target: 'poisson'),
     ];
-          final vocabulary = TextVocabulary(
+    final vocabulary = TextVocabulary(
       id: 'test-vocab-flash',
       name: 'Test French',
       entries: frenchEntries,
@@ -24,12 +24,7 @@ void main() {
 
     testWidgets('renders initial flashcard', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: FlashcardScreen(
-            vocabulary: vocabulary,
-            count: 2,
-          ),
-        ),
+        MaterialApp(home: FlashcardScreen(vocabulary: vocabulary, count: 2)),
       );
       await tester.pumpAndSettle();
 
@@ -53,12 +48,7 @@ void main() {
 
     testWidgets('properly handles correct answer', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: FlashcardScreen(
-            vocabulary: vocabulary,
-            count: 2,
-          ),
-        ),
+        MaterialApp(home: FlashcardScreen(vocabulary: vocabulary, count: 2)),
       );
       await tester.pumpAndSettle();
 
@@ -68,7 +58,9 @@ void main() {
       );
       expect(shownWordFinder, findsOneWidget);
       final shownWord = (tester.widget<Text>(shownWordFinder)).data!;
-      final correctFrench = frenchEntries.firstWhere((e) => e.source == shownWord).target;
+      final correctFrench = frenchEntries
+          .firstWhere((e) => e.source == shownWord)
+          .target;
 
       // Enter the correct French word
       await tester.enterText(find.byType(TextField), correctFrench);
@@ -91,14 +83,11 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('properly handles incorrect answer', (WidgetTester tester) async {
+    testWidgets('properly handles incorrect answer', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: FlashcardScreen(
-            vocabulary: vocabulary,
-            count: 2,
-          ),
-        ),
+        MaterialApp(home: FlashcardScreen(vocabulary: vocabulary, count: 2)),
       );
       await tester.pumpAndSettle();
 
@@ -123,4 +112,4 @@ void main() {
       await tester.pumpAndSettle();
     });
   });
-} 
+}

@@ -25,14 +25,17 @@ class WordSearchScreen extends StatefulWidget {
   final List<Entry> entries;
   final Vocabulary vocabulary;
   static const int gridDimension = 10;
-  const WordSearchScreen({super.key, required this.entries, required this.vocabulary});
+  const WordSearchScreen({
+    super.key,
+    required this.entries,
+    required this.vocabulary,
+  });
 
   @override
   State<WordSearchScreen> createState() => _WordSearchScreenState();
 
   TextDirection get readingDirection => vocabulary.targetReadingDirection;
 }
-
 
 class _WordSearchScreenState extends State<WordSearchScreen> {
   static const int _numPairs = 12;
@@ -59,30 +62,51 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     // Set grid size from the widget's static const
     _gridSize = WordSearchScreen.gridDimension;
     final rand = Random();
-    final allEntries = List<Entry>.from(widget.entries)
-        .where((e) {
-          final trimmed = e.target.trim();
-          // Exclude words with spaces or punctuation
-          final hasPunctuation = RegExp(r'[\p{P}]', unicode: true).hasMatch(trimmed);
-          return !trimmed.contains(' ') && !hasPunctuation && trimmed.length <= _gridSize;
-        })
-        .toList();
+    final allEntries = List<Entry>.from(widget.entries).where((e) {
+      final trimmed = e.target.trim();
+      // Exclude words with spaces or punctuation
+      final hasPunctuation = RegExp(
+        r'[\p{P}]',
+        unicode: true,
+      ).hasMatch(trimmed);
+      return !trimmed.contains(' ') &&
+          !hasPunctuation &&
+          trimmed.length <= _gridSize;
+    }).toList();
     allEntries.shuffle(rand);
     _selectedEntries = allEntries.take(_numPairs).toList();
-    final wordList = _selectedEntries.map((e) => e.target.trim().toUpperCase()).toList();
+    final wordList = _selectedEntries
+        .map((e) => e.target.trim().toUpperCase())
+        .toList();
     _placedWords = [];
-    _grid = _generateGrid(_gridSize, wordList, widget.readingDirection, actuallyPlaced: _placedWords);
+    _grid = _generateGrid(
+      _gridSize,
+      wordList,
+      widget.readingDirection,
+      actuallyPlaced: _placedWords,
+    );
     _foundWordIndexes.clear();
     _foundWords.clear();
     _selectStartRow = null;
     _selectStartCol = null;
     _selectEndRow = null;
     _selectEndCol = null;
-    _foundMatrix = List.generate(_gridSize, (_) => List.filled(_gridSize, false));
+    _foundMatrix = List.generate(
+      _gridSize,
+      (_) => List.filled(_gridSize, false),
+    );
   }
 
-  List<List<String>> _generateGrid(int gridSize, List<String> wordList, TextDirection direction, {List<_PlacedWord>? actuallyPlaced}) {
-    final grid = List.generate(gridSize, (_) => List.generate(gridSize, (_) => ''));
+  List<List<String>> _generateGrid(
+    int gridSize,
+    List<String> wordList,
+    TextDirection direction, {
+    List<_PlacedWord>? actuallyPlaced,
+  }) {
+    final grid = List.generate(
+      gridSize,
+      (_) => List.generate(gridSize, (_) => ''),
+    );
     final rand = Random();
     final placed = <_PlacedWord>[];
 
@@ -108,7 +132,9 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
       }
     }
     if (scriptCounts.isNotEmpty) {
-      detectedScript = scriptCounts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+      detectedScript = scriptCounts.entries
+          .reduce((a, b) => a.value >= b.value ? a : b)
+          .key;
     }
 
     // 3. Get full alphabet for the detected script
@@ -142,7 +168,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
               for (final pw in placed) {
                 if (pw.isHorizontal &&
                     ((row == pw.start[0] + 1 || row == pw.start[0] - 1) &&
-                     ((col <= pw.end[1] && col + word.length - 1 >= pw.start[1])))) {
+                        ((col <= pw.end[1] &&
+                            col + word.length - 1 >= pw.start[1])))) {
                   canPlace = false;
                   break;
                 }
@@ -152,7 +179,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
               for (final pw in placed) {
                 if (!pw.isHorizontal &&
                     ((col == pw.start[1] + 1 || col == pw.start[1] - 1) &&
-                     ((row <= pw.end[0] && row + word.length - 1 >= pw.start[0])))) {
+                        ((row <= pw.end[0] &&
+                            row + word.length - 1 >= pw.start[0])))) {
                   canPlace = false;
                   break;
                 }
@@ -173,12 +201,16 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                   if (pw.isHorizontal != isHorizontal) {
                     // Check if this cell is part of pw
                     if (pw.isHorizontal) {
-                      if (r == pw.start[0] && c >= pw.start[1] && c <= pw.end[1]) {
+                      if (r == pw.start[0] &&
+                          c >= pw.start[1] &&
+                          c <= pw.end[1]) {
                         overlapAllowed = true;
                         break;
                       }
                     } else {
-                      if (c == pw.start[1] && r >= pw.start[0] && r <= pw.end[0]) {
+                      if (c == pw.start[1] &&
+                          r >= pw.start[0] &&
+                          r <= pw.end[0]) {
                         overlapAllowed = true;
                         break;
                       }
@@ -192,10 +224,12 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
               if (overlap > maxOverlap) {
                 maxOverlap = overlap;
                 bestOptions = [
-                  _PlacementOption(row, col, isHorizontal, overlap)
+                  _PlacementOption(row, col, isHorizontal, overlap),
                 ];
               } else if (overlap == maxOverlap) {
-                bestOptions.add(_PlacementOption(row, col, isHorizontal, overlap));
+                bestOptions.add(
+                  _PlacementOption(row, col, isHorizontal, overlap),
+                );
               }
             }
           }
@@ -208,14 +242,16 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
           int c = chosen.isHorizontal ? chosen.col + i : chosen.col;
           grid[r][c] = word[i];
         }
-        placed.add(_PlacedWord(
-          word: wordOrig, // always store the original word
-          start: [chosen.row, chosen.col],
-          end: chosen.isHorizontal
-              ? [chosen.row, chosen.col + word.length - 1]
-              : [chosen.row + word.length - 1, chosen.col],
-          isHorizontal: chosen.isHorizontal,
-        ));
+        placed.add(
+          _PlacedWord(
+            word: wordOrig, // always store the original word
+            start: [chosen.row, chosen.col],
+            end: chosen.isHorizontal
+                ? [chosen.row, chosen.col + word.length - 1]
+                : [chosen.row + word.length - 1, chosen.col],
+            isHorizontal: chosen.isHorizontal,
+          ),
+        );
       }
     }
     for (int r = 0; r < gridSize; r++) {
@@ -236,7 +272,9 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   String? _getUnicodeScript(String char) {
     if (char.isEmpty) return null;
     final code = char.runes.first;
-    final script = UnicodeScript.scripts.where((s) => code >= s.start && code <= s.end).toList();
+    final script = UnicodeScript.scripts
+        .where((s) => code >= s.start && code <= s.end)
+        .toList();
     if (script.isEmpty) return null;
     return script.first.name;
   }
@@ -264,13 +302,128 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   List<String>? _commonLettersForScript(String script) {
     switch (script.toLowerCase()) {
       case 'latin':
-        return ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+        return [
+          'A',
+          'B',
+          'C',
+          'D',
+          'E',
+          'F',
+          'G',
+          'H',
+          'I',
+          'J',
+          'K',
+          'L',
+          'M',
+          'N',
+          'O',
+          'P',
+          'Q',
+          'R',
+          'S',
+          'T',
+          'U',
+          'V',
+          'W',
+          'X',
+          'Y',
+          'Z',
+        ];
       case 'cyrillic':
-        return ['А','Б','В','Г','Д','Е','Ё','Ж','З','И','Й','К','Л','М','Н','О','П','Р','С','Т','У','Ф','Х','Ц','Ч','Ш','Щ','Ъ','Ы','Ь','Э','Ю','Я'];
+        return [
+          'А',
+          'Б',
+          'В',
+          'Г',
+          'Д',
+          'Е',
+          'Ё',
+          'Ж',
+          'З',
+          'И',
+          'Й',
+          'К',
+          'Л',
+          'М',
+          'Н',
+          'О',
+          'П',
+          'Р',
+          'С',
+          'Т',
+          'У',
+          'Ф',
+          'Х',
+          'Ц',
+          'Ч',
+          'Ш',
+          'Щ',
+          'Ъ',
+          'Ы',
+          'Ь',
+          'Э',
+          'Ю',
+          'Я',
+        ];
       case 'greek':
-        return ['Α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν','Ξ','Ο','Π','Ρ','Σ','Τ','Υ','Φ','Χ','Ψ','Ω'];
+        return [
+          'Α',
+          'Β',
+          'Γ',
+          'Δ',
+          'Ε',
+          'Ζ',
+          'Η',
+          'Θ',
+          'Ι',
+          'Κ',
+          'Λ',
+          'Μ',
+          'Ν',
+          'Ξ',
+          'Ο',
+          'Π',
+          'Ρ',
+          'Σ',
+          'Τ',
+          'Υ',
+          'Φ',
+          'Χ',
+          'Ψ',
+          'Ω',
+        ];
       case 'arabic':
-        return ['ا','ب','ت','ث','ج','ح','خ','د','ذ','ر','ز','س','ش','ص','ض','ط','ظ','ع','غ','ف','ق','ك','ل','م','ن','ه','و','ي'];
+        return [
+          'ا',
+          'ب',
+          'ت',
+          'ث',
+          'ج',
+          'ح',
+          'خ',
+          'د',
+          'ذ',
+          'ر',
+          'ز',
+          'س',
+          'ش',
+          'ص',
+          'ض',
+          'ط',
+          'ظ',
+          'ع',
+          'غ',
+          'ف',
+          'ق',
+          'ك',
+          'ل',
+          'م',
+          'ن',
+          'ه',
+          'و',
+          'ي',
+        ];
       default:
         return null;
     }
@@ -320,7 +473,11 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   }
 
   void _checkSelection() {
-    if (_selectStartRow == null || _selectStartCol == null || _selectEndRow == null || _selectEndCol == null) return;
+    if (_selectStartRow == null ||
+        _selectStartCol == null ||
+        _selectEndRow == null ||
+        _selectEndCol == null)
+      return;
     final start = [_selectStartRow!, _selectStartCol!];
     final end = [_selectEndRow!, _selectEndCol!];
     // Only allow horizontal or vertical
@@ -399,13 +556,15 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
       if (_placedWords[i].word == selectedWord) {
         setState(() {
           _foundWordIndexes.add(i);
-          _foundWords.add(_FoundWord(
-            index: i,
-            word: selectedWord,
-            start: _placedWords[i].start,
-            end: _placedWords[i].end,
-            isHorizontal: _placedWords[i].isHorizontal,
-          ));
+          _foundWords.add(
+            _FoundWord(
+              index: i,
+              word: selectedWord,
+              start: _placedWords[i].start,
+              end: _placedWords[i].end,
+              isHorizontal: _placedWords[i].isHorizontal,
+            ),
+          );
           _markWordFound(_placedWords[i]);
           _selectStartRow = null;
           _selectStartCol = null;
@@ -420,10 +579,16 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
 
   List<int> _getSelectedCells() {
     // If only start cell is set, highlight it
-    if (_selectStartRow != null && _selectStartCol != null && (_selectEndRow == null || _selectEndCol == null)) {
+    if (_selectStartRow != null &&
+        _selectStartCol != null &&
+        (_selectEndRow == null || _selectEndCol == null)) {
       return [_selectStartRow! * _gridSize + _selectStartCol!];
     }
-    if (_selectStartRow == null || _selectStartCol == null || _selectEndRow == null || _selectEndCol == null) return [];
+    if (_selectStartRow == null ||
+        _selectStartCol == null ||
+        _selectEndRow == null ||
+        _selectEndCol == null)
+      return [];
     final start = [_selectStartRow!, _selectStartCol!];
     final end = [_selectEndRow!, _selectEndCol!];
     final isRTL = widget.readingDirection == TextDirection.rtl;
@@ -469,9 +634,11 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   bool _isCellInFoundWord(int row, int col) {
     for (final fw in _foundWords) {
       if (fw.isHorizontal) {
-        if (row == fw.start[0] && col >= fw.start[1] && col <= fw.end[1]) return true;
+        if (row == fw.start[0] && col >= fw.start[1] && col <= fw.end[1])
+          return true;
       } else {
-        if (col == fw.start[1] && row >= fw.start[0] && row <= fw.end[0]) return true;
+        if (col == fw.start[1] && row >= fw.start[0] && row <= fw.end[0])
+          return true;
       }
     }
     return false;
@@ -484,11 +651,23 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     }
     // Only horizontal or vertical
     if (_selectStartRow == _selectEndRow) {
-      if (row == _selectStartRow && col >= _selectStartCol! && col <= _selectEndCol!) return true;
-      if (row == _selectStartRow && col <= _selectStartCol! && col >= _selectEndCol!) return true;
+      if (row == _selectStartRow &&
+          col >= _selectStartCol! &&
+          col <= _selectEndCol!)
+        return true;
+      if (row == _selectStartRow &&
+          col <= _selectStartCol! &&
+          col >= _selectEndCol!)
+        return true;
     } else if (_selectStartCol == _selectEndCol) {
-      if (col == _selectStartCol && row >= _selectStartRow! && row <= _selectEndRow!) return true;
-      if (col == _selectStartCol && row <= _selectStartRow! && row >= _selectEndRow!) return true;
+      if (col == _selectStartCol &&
+          row >= _selectStartRow! &&
+          row <= _selectEndRow!)
+        return true;
+      if (col == _selectStartCol &&
+          row <= _selectStartRow! &&
+          row >= _selectEndRow!)
+        return true;
     }
     return false;
   }
@@ -532,13 +711,16 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                             color: isSelected
                                 ? selectedC
                                 : isFound
-                                    ? foundC
-                                    : defaultC,
+                                ? foundC
+                                : defaultC,
                           ),
                           child: Center(
                             child: Text(
                               _grid[row][col],
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
@@ -567,7 +749,9 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    _showSourceHints ? 'Hints (Source Language):' : 'Target Words:',
+                    _showSourceHints
+                        ? 'Hints (Source Language):'
+                        : 'Target Words:',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -578,7 +762,9 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                       ? _selectedEntries.asMap().entries.map((entry) {
                           final idx = entry.key;
                           final word = entry.value;
-                          final foundIdx = _foundWords.indexWhere((fw) => fw.word == word.target.trim().toUpperCase());
+                          final foundIdx = _foundWords.indexWhere(
+                            (fw) => fw.word == word.target.trim().toUpperCase(),
+                          );
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -602,7 +788,9 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                           );
                         }).toList()
                       : _selectedEntries.map((e) {
-                          final found = _foundWords.any((fw) => fw.word == e.target.trim().toUpperCase());
+                          final found = _foundWords.any(
+                            (fw) => fw.word == e.target.trim().toUpperCase(),
+                          );
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -614,7 +802,10 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                                 padding: const EdgeInsets.only(top: 2.0),
                                 child: EntrySourceWidget(
                                   entry: e,
-                                  style: TextStyle(fontSize: 12, color: hintTextC),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: hintTextC,
+                                  ),
                                   vocabulary: widget.vocabulary,
                                   imageSize: ImageSize.small,
                                 ),
@@ -624,7 +815,10 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                         }).toList(),
                 ),
                 const SizedBox(height: 24),
-                Text('Found:  ${_foundWords.length} / ${_selectedEntries.length}', style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  'Found:  ${_foundWords.length} / ${_selectedEntries.length}',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 12),
                 // Show found words in full at the bottom
                 ElevatedButton(
@@ -645,7 +839,12 @@ class _PlacedWord {
   final List<int> start;
   final List<int> end;
   final bool isHorizontal;
-  _PlacedWord({required this.word, required this.start, required this.end, required this.isHorizontal});
+  _PlacedWord({
+    required this.word,
+    required this.start,
+    required this.end,
+    required this.isHorizontal,
+  });
 }
 
 class _FoundWord {
@@ -654,5 +853,11 @@ class _FoundWord {
   final List<int> start;
   final List<int> end;
   final bool isHorizontal;
-  _FoundWord({required this.index, required this.word, required this.start, required this.end, required this.isHorizontal});
-} 
+  _FoundWord({
+    required this.index,
+    required this.word,
+    required this.start,
+    required this.end,
+    required this.isHorizontal,
+  });
+}

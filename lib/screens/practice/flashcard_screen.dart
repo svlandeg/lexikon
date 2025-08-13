@@ -90,14 +90,16 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     if (userInput == correctAnswer) {
       setState(() {
         _correct++;
-        _feedback = 'Correct!\nThe ${widget.vocabulary.targetLanguage} word is: ${_quizEntries[_current].target}';
+        _feedback =
+            'Correct!\nThe ${widget.vocabulary.targetLanguage} word is: ${_quizEntries[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
     } else {
       setState(() {
         _incorrect++;
-        _feedback = 'Incorrect.\nYour answer: ${_controller.text.trim()}\nThe correct ${widget.vocabulary.targetLanguage} word is: ${_quizEntries[_current].target}';
+        _feedback =
+            'Incorrect.\nYour answer: ${_controller.text.trim()}\nThe correct ${widget.vocabulary.targetLanguage} word is: ${_quizEntries[_current].target}';
         _showingFeedback = true;
       });
       _requestKeyboardFocus();
@@ -116,12 +118,27 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Quiz complete!', style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                'Quiz complete!',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 16),
-              Text('Correct:  $_correct', style: const TextStyle(color: correctC, fontSize: 18)),
-              Text('Incorrect:  $_incorrect', style: const TextStyle(color: incorrectC, fontSize: 18)),
+              Text(
+                'Correct:  $_correct',
+                style: const TextStyle(color: correctC, fontSize: 18),
+              ),
+              Text(
+                'Incorrect:  $_incorrect',
+                style: const TextStyle(color: incorrectC, fontSize: 18),
+              ),
               const SizedBox(height: 8),
-              Text('Total score: ${percent.toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+              Text(
+                'Total score: ${percent.toStringAsFixed(1)}%',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
               const SizedBox(height: 24),
               ElevatedButton(
                 focusNode: _backButtonFocusNode,
@@ -146,7 +163,10 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${widget.vocabulary.inputSource}:', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              '${widget.vocabulary.inputSource}:',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             EntrySourceWidget(
               entry: entry,
@@ -159,7 +179,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               focusNode: _keyboardFocusNode,
               autofocus: true,
               onKey: (event) {
-                if (_showingFeedback && event.isKeyPressed(LogicalKeyboardKey.enter) && event.runtimeType.toString() == 'RawKeyDownEvent') {
+                if (_showingFeedback &&
+                    event.isKeyPressed(LogicalKeyboardKey.enter) &&
+                    event.runtimeType.toString() == 'RawKeyDownEvent') {
                   setState(() {
                     _feedback = null;
                     _showingFeedback = false;
@@ -190,7 +212,12 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                   ] else ...[
                     Text(
                       _feedback!,
-                      style: TextStyle(fontSize: 20, color: _feedback!.startsWith('Correct!') ? correctC : incorrectC),
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: _feedback!.startsWith('Correct!')
+                            ? correctC
+                            : incorrectC,
+                      ),
                       softWrap: true,
                       maxLines: null,
                     ),

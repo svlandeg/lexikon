@@ -9,17 +9,24 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    testWidgets('shows empty state when no vocabularies', (WidgetTester tester) async {
+    testWidgets('shows empty state when no vocabularies', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));
       expect(find.text('No vocabularies available'), findsOneWidget);
-      expect(find.text('Create a vocabulary first to start practicing'), findsOneWidget);
+      expect(
+        find.text('Create a vocabulary first to start practicing'),
+        findsOneWidget,
+      );
       expect(find.byIcon(Icons.school_outlined), findsOneWidget);
     });
 
-    testWidgets('shows vocabulary selector and practice options', (WidgetTester tester) async {
+    testWidgets('shows vocabulary selector and practice options', (
+      WidgetTester tester,
+    ) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          '{"type":"text","id":"1","name":"TestVocab","sourceLanguage":"English","targetLanguage":"Spanish","entries":[{"type":"text","source":"hello","target":"hola"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
+          '{"type":"text","id":"1","name":"TestVocab","sourceLanguage":"English","targetLanguage":"Spanish","entries":[{"type":"text","source":"hello","target":"hola"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}',
         ],
       });
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));
@@ -31,10 +38,12 @@ void main() {
       expect(find.text('Word Search'), findsOneWidget);
     });
 
-    testWidgets('disables practice options for an empty vocabulary', (WidgetTester tester) async {
+    testWidgets('disables practice options for an empty vocabulary', (
+      WidgetTester tester,
+    ) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          '{"type":"text","id":"2","name":"EmptyVocab","sourceLanguage":"English","targetLanguage":"French","entries":[],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
+          '{"type":"text","id":"2","name":"EmptyVocab","sourceLanguage":"English","targetLanguage":"French","entries":[],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}',
         ],
       });
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));
@@ -46,10 +55,12 @@ void main() {
       expect(find.text('Word Search'), findsNothing);
     });
 
-    testWidgets('navigates to FlashcardScreen with a single-entry vocabulary', (WidgetTester tester) async {
+    testWidgets('navigates to FlashcardScreen with a single-entry vocabulary', (
+      WidgetTester tester,
+    ) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          '{"type":"text","id":"3","name":"NavVocab","sourceLanguage":"English","targetLanguage":"German","entries":[{"type":"text","source":"cat","target":"Katze"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
+          '{"type":"text","id":"3","name":"NavVocab","sourceLanguage":"English","targetLanguage":"German","entries":[{"type":"text","source":"cat","target":"Katze"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}',
         ],
       });
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));
@@ -57,7 +68,10 @@ void main() {
       await tester.tap(find.text('Flashcards'));
       await tester.pumpAndSettle();
       // Should show single-word dialog
-      expect(find.text('There is only one word in this vocabulary.'), findsOneWidget);
+      expect(
+        find.text('There is only one word in this vocabulary.'),
+        findsOneWidget,
+      );
       // Confirm start (simulate tapping 'Start')
       await tester.tap(find.widgetWithText(TextButton, 'Start'));
       await tester.pumpAndSettle();
@@ -65,10 +79,12 @@ void main() {
       expect(find.text('Flashcards'), findsOneWidget);
     });
 
-    testWidgets('navigates to FlashcardScreen with a multi-entry vocabulary', (WidgetTester tester) async {
+    testWidgets('navigates to FlashcardScreen with a multi-entry vocabulary', (
+      WidgetTester tester,
+    ) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          '{"type":"text","id":"4","name":"NavVocabMulti","sourceLanguage":"English","targetLanguage":"German","entries":[{"type":"text","source":"cat","target":"Katze"},{"type":"text","source":"dog","target":"Hund"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
+          '{"type":"text","id":"4","name":"NavVocabMulti","sourceLanguage":"English","targetLanguage":"German","entries":[{"type":"text","source":"cat","target":"Katze"},{"type":"text","source":"dog","target":"Hund"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}',
         ],
       });
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));
@@ -87,7 +103,7 @@ void main() {
     testWidgets('navigates to WordSearchScreen', (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({
         'vocabularies': [
-          '{"type":"text","id":"4","name":"NavVocab2","sourceLanguage":"English","targetLanguage":"Italian","entries":[{"type":"text","source":"dog","target":"cane"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}'
+          '{"type":"text","id":"4","name":"NavVocab2","sourceLanguage":"English","targetLanguage":"Italian","entries":[{"type":"text","source":"dog","target":"cane"}],"sourceReadingDirection":"ltr","targetReadingDirection":"ltr"}',
         ],
       });
       await tester.pumpWidget(const MaterialApp(home: PracticeScreen()));
@@ -98,4 +114,4 @@ void main() {
       expect(find.text('Word Search'), findsOneWidget);
     });
   });
-} 
+}
