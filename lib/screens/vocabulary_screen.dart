@@ -820,7 +820,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           outFile.writeAsBytesSync(decompressed);
           // GZIP file extracted
         }
-      } else if (extension == 'bz2') {
+      } else if (extension == "bz2") {
         // Extract BZIP2 archive (single file)
         final decompressed = BZip2Decoder().decodeBytes(bytes);
         if (decompressed.isNotEmpty) {
