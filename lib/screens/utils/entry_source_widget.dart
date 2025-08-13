@@ -63,7 +63,7 @@ class EntrySourceWidget extends StatelessWidget {
     }
   }
 
-  build_text_entry(
+  Text build_text_entry(
     TextEntry textEntry,
     TextVocabulary vocabulary,
     TextStyle style,
@@ -72,7 +72,7 @@ class EntrySourceWidget extends StatelessWidget {
     return Text(textEntry.source, style: style, textDirection: textDirection);
   }
 
-  build_image_entry(ImageEntry imageEntry, ImageSize imageSize) {
+  dynamic build_image_entry(ImageEntry imageEntry, ImageSize imageSize) {
     final imageWidth = getImageWidth(imageSize);
     final imageHeight = getImageHeight(imageSize);
 
@@ -89,7 +89,7 @@ class EntrySourceWidget extends StatelessWidget {
     );
   }
 
-  build_error_entry(
+  Container build_error_entry(
     ImageEntry imageEntry,
     double imageWidth,
     double imageHeight,

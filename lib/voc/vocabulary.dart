@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'entry.dart';
-import 'csv_parser.dart';
 
 // Base abstract class for all vocabularies
 abstract class Vocabulary {
@@ -43,7 +41,8 @@ class TextVocabulary extends Vocabulary {
 
   List<TextEntry> get textEntries => entries.cast<TextEntry>();
 
-  String get inputSource => this.sourceLanguage;
+  @override
+  String get inputSource => sourceLanguage;
 
   @override
   List<Entry> get entries {
@@ -74,18 +73,16 @@ class TextVocabulary extends Vocabulary {
   setEntries(List<Entry> entries) {
     // Ensure all entries are TextEntry
     List<TextEntry> textEntries = <TextEntry>[];
-    if (entries != null) {
-      for (final entry in entries) {
-        if (entry is TextEntry) {
-          textEntries.add(entry);
-        } else {
-          throw ArgumentError(
-            'TextVocabulary can only contain TextEntry objects, found: ${entry.runtimeType}',
-          );
-        }
+    for (final entry in entries) {
+      if (entry is TextEntry) {
+        textEntries.add(entry);
+      } else {
+        throw ArgumentError(
+          'TextVocabulary can only contain TextEntry objects, found: ${entry.runtimeType}',
+        );
       }
     }
-    this.entries = textEntries;
+      this.entries = textEntries;
   }
 
   factory TextVocabulary.fromJson(Map<String, dynamic> json) {
@@ -152,7 +149,8 @@ class ImageVocabulary extends Vocabulary {
 
   List<ImageEntry> get imageEntries => entries.cast<ImageEntry>();
 
-  String get inputSource => "Image";
+  @override
+  String get inputSource => 'Image';
 
   @override
   List<Entry> get entries {
@@ -181,18 +179,16 @@ class ImageVocabulary extends Vocabulary {
   setEntries(List<Entry> entries) {
     // Ensure all entries are ImageEntry
     List<ImageEntry> imageEntries = <ImageEntry>[];
-    if (entries != null) {
-      for (final entry in entries) {
-        if (entry is ImageEntry) {
-          imageEntries.add(entry);
-        } else {
-          throw ArgumentError(
-            'ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}',
-          );
-        }
+    for (final entry in entries) {
+      if (entry is ImageEntry) {
+        imageEntries.add(entry);
+      } else {
+        throw ArgumentError(
+          'ImageVocabulary can only contain ImageEntry objects, found: ${entry.runtimeType}',
+        );
       }
     }
-    this.entries = imageEntries;
+      this.entries = imageEntries;
   }
 
   factory ImageVocabulary.fromJson(Map<String, dynamic> json) {

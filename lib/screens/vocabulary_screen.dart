@@ -10,7 +10,6 @@ import 'dart:io';
 
 import 'package:image/image.dart' as img;
 import 'package:archive/archive.dart';
-import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -532,7 +531,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           final targetWord = fileName.split('.').first; // Remove extension
 
           // Check if the image can be loaded and copy it to app data
-          if (file is File && file.existsSync()) {
+          if (file.existsSync()) {
             try {
               // Try to create a FileImage and test if it can be loaded
               final imageProvider = FileImage(file);
@@ -688,7 +687,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           final targetWord = fileName.split('.').first; // Remove extension
 
           // Check if the image can be loaded and copy it to app data
-          if (file is File && file.existsSync()) {
+          if (file.existsSync()) {
             try {
               // Try to create a FileImage and test if it can be loaded
               final imageProvider = FileImage(file);
@@ -820,7 +819,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
           outFile.writeAsBytesSync(decompressed);
           // GZIP file extracted
         }
-      } else if (extension == "bz2") {
+      } else if (extension == 'bz2') {
         // Extract BZIP2 archive (single file)
         final decompressed = BZip2Decoder().decodeBytes(bytes);
         if (decompressed.isNotEmpty) {
@@ -1520,7 +1519,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                   controller: _sourceController,
                   decoration: InputDecoration(
                     labelText:
-                        '${(widget.vocabulary as TextVocabulary).sourceLanguage}',
+                        (widget.vocabulary as TextVocabulary).sourceLanguage,
                     hintText: 'Enter a word from the source language',
                   ),
                   validator: (value) => value == null || value.isEmpty
@@ -1545,7 +1544,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               TextFormField(
                 controller: _targetController,
                 decoration: InputDecoration(
-                  labelText: '${widget.vocabulary.targetLanguage}',
+                  labelText: widget.vocabulary.targetLanguage,
                   hintText: 'Enter a word from the target language',
                 ),
                 validator: (value) => value == null || value.isEmpty
