@@ -725,7 +725,12 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                         }).toList(),
                 ),
                 const SizedBox(height: 24),
-                Text('Found:  ${_foundWords.length} / ${_selectedEntries.length}', style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  _foundWords.length == _selectedEntries.length
+                      ? 'Found all!'
+                      : 'Found:  ${_foundWords.length} / ${_selectedEntries.length}',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 12),
                 // Show found words in full at the bottom
                 ElevatedButton(
