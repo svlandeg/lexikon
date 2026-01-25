@@ -7,6 +7,7 @@ import 'package:unicode_data/unicode_data.dart';
 
 // Color definitions for WordSearchScreen
 const Color foundC = Colors.greenAccent;
+const Color solvedC = Colors.orangeAccent;
 const Color selectedC = Colors.yellowAccent;
 const Color borderC = Colors.blueGrey;
 const Color defaultC = Colors.white;
@@ -41,6 +42,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   late int _gridSize;
   late List<_PlacedWord> _placedWords;
   Set<int> _foundWordIndexes = {};
+  Set<int> _solvedWordIndexes = {};
   List<_FoundWord> _foundWords = [];
   int? _selectStartRow;
   int? _selectStartCol;
@@ -48,6 +50,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   int? _selectEndCol;
   bool _showSourceHints = true;
   late List<List<bool>> _foundMatrix;
+  late List<List<bool>> _solvedMatrix;
 
   @override
   void initState() {
@@ -73,12 +76,14 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     _placedWords = [];
     _grid = _generateGrid(_gridSize, wordList, widget.readingDirection, actuallyPlaced: _placedWords);
     _foundWordIndexes.clear();
+    _solvedWordIndexes.clear();
     _foundWords.clear();
     _selectStartRow = null;
     _selectStartCol = null;
     _selectEndRow = null;
     _selectEndCol = null;
     _foundMatrix = List.generate(_gridSize, (_) => List.filled(_gridSize, false));
+    _solvedMatrix = List.generate(_gridSize, (_) => List.filled(_gridSize, false));
   }
 
   List<List<String>> _generateGrid(int gridSize, List<String> wordList, TextDirection direction, {List<_PlacedWord>? actuallyPlaced}) {
@@ -319,6 +324,20 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     }
   }
 
+  void _markWordSolved(_PlacedWord word) {
+    final start = word.start;
+    final end = word.end;
+    if (word.isHorizontal) {
+      for (int c = start[1]; c <= end[1]; c++) {
+        _solvedMatrix[start[0]][c] = true;
+      }
+    } else {
+      for (int r = start[0]; r <= end[0]; r++) {
+        _solvedMatrix[r][start[1]] = true;
+      }
+    }
+  }
+
   void _checkSelection() {
     if (_selectStartRow == null || _selectStartCol == null || _selectEndRow == null || _selectEndCol == null) return;
     final start = [_selectStartRow!, _selectStartCol!];
@@ -393,9 +412,9 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
       }
     }
     final selectedWord = selected.join();
-    // Check if matches any placed word and not already found
+    // Check if matches any placed word and not already found or solved
     for (int i = 0; i < _placedWords.length; i++) {
-      if (_foundWordIndexes.contains(i)) continue;
+      if (_foundWordIndexes.contains(i) || _solvedWordIndexes.contains(i)) continue;
       if (_placedWords[i].word == selectedWord) {
         setState(() {
           _foundWordIndexes.add(i);
@@ -405,6 +424,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
             start: _placedWords[i].start,
             end: _placedWords[i].end,
             isHorizontal: _placedWords[i].isHorizontal,
+            isSolved: false,
           ));
           _markWordFound(_placedWords[i]);
           _selectStartRow = null;
@@ -416,6 +436,23 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
       }
     }
     // Keep the yellow highlight until a new selection is started
+  }
+
+  void _solveWord(int wordIndex) {
+    if (_foundWordIndexes.contains(wordIndex) || _solvedWordIndexes.contains(wordIndex)) return;
+    final placedWord = _placedWords[wordIndex];
+    setState(() {
+      _solvedWordIndexes.add(wordIndex);
+      _foundWords.add(_FoundWord(
+        index: wordIndex,
+        word: placedWord.word,
+        start: placedWord.start,
+        end: placedWord.end,
+        isHorizontal: placedWord.isHorizontal,
+        isSolved: true,
+      ));
+      _markWordSolved(placedWord);
+    });
   }
 
   List<int> _getSelectedCells() {
@@ -477,6 +514,10 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
     return false;
   }
 
+  bool _isCellSolved(int row, int col) {
+    return _solvedMatrix[row][col];
+  }
+
   bool _isCellSelected(int row, int col) {
     if (_selectStartRow == null || _selectStartCol == null) return false;
     if (_selectEndRow == null || _selectEndCol == null) {
@@ -520,6 +561,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                       final row = index ~/ _gridSize;
                       final col = index % _gridSize;
                       final isSelected = _isCellSelected(row, col);
+                      final isSolved = _isCellSolved(row, col);
                       final isFound = _foundMatrix[row][col];
                       return GestureDetector(
                         onTap: () => _onCellTap(row, col),
@@ -531,9 +573,11 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                             border: Border.all(color: borderC),
                             color: isSelected
                                 ? selectedC
-                                : isFound
-                                    ? foundC
-                                    : defaultC,
+                                : isSolved
+                                    ? solvedC
+                                    : isFound
+                                        ? foundC
+                                        : defaultC,
                           ),
                           child: Center(
                             child: Text(
@@ -578,7 +622,23 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                       ? _selectedEntries.asMap().entries.map((entry) {
                           final idx = entry.key;
                           final word = entry.value;
-                          final foundIdx = _foundWords.indexWhere((fw) => fw.word == word.target.trim().toUpperCase());
+                          final foundWord = _foundWords.firstWhere(
+                            (fw) => fw.word == word.target.trim().toUpperCase(),
+                            orElse: () => _FoundWord(
+                              index: -1,
+                              word: '',
+                              start: [0, 0],
+                              end: [0, 0],
+                              isHorizontal: true,
+                              isSolved: false,
+                            ),
+                          );
+                          final isFound = foundWord.index != -1;
+                          final isSolved = isFound && foundWord.isSolved;
+                          final isManuallyFound = isFound && !foundWord.isSolved;
+                          // Find the placed word index
+                          final placedWordIdx = _placedWords.indexWhere((pw) => pw.word == word.target.trim().toUpperCase());
+                          final canSolve = placedWordIdx != -1 && !_foundWordIndexes.contains(placedWordIdx) && !_solvedWordIndexes.contains(placedWordIdx);
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -590,25 +650,54 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                                   imageSize: ImageSize.medium,
                                 ),
                               ),
-                              if (foundIdx != -1)
+                              if (isFound)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 2.0),
                                   child: Chip(
                                     label: Text(word.target),
-                                    backgroundColor: foundC,
+                                    backgroundColor: isSolved ? solvedC : foundC,
+                                  ),
+                                )
+                              else if (canSolve)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2.0),
+                                  child: ElevatedButton(
+                                    onPressed: () => _solveWord(placedWordIdx),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      minimumSize: const Size(0, 24),
+                                    ),
+                                    child: const Text('Solve', style: TextStyle(fontSize: 12)),
                                   ),
                                 ),
                             ],
                           );
                         }).toList()
-                      : _selectedEntries.map((e) {
-                          final found = _foundWords.any((fw) => fw.word == e.target.trim().toUpperCase());
+                      : _selectedEntries.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final e = entry.value;
+                          final foundWord = _foundWords.firstWhere(
+                            (fw) => fw.word == e.target.trim().toUpperCase(),
+                            orElse: () => _FoundWord(
+                              index: -1,
+                              word: '',
+                              start: [0, 0],
+                              end: [0, 0],
+                              isHorizontal: true,
+                              isSolved: false,
+                            ),
+                          );
+                          final isFound = foundWord.index != -1;
+                          final isSolved = isFound && foundWord.isSolved;
+                          // Find the placed word index
+                          final placedWordIdx = _placedWords.indexWhere((pw) => pw.word == e.target.trim().toUpperCase());
+                          final canSolve = placedWordIdx != -1 && !_foundWordIndexes.contains(placedWordIdx) && !_solvedWordIndexes.contains(placedWordIdx);
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Chip(
                                 label: Text(e.target),
-                                backgroundColor: found ? foundC : null,
+                                backgroundColor: isFound ? (isSolved ? solvedC : foundC) : null,
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(top: 2.0),
@@ -619,6 +708,18 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                                   imageSize: ImageSize.small,
                                 ),
                               ),
+                              if (!isFound && canSolve)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2.0),
+                                  child: ElevatedButton(
+                                    onPressed: () => _solveWord(placedWordIdx),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      minimumSize: const Size(0, 24),
+                                    ),
+                                    child: const Text('Solve', style: TextStyle(fontSize: 12)),
+                                  ),
+                                ),
                             ],
                           );
                         }).toList(),
@@ -654,5 +755,6 @@ class _FoundWord {
   final List<int> start;
   final List<int> end;
   final bool isHorizontal;
-  _FoundWord({required this.index, required this.word, required this.start, required this.end, required this.isHorizontal});
+  final bool isSolved;
+  _FoundWord({required this.index, required this.word, required this.start, required this.end, required this.isHorizontal, required this.isSolved});
 } 
