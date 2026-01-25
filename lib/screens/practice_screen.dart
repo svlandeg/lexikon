@@ -62,7 +62,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   Widget build(BuildContext context) {
     if (_vocabularies.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Practice')),
+        appBar: AppBar(title: const Text('LexiKon - Practice')),
         body: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -85,7 +85,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Practice')),
+      appBar: AppBar(title: const Text('LexiKon - Practice')),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(

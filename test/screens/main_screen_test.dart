@@ -16,14 +16,17 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('MainScreen shows Welcome tab by default', (WidgetTester tester) async {
+  testWidgets('App starts directly on Practice screen', (WidgetTester tester) async {
     await tester.pumpWidget(const LexikonApp());
     await tester.pumpAndSettle();
-    // WelcomeScreen text should be visible
-    expect(find.text('Welcome to LexiKon!'), findsOneWidget);
+    // Should show empty practice text when no vocabularies exist
+    expect(find.text('No vocabularies available'), findsOneWidget);
+    expect(find.text('Create a vocabulary first to start practicing'), findsOneWidget);
+    // AppBar title
+    expect(find.text('LexiKon - Practice'), findsOneWidget);
     // BottomNavigationBar should be present
     expect(find.byType(BottomNavigationBar), findsOneWidget);
-    // Welcome tab should be selected
+    // Practice tab should be selected (index 0)
     final navBar = tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
     expect(navBar.currentIndex, 0);
   });
@@ -39,24 +42,5 @@ void main() {
     expect(find.text('Create your first vocabulary to get started'), findsOneWidget);
     // AppBar title
     expect(find.text('LexiKon - Vocabularies'), findsOneWidget);
-  });
-
-  testWidgets('MainScreen switches to Practice tab', (WidgetTester tester) async {
-    await tester.pumpWidget(const LexikonApp());
-    await tester.pumpAndSettle();
-    // Tap the Practice tab
-    await tester.tap(find.byIcon(Icons.school));
-    await tester.pumpAndSettle();
-    // Should show empty practice text
-    expect(find.text('No vocabularies available'), findsOneWidget);
-    expect(find.text('Create a vocabulary first to start practicing'), findsOneWidget);
-    // AppBar title
-    expect(
-      find.descendant(
-        of: find.byType(AppBar),
-        matching: find.text('Practice'),
-      ),
-      findsOneWidget,
-    );
   });
 }
