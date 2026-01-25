@@ -33,7 +33,9 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
   // Statistics tracking
   int _correctWithoutHint = 0;
   int _correctWithHint = 0;
+  int _correctWithSolve = 0;
   List<bool> _hintUsed = [];
+  List<bool> _solveUsed = [];
 
   /// Checks if a word can be meaningfully scrambled
   bool _canBeScrambled(String word) {
@@ -56,6 +58,7 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
       _quizEntries = _quizEntries.sublist(0, widget.count);
     }
     _hintUsed = List.filled(_quizEntries.length, false);
+    _solveUsed = List.filled(_quizEntries.length, false);
     _setupCurrentWord();
   }
 
@@ -109,11 +112,22 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     });
   }
 
+  void _solveWord() {
+    setState(() {
+      final target = _quizEntries[_current].target.trim();
+      _userOrder = target.split('');
+      _solveUsed[_current] = true;
+      _checkCorrect();
+    });
+  }
+
   void _nextWord() {
     setState(() {
       // Update statistics for the current word
       if (_isCorrect) {
-        if (_hintUsed[_current]) {
+        if (_solveUsed[_current]) {
+          _correctWithSolve++;
+        } else if (_hintUsed[_current]) {
           _correctWithHint++;
         } else {
           _correctWithoutHint++;
@@ -161,7 +175,7 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
     }
     
     if (_current >= _quizEntries.length) {
-      int totalCorrect = _correctWithoutHint + _correctWithHint;
+      int totalCorrect = _correctWithoutHint + _correctWithHint + _correctWithSolve;
       double percent = totalCorrect > 0 ? (_correctWithoutHint / totalCorrect) * 100 : 0;
       
       return Scaffold(
@@ -172,8 +186,9 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
             children: [
               Text('Exercise complete', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 16),
-              Text('Correct without hint: $_correctWithoutHint', style: const TextStyle(color: correctTextC, fontSize: 18)),
-              Text('Correct with hint: $_correctWithHint', style: const TextStyle(color: Colors.blue, fontSize: 18)),
+              Text('Found without hint: $_correctWithoutHint', style: const TextStyle(color: correctTextC, fontSize: 18)),
+              Text('Found with hint: $_correctWithHint', style: const TextStyle(color: Colors.blue, fontSize: 18)),
+              Text('Solved automatically: $_correctWithSolve', style: const TextStyle(color: Colors.orange, fontSize: 18)),
               const SizedBox(height: 8),
               Text('Score: ${percent.toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
               const SizedBox(height: 24),
@@ -295,6 +310,11 @@ class _ScrambledWordScreenState extends State<ScrambledWordScreen> {
                       onChanged: _onHintChanged,
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _solveWord,
+                  child: const Text('Solve'),
                 ),
               ],
                            const SizedBox(height: 24),
