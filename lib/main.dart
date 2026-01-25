@@ -34,12 +34,11 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // Start with Practice screen (index 0)
 
   final List<Widget> _screens = [
-    const WelcomeScreen(),
-    const VocabularyListScreen(),
     const PracticeScreen(),
+    const VocabularyListScreen(),
   ];
 
   @override
@@ -55,36 +54,16 @@ class _MainScreenState extends State<MainScreen> {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Welcome',
+            icon: Icon(Icons.school),
+            label: 'Practice',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.book),
             label: 'Vocabularies',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'Practice',
-          ),
         ],
         selectedItemColor: selectedC,
         unselectedItemColor: unselectedC,
-      ),
-    );
-  }
-}
-
-class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
-  
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text(
-          'Welcome to LexiKon!',
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-        ),
       ),
     );
   }
