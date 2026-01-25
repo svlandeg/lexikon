@@ -618,6 +618,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 12,
+                  runSpacing: 12,
                   children: _showSourceHints
                       ? _selectedEntries.asMap().entries.map((entry) {
                           final idx = entry.key;
@@ -639,38 +640,41 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                           // Find the placed word index
                           final placedWordIdx = _placedWords.indexWhere((pw) => pw.word == word.target.trim().toUpperCase());
                           final canSolve = placedWordIdx != -1 && !_foundWordIndexes.contains(placedWordIdx) && !_solvedWordIndexes.contains(placedWordIdx);
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Chip(
-                                label: EntrySourceWidget(
-                                  entry: word,
-                                  style: const TextStyle(fontSize: 12),
-                                  vocabulary: widget.vocabulary,
-                                  imageSize: ImageSize.medium,
-                                ),
-                              ),
-                              if (isFound)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 2.0),
-                                  child: Chip(
-                                    label: Text(word.target),
-                                    backgroundColor: isSolved ? solvedC : foundC,
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Chip(
+                                  label: EntrySourceWidget(
+                                    entry: word,
+                                    style: const TextStyle(fontSize: 12),
+                                    vocabulary: widget.vocabulary,
+                                    imageSize: ImageSize.medium,
                                   ),
-                                )
-                              else if (canSolve)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 2.0),
-                                  child: ElevatedButton(
-                                    onPressed: () => _solveWord(placedWordIdx),
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      minimumSize: const Size(0, 24),
+                                ),
+                                if (isFound)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2.0),
+                                    child: Chip(
+                                      label: Text(word.target),
+                                      backgroundColor: isSolved ? solvedC : foundC,
                                     ),
-                                    child: const Text('Solve', style: TextStyle(fontSize: 12)),
+                                  )
+                                else if (canSolve)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2.0),
+                                    child: ElevatedButton(
+                                      onPressed: () => _solveWord(placedWordIdx),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        minimumSize: const Size(0, 24),
+                                      ),
+                                      child: const Text('Solve', style: TextStyle(fontSize: 12)),
+                                    ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           );
                         }).toList()
                       : _selectedEntries.asMap().entries.map((entry) {
@@ -692,35 +696,38 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
                           // Find the placed word index
                           final placedWordIdx = _placedWords.indexWhere((pw) => pw.word == e.target.trim().toUpperCase());
                           final canSolve = placedWordIdx != -1 && !_foundWordIndexes.contains(placedWordIdx) && !_solvedWordIndexes.contains(placedWordIdx);
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Chip(
-                                label: Text(e.target),
-                                backgroundColor: isFound ? (isSolved ? solvedC : foundC) : null,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2.0),
-                                child: EntrySourceWidget(
-                                  entry: e,
-                                  style: TextStyle(fontSize: 12, color: hintTextC),
-                                  vocabulary: widget.vocabulary,
-                                  imageSize: ImageSize.small,
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Chip(
+                                  label: Text(e.target),
+                                  backgroundColor: isFound ? (isSolved ? solvedC : foundC) : null,
                                 ),
-                              ),
-                              if (!isFound && canSolve)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 2.0),
-                                  child: ElevatedButton(
-                                    onPressed: () => _solveWord(placedWordIdx),
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      minimumSize: const Size(0, 24),
-                                    ),
-                                    child: const Text('Solve', style: TextStyle(fontSize: 12)),
+                                  child: EntrySourceWidget(
+                                    entry: e,
+                                    style: TextStyle(fontSize: 12, color: hintTextC),
+                                    vocabulary: widget.vocabulary,
+                                    imageSize: ImageSize.small,
                                   ),
                                 ),
-                            ],
+                                if (!isFound && canSolve)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2.0),
+                                    child: ElevatedButton(
+                                      onPressed: () => _solveWord(placedWordIdx),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        minimumSize: const Size(0, 24),
+                                      ),
+                                      child: const Text('Solve', style: TextStyle(fontSize: 12)),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           );
                         }).toList(),
                 ),
